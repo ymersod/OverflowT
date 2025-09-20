@@ -69,4 +69,8 @@ function LineManager:GetIndex(userId)
 	return nil
 end
 
+function LineManager:ResetLine()
+	self.Line = {}
+end
+
 return LineManager

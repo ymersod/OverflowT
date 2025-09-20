@@ -55,12 +55,15 @@ RunService.Heartbeat:Connect(function()
 	end
 	print(currentLine)
 	prevLine = { table.unpack(currentLine) }
-	for i = 1, #currentLine do
-		local player = Players:GetPlayerByUserId(currentLine[i])
-		if not player then
-			continue
-		end
+	local players = Players:GetChildren()
+	for i = 1, #players do
+		local player = players[i]
 		local states = player:FindFirstChild("States")
-		states.LinePosition.Value = i
+		local index = Line:GetIndex(player.UserId)
+		if index then
+			states.LinePosition.Value = index
+		else
+			states.LinePosition.Value = 0
+		end
 	end
 end)
