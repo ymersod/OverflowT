@@ -17,6 +17,10 @@ function LineManager:Fill(players)
 end
 
 function LineManager:Enqueue(op, userId)
+	local index = self.GetIndex(userId)
+	if index then
+		return
+	end
 	table.insert(self.Queue, { op = op, userId = userId })
 end
 
@@ -28,6 +32,10 @@ function LineManager:ProcessNext()
 
 	local op = req.op
 	local index = self.GetIndex(req.userId)
+
+	if not index then
+		return
+	end
 
 	if op == self.OperationType.Next then
 		if #self.Line > 0 then

@@ -16,17 +16,11 @@ RunService.Heartbeat:Connect(function()
 end)
 
 SkipAheadEvent.OnServerEvent:Connect(function(player: Player)
-	local index = LineManager:GetIndex(player.UserId)
-	if index then
-		LineManager:Enqueue(LineManager.OperationType.SkipAhead, player.UserId)
-	end
+	LineManager:Enqueue(LineManager.OperationType.SkipAhead, player.UserId)
 end)
 
 CutAllEvent.OnServerEvent:Connect(function(player: Player)
-	local index = LineManager:GetIndex(player.UserId)
-	if index then
-		LineManager:Enqueue(LineManager.OperationType.CutAll, player.UserId)
-	end
+	LineManager:Enqueue(LineManager.OperationType.CutAll, player.UserId)
 end)
 
 NextEvent.OnServerEvent:Connect(function(_player: Player)
@@ -34,19 +28,9 @@ NextEvent.OnServerEvent:Connect(function(_player: Player)
 end)
 
 RemoveEvent.OnServerEvent:Connect(function(player: Player)
-	local index = LineManager:GetIndex(player.UserId)
-	if index then
-		LineManager:Enqueue(LineManager.OperationType.Remove, player.UserId)
-	end
-end)
-
-Players.PlayerAdded:Connect(function(player: Player)
-	table.insert(LineManager.Line, player.UserId)
+	LineManager:Enqueue(LineManager.OperationType.Remove, player.UserId)
 end)
 
 Players.PlayerRemoving:Connect(function(player: Player)
-	local index = LineManager:GetIndex(player.UserId)
-	if index then
-		table.remove(LineManager.Line, index)
-	end
+	LineManager:Enqueue(LineManager.OperationType.Remove, player.UserId)
 end)
