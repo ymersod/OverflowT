@@ -4,6 +4,7 @@ local tags = {
 	NOT_FIRST_TAG = "NotFirst",
 	ONLY_FIRST_TAG = "OnlyFirst",
 	LOBBYZONE = "LobbyZone",
+	TOILET = "Toilet",
 }
 
 return tags

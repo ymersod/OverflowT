@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
+local FlushHandler = require(script.Parent.FlushHandler)
 local Line = require(ServerScriptService.Server.LineArray)
 local prevLine = { table.unpack(Line:GetLine()) }
 
@@ -29,9 +30,19 @@ local function GetPlayersInLobby(): { Player }
 	return playersInLobby
 end
 
-task.delay(15, function()
-	Line:Fill(GetPlayersInLobby())
-	print("Line filled with players after 10 seconds")
+-- Main loop
+task.spawn(function()
+	while true do
+		task.wait(5) -- INTERMISSION TIME
+
+		if #Line:GetLine() > 0 then
+			print("Game is ongoing!")
+		else
+			Line:Fill(GetPlayersInLobby())
+			FlushHandler.StartToilet()
+			print("Line filled with players after 10 seconds")
+		end
+	end
 end)
 
 local function arraysEqual(a, b)
