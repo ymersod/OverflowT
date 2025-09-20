@@ -8,6 +8,7 @@ local prevLine = { table.unpack(Line:GetLine()) }
 
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
+local lobbyCenter = lobbyZone.Position
 
 local function GetPlayersInLobby(): { Player }
 	local playersInLobby = {}
@@ -29,7 +30,19 @@ local function GetPlayersInLobby(): { Player }
 	return playersInLobby
 end
 
-task.delay(10, function()
+local function MovePlayersToLobbyCenter()
+	for _, userId in ipairs(Line:GetLine()) do
+		local player = Players:GetPlayerByUserId(userId)
+		local character = player.Character
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			local hrp = character.HumanoidRootPart
+
+			hrp.CFrame = CFrame.new(lobbyCenter)
+		end
+	end
+end
+
+task.delay(20, function()
 	Line:Fill(GetPlayersInLobby())
 	print("Line filled with players after 10 seconds")
 end)
