@@ -29,7 +29,7 @@ local function GetPlayersInLobby(): { Player }
 	return playersInLobby
 end
 
-task.delay(10, function()
+task.delay(15, function()
 	Line:Fill(GetPlayersInLobby())
 	print("Line filled with players after 10 seconds")
 end)
