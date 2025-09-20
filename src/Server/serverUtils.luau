@@ -6,7 +6,7 @@ local serverUtils = {}
 function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stats.PlayerStats)
 	print("do it")
 	local player = Players:GetPlayerByUserId(playerId)
-	local leaderStats = player:FindFirstChild("LeaderStats")
+	local leaderStats = player:FindFirstChild("leaderstats")
 
 	local money: IntValue? = leaderStats:FindFirstChild("Money")
 	local wins: IntValue? = leaderStats:FindFirstChild("wins")

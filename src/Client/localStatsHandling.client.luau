@@ -1,6 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 
-local LeaderStats = Player:WaitForChild("LeaderStats")
+local LeaderStats = Player:WaitForChild("leaderstats")
 local money: IntValue? = LeaderStats:WaitForChild("Money")
 local wins: IntValue? = LeaderStats:WaitForChild("Wins")
 

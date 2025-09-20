@@ -19,7 +19,7 @@ Players.PlayerAdded:Connect(function(player)
 	LinePosition.Parent = states
 
 	local leaderStats = Instance.new("Folder")
-	leaderStats.Name = "LeaderStats"
+	leaderStats.Name = "leaderstats"
 	leaderStats.Parent = player
 
 	local Wins = Instance.new("IntValue")
