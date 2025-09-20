@@ -19,7 +19,7 @@ local function RewardWinners()
 	local playerIds = LineArray:GetLine()
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
-		playerId = playerIds[i]
+		local playerId = playerIds[i]
 		local stats = Stats.UpdatePlayerStats(playerId, function(currentStats)
 			currentStats.Coins += 50
 			currentStats.Wins += 1
