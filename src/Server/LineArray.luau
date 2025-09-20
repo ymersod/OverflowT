@@ -18,7 +18,7 @@ end
 
 function LineManager:Enqueue(op, userId)
 	local index = self:GetIndex(userId)
-	if index then
+	if not index then
 		return
 	end
 	table.insert(self.Queue, { op = op, userId = userId })
@@ -31,7 +31,6 @@ function LineManager:ProcessNext()
 	end
 	local op = req.op
 	local index = self:GetIndex(req.userId)
-
 	if not index then
 		return
 	end
