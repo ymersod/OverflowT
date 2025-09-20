@@ -1,6 +1,7 @@
 {
     "stylua.targetReleaseVersion": "latest",
     "cSpell.words": [
-        "ipairs"
+        "ipairs",
+        "pcall"
     ]
 }
