@@ -1,4 +1,5 @@
 local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
 local Stats = DataStoreService:GetDataStore("PlayerStats")
 
 local statPrefix = "Stats_"
@@ -41,6 +42,7 @@ function statsHandler.UpdatePlayerStats(playerId: string, updater: (PlayerStats)
 	local success, result = pcall(function()
 		return Stats:UpdateAsync(key, function(oldData)
 			local currentData: PlayerStats = oldData or DefaultStats()
+
 			return updater(currentData)
 		end)
 	end)

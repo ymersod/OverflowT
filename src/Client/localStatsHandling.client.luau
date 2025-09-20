@@ -13,6 +13,7 @@ local moneyText = leaderStatsFrame:WaitForChild("Money"):FindFirstChildOfClass("
 
 function Observe()
 	if money then
+		moneyText.Text = "$ " .. money.Value
 		money.Changed:Connect(function(newVal)
 			moneyText.Text = "$ " .. newVal
 		end)
@@ -21,6 +22,7 @@ function Observe()
 	end
 
 	if wins then
+		winsText.Text = wins.Value
 		wins.Changed:Connect(function(newVal)
 			winsText.Text = newVal
 		end)

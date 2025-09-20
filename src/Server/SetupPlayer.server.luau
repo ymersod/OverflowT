@@ -1,4 +1,7 @@
 local Players = game:GetService("Players")
+local ServerScriptService = game:GetService("ServerScriptService")
+local serverUtils = require(script.Parent.serverUtils)
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
 
 Players.PlayerAdded:Connect(function(player)
 	local localStats = Instance.new("Folder")
@@ -22,10 +25,13 @@ Players.PlayerAdded:Connect(function(player)
 	local Wins = Instance.new("IntValue")
 	Wins.Value = 0
 	Wins.Name = "Wins"
-	Wins.Parent = states
+	Wins.Parent = leaderStats
 
 	local Money = Instance.new("IntValue")
 	Money.Value = 0
 	Money.Name = "Money"
-	Money.Parent = states
+	Money.Parent = leaderStats
+
+	local playerStats = Stats.GetPlayerStats(player.UserId)
+	serverUtils.updatePlayerLeaderStats(player.UserId, playerStats)
 end)
