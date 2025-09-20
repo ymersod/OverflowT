@@ -17,5 +17,5 @@ end)
 
 flushButton.MouseButton1Up:Connect(function()
 	print("Stop flushing")
-	nextEvent:InvokeServer()
+	nextEvent:FireServer()
 end)
