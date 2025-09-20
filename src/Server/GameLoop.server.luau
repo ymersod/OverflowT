@@ -42,19 +42,17 @@ end
 task.spawn(function()
 	while true do
 		timer = INTERMISSION_TIME
-		while timer > 0 do
-			print("Next round in " .. math.floor(timer))
-			task.wait(1)
-			timer -= 1
-		end
+		if #Line:GetLine() == 0 then
+			while timer > 0 do
+				print("Next round in " .. math.floor(timer))
+				task.wait(1)
+				timer -= 1
+			end
 
-		if #Line:GetLine() > 0 then
-			print("Game is ongoing!")
-		else
 			Line:Fill(GetPlayersInLobby())
 			FlushHandler.StartToilet()
-			print("Line filled after intermission")
 		end
+		task.wait(1)
 	end
 end)
 
