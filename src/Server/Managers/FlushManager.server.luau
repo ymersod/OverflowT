@@ -9,13 +9,28 @@ local StartFlushEvent = GameEvents:WaitForChild("StartFlush")
 local FinishFlushEvent = GameEvents:WaitForChild("FinishFlush")
 
 local serverTimer = 0
+local inactive = true
+local currentHolder = nil
 
-StartFlushEvent.OnServerEvent:Connect(function(_: Player)
+StartFlushEvent.OnServerEvent:Connect(function(player: Player)
+	currentHolder = player
 	serverTimer = os.clock()
+	inactive = false
 end)
 
 FinishFlushEvent.OnServerInvoke = function(player: Player)
-	local clockedTime = os.clock() - serverTimer
-	print(clockedTime)
-	return FlushHandler.AddFlushedTime(clockedTime, player)
+	if inactive then
+		return false --This is to say, there has happened an overflow
+	end
+	inactive = true
+	return true
 end
+
+RunService.Heartbeat:Connect(function()
+	if inactive then
+		return
+	end
+	local clockedTime = os.clock() - serverTimer
+	local isStillRunning = FlushHandler.AddFlushedTime(clockedTime, currentHolder)
+	inactive = not isStillRunning
+end)
