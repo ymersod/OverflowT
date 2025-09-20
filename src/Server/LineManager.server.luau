@@ -24,7 +24,6 @@ CutAllEvent.OnServerEvent:Connect(function(player: Player)
 end)
 
 NextEvent.OnServerEvent:Connect(function(player: Player)
-	print("here")
 	Line:Enqueue(Line.OperationType.Next, player.UserId)
 end)
 
