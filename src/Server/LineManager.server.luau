@@ -16,15 +16,17 @@ RunService.Heartbeat:Connect(function()
 end)
 
 SkipAheadEvent.OnServerEvent:Connect(function(player: Player)
+	print(player.UserId .. " skipping one")
 	Line:Enqueue(Line.OperationType.SkipAhead, player.UserId)
 end)
 
 CutAllEvent.OnServerEvent:Connect(function(player: Player)
+	print(player.UserId .. " cuts all")
 	Line:Enqueue(Line.OperationType.CutAll, player.UserId)
 end)
 
 NextEvent.OnServerEvent:Connect(function(player: Player)
-	print("here")
+	print(player.UserId .. " next")
 	Line:Enqueue(Line.OperationType.Next, player.UserId)
 end)
 
