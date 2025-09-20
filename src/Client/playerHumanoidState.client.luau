@@ -12,11 +12,11 @@ local newLinePosition = 0
 local prevLinePosition = 0
 
 -- World objects
-local lobbyZone, spots: { BasePart }, toilet: { BasePart }
+local lobbyZone, spots: { BasePart }, toilet: { Model }
 local function getWorldObjects()
 	lobbyZone = CollectionService:GetTagged(tags.LOBBYZONE)
 	spots = CollectionService:GetTagged(tags.SPOT_TAG)
-	toilet = CollectionService:GetTagged(tags.TOILET)
+	toilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)
 
 	CollectionService:GetInstanceAddedSignal(tags.LOBBYZONE):Connect(function(obj)
 		table.insert(lobbyZone, obj)
@@ -24,7 +24,7 @@ local function getWorldObjects()
 	CollectionService:GetInstanceAddedSignal(tags.SPOT_TAG):Connect(function(obj)
 		table.insert(spots, obj)
 	end)
-	CollectionService:GetInstanceAddedSignal(tags.TOILET):Connect(function(obj)
+	CollectionService:GetInstanceAddedSignal(tags.GOLDEN_TOILET):Connect(function(obj)
 		table.insert(toilet, obj)
 	end)
 end
@@ -88,7 +88,8 @@ function updateHumanoid(newval: number)
 		else
 			humanoidUtils.MoveTo(hum, spot.Position, function()
 				hrp.CFrame = CFrame.new(Vector3.new(spot.Position.X, hrp.Position.Y, spot.Position.Z))
-				hrp:PivotTo(CFrame.lookAt(hrp.Position, toilet[1].Position))
+				local targetPart = toilet[1].PrimaryPart
+				hrp:PivotTo(CFrame.lookAt(hrp.Position, targetPart.Position))
 			end)
 		end
 	end
