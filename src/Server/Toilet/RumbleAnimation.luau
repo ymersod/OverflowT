@@ -59,8 +59,11 @@ end
 
 function Rumble.Stop(obj: BasePart)
 	if activeRumbles[obj] then
-		activeRumbles[obj].stopFlag = true
-		activeRumbles[obj].tween:Cancel()
+		local state = activeRumbles[obj]
+		state.stopFlag = true
+		if state.tween then
+			state.tween:Cancel()
+		end
 	end
 end
 
