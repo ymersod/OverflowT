@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local tags = require(ReplicatedStorage.Shared.tags)
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
 
@@ -13,10 +14,6 @@ local flushFrame: Frame = actionMenu:WaitForChild("Flush")
 
 local contextActionMenu1 = actionMenu:WaitForChild("ActionMenu1")
 local contextActionMenu2 = actionMenu:WaitForChild("ActionMenu2")
-
--- GLOBALS
-local NOT_FIRST_TAG = "NotFirst"
-local ONLY_FIRST_TAG = "OnlyFirst"
 
 local function shade(frames: { Frame }, modification: "Add" | "Remove")
 	if modification == "Add" then
@@ -64,8 +61,8 @@ function firstInLineState()
 
 	flushFrame.Visible = true
 
-	local notFirstActions = findActions(NOT_FIRST_TAG)
-	local onlyFirstActions = findActions(ONLY_FIRST_TAG)
+	local notFirstActions = findActions(tags.NOT_FIRST_TAG)
+	local onlyFirstActions = findActions(tags.ONLY_FIRST_TAG)
 
 	shade(notFirstActions, "Add")
 	shade(onlyFirstActions, "Remove")
@@ -76,8 +73,8 @@ function inLineState()
 
 	flushFrame.Visible = false
 
-	local notFirstActions = findActions(NOT_FIRST_TAG)
-	local onlyFirstActions = findActions(ONLY_FIRST_TAG)
+	local notFirstActions = findActions(tags.NOT_FIRST_TAG)
+	local onlyFirstActions = findActions(tags.ONLY_FIRST_TAG)
 
 	shade(notFirstActions, "Remove")
 	shade(onlyFirstActions, "Add")
