@@ -6,32 +6,35 @@ local activeRumbles = {}
 local function rumble(obj: BasePart, axis: "X" | "Y", angle: number, speed: number)
 	Rumble.Stop(obj)
 
-	local stopFlag = false
-	activeRumbles[obj] = function()
-		stopFlag = true
-	end
+	local state = {
+		angle = angle,
+		speed = speed,
+		stopFlag = false,
+	}
+
+	activeRumbles[obj] = state
 
 	local originalCF = obj.CFrame
 
 	task.spawn(function()
-		while not stopFlag do
-			local rotOffset = (axis == "X" and CFrame.Angles(math.rad(angle), 0, 0))
-				or CFrame.Angles(0, math.rad(angle), 0)
+		while not state.stopFlag do
+			local rotOffset = (axis == "X" and CFrame.Angles(math.rad(state.angle), 0, 0))
+				or CFrame.Angles(0, math.rad(state.angle), 0)
 
 			local tween1 = TweenService:Create(
 				obj,
-				TweenInfo.new(speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+				TweenInfo.new(state.speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
 				{ CFrame = originalCF * rotOffset }
 			)
 			tween1:Play()
 			tween1.Completed:Wait()
-			if stopFlag then
+			if state.stopFlag then
 				break
 			end
 
 			local tween2 = TweenService:Create(
 				obj,
-				TweenInfo.new(speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+				TweenInfo.new(state.speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
 				{ CFrame = originalCF }
 			)
 			tween2:Play()
@@ -53,8 +56,19 @@ end
 
 function Rumble.Stop(obj: BasePart)
 	if activeRumbles[obj] then
-		activeRumbles[obj]()
-		activeRumbles[obj] = nil
+		activeRumbles[obj].stopFlag = true
+	end
+end
+
+function Rumble.SetAngle(obj: BasePart, newAngle: number)
+	if activeRumbles[obj] then
+		activeRumbles[obj].angle = newAngle
+	end
+end
+
+function Rumble.SetSpeed(obj: BasePart, newSpeed: number)
+	if activeRumbles[obj] then
+		activeRumbles[obj].speed = newSpeed
 	end
 end
 
