@@ -8,12 +8,21 @@ local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 local actionMenu = ScreenGUI:WaitForChild("ActionMenu")
 local flushFrame: Frame = actionMenu:WaitForChild("Flush")
+local shadePrefab: Frame = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Shade")
+
+function firstState()
+	flushFrame.Visible = true
+end
+
+function otherState()
+	flushFrame.Visible = false
+end
 
 function updateGUI(linePositionValue: number)
 	if linePositionValue == 1 then
-		flushFrame.Visible = true
+		firstState()
 	else
-		flushFrame.Visible = false
+		otherState()
 	end
 end
 
