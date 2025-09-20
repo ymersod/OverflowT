@@ -1,4 +1,12 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+
+local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("EndGameScreen")
+
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
 local flushHandler = {}
@@ -17,6 +25,10 @@ local playerHeldTime: { PlayerHeld } = {}
 local function RewardWinners()
 	-- TODO: Coins should be rewarded from held time
 	local playerIds = LineArray:GetLine()
+
+	local losingPlayer = playerIds[1]
+	EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(losingPlayer, false))
+
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
 		local playerId = playerIds[i]
@@ -26,6 +38,8 @@ local function RewardWinners()
 			return currentStats
 		end)
 		print(stats)
+
+		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId, true, 50))
 	end
 end
 
