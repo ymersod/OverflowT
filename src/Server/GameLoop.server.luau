@@ -30,6 +30,8 @@ RunService.Heartbeat:Connect(function()
 	if arraysEqual(prevLine, currentLine) then
 		return
 	end
+	print(currentLine)
+	prevLine = { table.unpack(currentLine) }
 	for i = 1, #currentLine do
 		local player = Players:GetPlayerByUserId(currentLine[i])
 		if not player then
