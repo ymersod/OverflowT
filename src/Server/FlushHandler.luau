@@ -1,4 +1,5 @@
 local ServerScriptService = game:GetService("ServerScriptService")
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
 local flushHandler = {}
 
@@ -13,8 +14,24 @@ local totalTimeHeld = 0
 -- TODO: Used for giving rewards later
 local playerHeldTime: { PlayerHeld } = {}
 
+local function RewardWinners()
+	-- TODO: Coins should be rewarded from held time
+	local playerIds = LineArray:GetLine()
+	--Skipping first since he was the one who made it Overflow
+	for i = 2, #playerIds do
+		local playerId = playerIds[i]
+		local stats = Stats.UpdatePlayerStats(playerId, function(currentStats)
+			currentStats.Coins += 50
+			currentStats.Wins += 1
+			return currentStats
+		end)
+		print(stats)
+	end
+end
+
 local function Overflow()
 	print("OVERFLOW!!!!!")
+	RewardWinners()
 	LineArray:ResetLine()
 end
 
