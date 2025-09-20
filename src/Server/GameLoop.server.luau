@@ -3,7 +3,7 @@ local RunService = game:GetService("RunService")
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local Line = require(ServerScriptService.Server.LineArray)
-local prevLine = { table.unpack(Line.GetLine()) }
+local prevLine = { table.unpack(Line:GetLine()) }
 
 task.delay(30, function()
 	local currentPlayers = Players:GetPlayers()
@@ -26,12 +26,12 @@ local function arraysEqual(a, b)
 end
 
 RunService.Heartbeat:Connect(function()
-	local currentLine = Line.GetLine()
+	local currentLine = Line:GetLine()
 	if arraysEqual(prevLine, currentLine) then
 		return
 	end
 	for i = 1, #currentLine do
-		local player = Players.GetPlayerByUserId(currentLine[i])
+		local player = Players:GetPlayerByUserId(currentLine[i])
 		if not player then
 			continue
 		end

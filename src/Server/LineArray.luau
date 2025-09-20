@@ -17,7 +17,7 @@ function LineManager:Fill(players)
 end
 
 function LineManager:Enqueue(op, userId)
-	local index = self.GetIndex(userId)
+	local index = self:GetIndex(userId)
 	if index then
 		return
 	end
@@ -31,7 +31,7 @@ function LineManager:ProcessNext()
 	end
 
 	local op = req.op
-	local index = self.GetIndex(req.userId)
+	local index = self:GetIndex(req.userId)
 
 	if not index then
 		return
