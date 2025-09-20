@@ -10,6 +10,7 @@ local function rumble(obj: BasePart, axis: "X" | "Y", angle: number, speed: numb
 		angle = angle,
 		speed = speed,
 		stopFlag = false,
+		tween = nil,
 	}
 
 	activeRumbles[obj] = state
@@ -26,6 +27,7 @@ local function rumble(obj: BasePart, axis: "X" | "Y", angle: number, speed: numb
 				TweenInfo.new(state.speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
 				{ CFrame = originalCF * rotOffset }
 			)
+			state.tween = tween1
 			tween1:Play()
 			tween1.Completed:Wait()
 			if state.stopFlag then
@@ -37,6 +39,7 @@ local function rumble(obj: BasePart, axis: "X" | "Y", angle: number, speed: numb
 				TweenInfo.new(state.speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
 				{ CFrame = originalCF }
 			)
+			state.tween = tween2
 			tween2:Play()
 			tween2.Completed:Wait()
 		end
@@ -57,6 +60,7 @@ end
 function Rumble.Stop(obj: BasePart)
 	if activeRumbles[obj] then
 		activeRumbles[obj].stopFlag = true
+		activeRumbles[obj].tween:Cancel()
 	end
 end
 
