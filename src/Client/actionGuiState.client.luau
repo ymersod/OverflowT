@@ -27,9 +27,12 @@ local function shade(frames: { Frame }, modification: "Add" | "Remove")
 		end
 	elseif modification == "Remove" then
 		for _, frame in ipairs(frames) do
-			local shadeClone = frame:FindFirstChild("ShadeClone")
-			if shadeClone then
-				shadeClone:Destroy()
+			local shadeClones = frame:GetChildren()
+
+			for _, shadeClonk in ipairs(shadeClones) do
+				if shadeClonk:IsA("Frame") and shadeClonk.Name == "ShadeClone" then
+					shadeClonk:Destroy()
+				end
 			end
 
 			local actionButton = frame:FindFirstChildOfClass("TextButton")

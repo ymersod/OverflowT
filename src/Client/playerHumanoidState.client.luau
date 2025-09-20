@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
 local FREEZE_ACTION = "freezeMovement"
 
+local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
@@ -38,7 +39,7 @@ local function MovePlayersToLobbyCenter()
 	end
 end
 
-function updateHumanoid()
+function updateHumanoid(newval: number)
 	if #spots ~= 6 then
 		warn("Theres not exactly 6 spots only " .. #spots .. " were found")
 		return
@@ -53,7 +54,7 @@ function updateHumanoid()
 	end
 
 	-- put them in spawn
-	if newLinePosition == 0 then
+	if newval == 0 then
 		-- Unfreeze player
 		ContextActionService:UnbindAction(FREEZE_ACTION)
 
@@ -61,7 +62,7 @@ function updateHumanoid()
 		if lobbyZone then
 			MovePlayersToLobbyCenter()
 		end
-	elseif newLinePosition > 0 then
+	elseif newval > 0 then
 		-- Freeze player
 		ContextActionService:BindAction(FREEZE_ACTION, function()
 			return Enum.ContextActionResult.Sink
@@ -70,7 +71,7 @@ function updateHumanoid()
 		hum.WalkSpeed = 32
 		local spot
 		for _, lilSpot in ipairs(spots) do
-			if lilSpot:GetAttribute("ArrayIndex") == newLinePosition then
+			if lilSpot:GetAttribute("ArrayIndex") == newval then
 				spot = lilSpot
 				break
 			end
@@ -80,13 +81,12 @@ function updateHumanoid()
 			warn("Spot not found yikers")
 			return
 		end
-		print("MY NEW SPOT: " .. spot:GetAttribute("ArrayIndex") .. " and newline is:  " .. newLinePosition)
+		print("MY NEW SPOT: " .. spot:GetAttribute("ArrayIndex") .. " and newline is:  " .. newval)
 
 		if prevLinePosition == 0 then
 			hrp.CFrame = CFrame.new(spot.Position)
 		else
-			hum:MoveTo(spot.Position)
-			hum.MoveToFinished:Once(function()
+			humanoidUtils.MoveTo(hum, spot.Position, function()
 				hrp.CFrame = CFrame.new(Vector3.new(spot.Position.X, hrp.Position.Y, spot.Position.Z))
 				hrp:PivotTo(CFrame.lookAt(hrp.Position, toilet[1].Position))
 			end)
@@ -95,10 +95,10 @@ function updateHumanoid()
 end
 
 function startListen()
-	linePosition.Changed:Connect(function()
+	linePosition.Changed:Connect(function(val)
 		prevLinePosition = newLinePosition
 		newLinePosition = linePosition.Value
-		updateHumanoid()
+		updateHumanoid(val)
 	end)
 end
 startListen()

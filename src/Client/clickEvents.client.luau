@@ -1,9 +1,15 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local lineEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("LineEvents")
+
+local events = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events")
+local lineEvents = events:WaitForChild("LineEvents")
+local gameEvents = events:WaitForChild("GameEvents")
+
 local nextEvent = lineEvents:WaitForChild("Next")
 local cutAllEvent = lineEvents:WaitForChild("CutAll")
 local skipAheadEvent = lineEvents:WaitForChild("SkipAhead")
+local startFlushEvent = gameEvents:WaitForChild("StartFlush")
+local finishFlushEvent = gameEvents:WaitForChild("FinishFlush")
 
 -- UI
 local StaterGUI = Player:WaitForChild("PlayerGui")
@@ -16,12 +22,13 @@ local contextActionMenu2: Frame = actionMenu:WaitForChild("ActionMenu2")
 -- Flush button
 local flushButton = actionMenu:WaitForChild("Flush"):FindFirstChildOfClass("TextButton")
 flushButton.MouseButton1Down:Connect(function()
-	print("Start flushing")
+	startFlushEvent:FireServer()
 end)
 
 flushButton.MouseButton1Up:Connect(function()
-	print("Stop flushing")
-	nextEvent:FireServer()
+	if finishFlushEvent:InvokeServer() then
+		nextEvent:FireServer()
+	end
 end)
 
 -- More less button
