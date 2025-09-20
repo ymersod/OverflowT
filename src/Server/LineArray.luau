@@ -29,7 +29,6 @@ function LineManager:ProcessNext()
 	if not req then
 		return
 	end
-
 	local op = req.op
 	local index = self:GetIndex(req.userId)
 

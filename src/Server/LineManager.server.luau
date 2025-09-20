@@ -23,8 +23,9 @@ CutAllEvent.OnServerEvent:Connect(function(player: Player)
 	Line:Enqueue(Line.OperationType.CutAll, player.UserId)
 end)
 
-NextEvent.OnServerEvent:Connect(function(_player: Player)
-	Line:Enqueue(Line.OperationType.Next)
+NextEvent.OnServerEvent:Connect(function(player: Player)
+	print("here")
+	Line:Enqueue(Line.OperationType.Next, player.UserId)
 end)
 
 RemoveEvent.OnServerEvent:Connect(function(player: Player)

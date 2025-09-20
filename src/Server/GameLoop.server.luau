@@ -5,7 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Line = require(ServerScriptService.Server.LineArray)
 local prevLine = { table.unpack(Line:GetLine()) }
 
-task.delay(15, function()
+task.delay(5, function()
 	local currentPlayers = Players:GetPlayers()
 	Line:Fill(currentPlayers)
 	print("Line filled with players after 10 seconds")
