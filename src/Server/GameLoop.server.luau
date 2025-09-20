@@ -1,7 +1,13 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+
+local TopBarUpdateEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("TopBarUpdate")
 
 local FlushHandler = require(script.Parent.FlushHandler)
 local Line = require(ServerScriptService.Server.LineArray)
@@ -9,6 +15,9 @@ local prevLine = { table.unpack(Line:GetLine()) }
 
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
+
+local INTERMISSION_TIME = 10 -- seconds
+local timer = INTERMISSION_TIME
 
 local function GetPlayersInLobby(): { Player }
 	local playersInLobby = {}
@@ -30,17 +39,21 @@ local function GetPlayersInLobby(): { Player }
 	return playersInLobby
 end
 
--- Main loop
 task.spawn(function()
 	while true do
-		task.wait(5) -- INTERMISSION TIME
+		timer = INTERMISSION_TIME
+		while timer > 0 do
+			print("Next round in " .. math.floor(timer))
+			task.wait(1)
+			timer -= 1
+		end
 
 		if #Line:GetLine() > 0 then
 			print("Game is ongoing!")
 		else
 			Line:Fill(GetPlayersInLobby())
 			FlushHandler.StartToilet()
-			print("Line filled with players after 10 seconds")
+			print("Line filled after intermission")
 		end
 	end
 end)
@@ -61,16 +74,24 @@ end
 
 RunService.Heartbeat:Connect(function()
 	local currentLine = Line:GetLine()
+	if #currentLine > 0 then
+		TopBarUpdateEvent:FireAllClients(Players:GetPlayerByUserId(currentLine[1]).Name, "Ongoing")
+	else
+		TopBarUpdateEvent:FireAllClients(math.max(0, math.floor(timer)), "Intermission")
+	end
+
 	if arraysEqual(prevLine, currentLine) then
 		return
 	end
-	print(currentLine)
+
 	prevLine = { table.unpack(currentLine) }
 	local players = Players:GetChildren()
 	for i = 1, #players do
 		local player = players[i]
+
 		local states = player:FindFirstChild("States")
 		local index = Line:GetIndex(player.UserId)
+
 		if index then
 			states.LinePosition.Value = index
 		else
