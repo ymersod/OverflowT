@@ -3,6 +3,7 @@ local tags = {
 	SPOT_TAG = "Spot",
 	NOT_FIRST_TAG = "NotFirst",
 	ONLY_FIRST_TAG = "OnlyFirst",
+	LOBBYZONE = "LobbyZone",
 }
 
 return tags
