@@ -1,6 +1,6 @@
 local ServerScriptService = game:GetService("ServerScriptService")
-local LineArray = require(script.Parent.LineArray)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
+local LineArray = require(ServerScriptService.Server.LineArray)
 local flushHandler = {}
 
 type PlayerHeld = {
