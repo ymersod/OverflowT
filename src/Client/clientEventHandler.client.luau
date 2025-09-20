@@ -15,7 +15,7 @@ local uiConstants = require(ReplicatedStorage.Shared.uiConstants)
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 
-local InfoBar = ScreenGUI:WaitForChild("InfoBar")
+local InfoBar = ScreenGUI:WaitForChild("InfoBar"):WaitForChild("ParentFrame")
 local infoText = InfoBar:WaitForChild("Frame"):FindFirstChildOfClass("TextLabel")
 local rainbowText = InfoBar:FindFirstChildOfClass("TextLabel")
 local gradient = rainbowText:FindFirstChildOfClass("UIGradient")

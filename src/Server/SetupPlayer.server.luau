@@ -10,12 +10,22 @@ Players.PlayerAdded:Connect(function(player)
 	states.Parent = player
 
 	-- Determines position in line for client to observe
-	local intVal = Instance.new("IntValue")
-	intVal.Value = 0
-	intVal.Name = "LinePosition"
-	intVal.Parent = states
+	local LinePosition = Instance.new("IntValue")
+	LinePosition.Value = 0
+	LinePosition.Name = "LinePosition"
+	LinePosition.Parent = states
 
 	local leaderStats = Instance.new("Folder")
 	leaderStats.Name = "LeaderStats"
 	leaderStats.Parent = player
+
+	local Wins = Instance.new("IntValue")
+	Wins.Value = 0
+	Wins.Name = "Wins"
+	Wins.Parent = states
+
+	local Money = Instance.new("IntValue")
+	Money.Value = 0
+	Money.Name = "Money"
+	Money.Parent = states
 end)
