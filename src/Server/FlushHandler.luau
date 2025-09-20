@@ -23,6 +23,7 @@ local function RewardWinners()
 		local stats = Stats.UpdatePlayerStats(playerId, function(currentStats)
 			currentStats.Coins += 50
 			currentStats.Wins += 1
+			return currentStats
 		end)
 		print(stats)
 	end
