@@ -65,7 +65,7 @@ function updateHumanoid(newVal: number)
 		if prevLinePosition == 0 or prevLinePosition == 1 then
 			hrp.CFrame = CFrame.new(spot.Position)
 		else
-			hum.WalkToPart(spot)
+			hum.WalkToPoint(spot.Position)
 		end
 	end
 end
