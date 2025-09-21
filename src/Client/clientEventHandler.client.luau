@@ -23,7 +23,7 @@ local gradient = rainbowText:FindFirstChildOfClass("UIGradient")
 local GameEndFrames = ScreenGUI:WaitForChild("GameEndFrames")
 local LoseFrame: Frame = GameEndFrames:WaitForChild("LoseFrame")
 local WinFrame = GameEndFrames:WaitForChild("WinFrame") :: Frame
-local MoneyText = WinFrame:WaitForChild("TextParent"):WaitForChild("MoneyLabel")
+local MoneyText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("MoneyLabel")
 
 -- Top bar GUI
 TopBarUpdate.OnClientEvent:Connect(function(text: string, mode: "Ongoing" | "Intermission")
@@ -35,7 +35,7 @@ EndGameScreen.OnClientEvent:Connect(function(didWin: boolean, money: number?)
 	local frame: Frame
 	if didWin then
 		if money then
-			MoneyText = "+$" .. money
+			MoneyText.Text = "+$" .. money
 		end
 		WinFrame.Visible = true
 		frame = WinFrame

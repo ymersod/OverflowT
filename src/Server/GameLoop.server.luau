@@ -50,7 +50,7 @@ task.spawn(function()
 			end
 
 			local players = GetPlayersInLobby()
-			if #players >= 2 then
+			if #players >= 1 then
 				Line:Fill(players)
 				FlushHandler.StartToilet()
 			else

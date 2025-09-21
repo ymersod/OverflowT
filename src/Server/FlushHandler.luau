@@ -54,7 +54,7 @@ local function RewardWinners()
 		end)
 		serverUtils.updatePlayerLeaderStats(playerId, newStats)
 
-		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId), true, 50)
+		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId), true, coinsEarned)
 	end
 end
 

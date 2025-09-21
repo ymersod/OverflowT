@@ -35,15 +35,21 @@ local function getWorldObjects()
 end
 getWorldObjects()
 
-local function MovePlayersToLobbyCenter(player: Player)
-	local character = player.Character or player.CharacterAdded:Wait()
-	character:WaitForChild("HumanoidRootPart")
+local function MovePlayersToLobbyCenter()
+	local character = Player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		local hrp = character.HumanoidRootPart
 
-	character:PivotTo(CFrame.new(lobbyZone[1].Position))
+		local targetPos = lobbyZone[1].Position
+		hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
 
-	soundHandler.Play("Teleport")
+		task.delay(0.2, function()
+			if (hrp.Position - targetPos).Magnitude > 5 then
+				hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+			end
+		end)
+	end
 end
-
 function updateHumanoid(newval: number)
 	if #spots ~= 6 then
 		warn("Theres not exactly 6 spots only " .. #spots .. " were found")
@@ -66,7 +72,7 @@ function updateHumanoid(newval: number)
 
 		hum.WalkSpeed = 16
 		if lobbyZone then
-			MovePlayersToLobbyCenter(Players.LocalPlayer)
+			task.defer(MovePlayersToLobbyCenter)
 		end
 	elseif newval > 0 then
 		-- Freeze player
@@ -90,7 +96,7 @@ function updateHumanoid(newval: number)
 		print("MY NEW SPOT: " .. spot:GetAttribute("ArrayIndex") .. " and newline is:  " .. newval)
 
 		if prevLinePosition == 0 then
-			hrp.CFrame = CFrame.new(spot.Position)
+			hrp.CFrame = CFrame.new(spot.Position + Vector3.new(0, 3, 0))
 			soundHandler.Play("Teleport")
 		else
 			humanoidUtils.MoveTo(hum, spot.Position, function()
