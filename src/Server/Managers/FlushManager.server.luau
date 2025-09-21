@@ -10,6 +10,7 @@ local FinishFlushEvent = GameEvents:WaitForChild("FinishFlush")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
+
 local ServerStorage = game:GetService("ServerStorage")
 local tags = require(ReplicatedStorage.Shared.tags)
 local toiletLid = CollectionService:GetTagged(tags.TOILET_LID)[1]
@@ -17,10 +18,19 @@ local toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1]
 local toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1]
 local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
 local particlesNormalSetting = {}
+local waterParticles = {}
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
 local bubbleTypes: { Part } = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
+local curBubbles = bubbleTypes[1]
+
+for _, particle in ipairs(curBubbles:GetDescendants()) do
+	if particle:IsA("ParticleEmitter") then
+		table.insert(waterParticles, particle)
+		table.insert(particlesNormalSetting, particle.Rate) --<- Index isn't the same anymore
+	end
+end
 
 local toiletLidMaxAmp = 50
 local toiletLidSpeed = 0.1
@@ -68,7 +78,7 @@ local function getIntensity(maxAmp, standardPercent: number?): number
 end
 
 local function SetParticlesEnabled(enabled: boolean)
-	for i, descendant in ipairs(curBubbles:GetDescendants()) do
+	for i, descendant in ipairs(waterParticles) do
 		if descendant:IsA("ParticleEmitter") then
 			descendant.Rate = getIntensity(particlesNormalSetting[i])
 			descendant.Enabled = enabled
@@ -167,7 +177,8 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	table.clear(particlesNormalSetting)
 	for _, particle in ipairs(curBubbles:GetDescendants()) do
 		if particle:IsA("ParticleEmitter") then
-			table.insert(particlesNormalSetting, particle.Rate)
+			table.insert(waterParticles, particle)
+			table.insert(particlesNormalSetting, particle.Rate) --<- Index isn't the same anymore
 		end
 	end
 

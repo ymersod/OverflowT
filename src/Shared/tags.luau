@@ -9,6 +9,11 @@ local tags = {
 	TOILET_SEAT = "ToiletSeat",
 	TOILET_LID = "ToiletLid",
 	TOILET_PARTICLE_PARENT = "ToiletParticleParent",
+	Sound_On_Hover = "SoundOnHover",
+	Sound_On_Click = "SoundOnClick",
+	Sound_On_Click_Flush = "SoundOnClickFlush",
+	Sound_On_Visible_Win = "SoundOnVisibleWin",
+	Sound_On_Visible_Lose = "SoundOnVisibleLose",
 	SHOP_PROXIMITY = "ShopProximity",
 }
 
