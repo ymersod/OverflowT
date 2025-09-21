@@ -11,11 +11,15 @@ local ranges = {
 	High = { min = 0.55, max = 0.95 },
 }
 
-local taggedSounds = {
-	Soft = CollectionService:GetTagged("Soft"),
-	Medium = CollectionService:GetTagged("Medium"),
-	High = CollectionService:GetTagged("High"),
-}
+local taggedSounds = {}
+
+function SoundHandler.FillSounds()
+	taggedSounds = {
+		Soft = CollectionService:GetTagged("Soft"),
+		Medium = CollectionService:GetTagged("Medium"),
+		High = CollectionService:GetTagged("High"),
+	}
+end
 
 local function getVolumeForRange(value, minRange, maxRange)
 	local base = MAX_VOLUME * MIN_VOLUME_FACTOR

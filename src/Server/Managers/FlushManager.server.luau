@@ -197,7 +197,7 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 			table.insert(particlesNormalSetting, particle.Rate)
 		end
 	end
-
+	Sound.FillSounds()
 	turnOnRumbleAnimation()
 	SetParticlesEnabled(true)
 	Sound.Update(getPercentageFull())
