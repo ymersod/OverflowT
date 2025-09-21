@@ -108,9 +108,7 @@ local function SetupButton(
 end
 
 updateGUI = function()
-	-- print(#filteredShopItems)
 	for _, shopItem in ipairs(filteredShopItems) do
-		-- TODO: Image also needed
 		local shopItemPrefabClone = shopItemPrefab:Clone()
 		local price: TextLabel = shopItemPrefabClone:FindFirstChild("Price")
 		local title: TextLabel = shopItemPrefabClone:FindFirstChild("Title")
