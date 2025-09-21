@@ -72,7 +72,9 @@ local function SetupButton(
 	button: ImageButton,
 	actionButtonText: TextLabel,
 	mode: "GroupClaim" | "Buy" | "Equip",
-	id: number
+	id: number,
+	price: TextLabel,
+	cost: number
 )
 	if buttonConnections[button] then
 		buttonConnections[button]:Disconnect()
@@ -85,17 +87,20 @@ local function SetupButton(
 			print("GroupClaim clicked")
 		end)
 	elseif mode == "Equip" then
+		price.Visible = false
 		actionButtonText.Text = "Equip"
 		conn = button.MouseButton1Click:Connect(function()
 			equipShopItem:InvokeServer(id)
 		end)
 	elseif mode == "Buy" then
 		actionButtonText.Text = "Buy"
+		price.Text = "$" .. cost
+		price.Visible = true
 		conn = button.MouseButton1Click:Connect(function()
 			ownedShopItems = buyShopItems:InvokeServer(id)
 
 			if table.find(ownedShopItems, id) then
-				SetupButton(button, actionButtonText, "Equip", id)
+				SetupButton(button, actionButtonText, "Equip", id, price, cost)
 			end
 		end)
 	end
@@ -111,18 +116,18 @@ updateGUI = function()
 		local title: TextLabel = shopItemPrefabClone:FindFirstChild("Title")
 		local actionButton: ImageButton = shopItemPrefabClone:FindFirstChildOfClass("ImageButton")
 		local actionButtonText = actionButton:FindFirstChildOfClass("TextLabel")
+		local imageLabel: ImageLabel = shopItemPrefabClone:FindFirstChildOfClass("ImageLabel")
 
 		if table.find(ownedShopItems, shopItem.Id) then
-			SetupButton(actionButton, actionButtonText, "Equip", shopItem.Id)
+			SetupButton(actionButton, actionButtonText, "Equip", shopItem.Id, price, shopItem.PriceMoney)
 		elseif shopItem.ShopFunction == enums.ShopItemType.GroupJoin then
-			SetupButton(actionButton, actionButtonText, "GroupClaim", shopItem.Id)
+			SetupButton(actionButton, actionButtonText, "GroupClaim", shopItem.Id, price, shopItem.PriceMoney)
 		else
-			SetupButton(actionButton, actionButtonText, "Buy", shopItem.Id)
+			SetupButton(actionButton, actionButtonText, "Buy", shopItem.Id, price, shopItem.PriceMoney)
 		end
 
-		price.Text = shopItem.PriceMoney
-		price.Visible = true
 		title.Text = shopItem.Name
+		imageLabel.Image = shopItem.ImageId
 
 		shopItemPrefabClone.Parent = scrollingFrame
 	end
