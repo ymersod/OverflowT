@@ -10,19 +10,17 @@ local FinishFlushEvent = GameEvents:WaitForChild("FinishFlush")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
-local toiletLid = CollectionService:GetTagged("ToiletLid")[1]
-local toiletSeat = CollectionService:GetTagged("ToiletSeat")[1]
-local toiletBody = CollectionService:GetTagged("ToiletBody")[1]
-local particles = CollectionService:GetTagged("WaterParticleActive")[1]
+local ServerStorage = game:GetService("ServerStorage")
+local tags = require(ReplicatedStorage.Shared.tags)
+local toiletLid = CollectionService:GetTagged(tags.TOILET_LID)[1]
+local toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1]
+local toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1]
+local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
 local particlesNormalSetting = {}
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
-for _, particle in ipairs(particles:GetDescendants()) do
-	if particle:IsA("ParticleEmitter") then
-		table.insert(particlesNormalSetting, particle.Rate)
-	end
-end
+local bubbleTypes: { Part } = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
 
 local toiletLidMaxAmp = 50
 local toiletLidSpeed = 0.1
@@ -34,6 +32,13 @@ local toiletSeatSpeed = 0.2
 local lastTimeIteration = 0
 local inactive = true
 local currentHolder = nil
+
+local curBubbles: Part = bubbleTypes[1]
+for _, particle in ipairs(curBubbles:GetDescendants()) do
+	if particle:IsA("ParticleEmitter") then
+		table.insert(particlesNormalSetting, particle.Rate)
+	end
+end
 
 local function getPercentageFull(): number
 	local curCap = FlushHandler.curCap
@@ -63,7 +68,7 @@ local function getIntensity(maxAmp, standardPercent: number?): number
 end
 
 local function SetParticlesEnabled(enabled: boolean)
-	for i, descendant in ipairs(particles:GetDescendants()) do
+	for i, descendant in ipairs(curBubbles:GetDescendants()) do
 		if descendant:IsA("ParticleEmitter") then
 			descendant.Rate = getIntensity(particlesNormalSetting[i])
 			descendant.Enabled = enabled
@@ -89,10 +94,83 @@ local function turnOfRumbleAnimation()
 	Rumble.Stop(toiletBody)
 end
 
+local function CleanupPreviousParticleObjects(obj: Instance)
+	local tasks = {}
+
+	for _, child in ipairs(obj:GetChildren()) do
+		if child:IsA("Sound") then
+			if child.Playing then
+				local t = Instance.new("BindableEvent")
+				child.Ended:Connect(function()
+					t:Fire()
+					t:Destroy()
+				end)
+				table.insert(tasks, t.Event)
+			end
+		elseif child:IsA("ParticleEmitter") then
+			child.Enabled = false
+			local t = Instance.new("BindableEvent")
+			task.delay(child.Lifetime.Max, function()
+				t:Fire()
+				t:Destroy()
+			end)
+			table.insert(tasks, t.Event)
+		end
+	end
+
+	if #tasks > 0 then
+		for _, event in ipairs(tasks) do
+			event:Wait()
+		end
+	end
+
+	obj:Destroy()
+end
+
+local function SetupPlayerBubbleType(player: Player): Part
+	local localstats = player:FindFirstChild("localstats")
+	local equippedBubbles: IntValue? = localstats and localstats:FindFirstChild("EquippedShopItem")
+	local selectedBubble = bubbleTypes[1]
+
+	if equippedBubbles then
+		local id = equippedBubbles.Value
+		for _, bubbleItem in ipairs(bubbleTypes) do
+			local itemId = bubbleItem:GetAttribute("Id")
+			if itemId and itemId == id then
+				selectedBubble = bubbleItem
+				break
+			end
+		end
+	else
+		warn("Player didnt have an equipped item, doing basic bubbles")
+	end
+
+	-- Cleanup
+	for _, child in ipairs(mainToilet:GetChildren()) do
+		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
+			task.spawn(CleanupPreviousParticleObjects(child))
+		end
+	end
+
+	local clone = selectedBubble:Clone()
+	clone.Parent = mainToilet
+
+	return clone
+end
+
 StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	currentHolder = player
 	lastTimeIteration = os.clock()
 	inactive = false
+
+	curBubbles = SetupPlayerBubbleType(player)
+	table.clear(particlesNormalSetting)
+	for _, particle in ipairs(curBubbles:GetDescendants()) do
+		if particle:IsA("ParticleEmitter") then
+			table.insert(particlesNormalSetting, particle.Rate)
+		end
+	end
+
 	turnOnRumbleAnimation()
 	SetParticlesEnabled(true)
 	Sound.Update(getPercentageFull())
@@ -103,6 +181,7 @@ FinishFlushEvent.OnServerInvoke = function(_: Player)
 		return false --This is to say, there has happened an overflow
 	end
 	inactive = true
+
 	turnOfRumbleAnimation()
 	SetParticlesEnabled(false)
 	Sound.Stop()
