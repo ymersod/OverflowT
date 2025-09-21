@@ -30,7 +30,6 @@ local function hookEvents()
 	insert("UniversalButtonClick", CollectionService:GetTagged(tags.Sound_On_Click), "Click")
 	insert("WinRound", CollectionService:GetTagged(tags.Sound_On_Visible_Win), "Visible")
 	insert("LoseRound", CollectionService:GetTagged(tags.Sound_On_Visible_Lose), "Visible")
-	insert("WaterPourClick", CollectionService:GetTagged(tags.Sound_On_Click_Flush), "Pressed") --TODO: Make pressed
 
 	for i = 1, #componentList do
 		local soundName = componentList[i].soundName

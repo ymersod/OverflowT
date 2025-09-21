@@ -24,6 +24,20 @@ local hardCap = 15 -- Seconds
 -- TODO: Used for giving rewards later
 local playerHeldTime: { PlayerHeld } = {}
 
+local function calcCoins(playerId: number)
+	local timeHeld = 1
+	for _, entry in ipairs(playerHeldTime) do
+		if entry.player.UserId == playerId then
+			if entry.timeHeld > timeHeld then
+				timeHeld = entry.timeHeld
+			end
+			break
+		end
+	end
+
+	return math.ceil(timeHeld * 10)
+end
+
 local function RewardWinners()
 	-- TODO: Coins should be rewarded from held time
 	local playerIds = LineArray:GetLine()
@@ -34,8 +48,9 @@ local function RewardWinners()
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
 		local playerId = playerIds[i]
+		local coinsEarned = calcCoins(playerId)
 		local newStats = Stats.UpdatePlayerStats(playerId, function(currentStats)
-			currentStats.Coins += 50
+			currentStats.Coins += coinsEarned
 			currentStats.Wins += 1
 			return currentStats
 		end)
