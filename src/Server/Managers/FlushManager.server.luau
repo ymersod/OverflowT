@@ -14,13 +14,15 @@ local toiletLid = CollectionService:GetTagged("ToiletLid")[1]
 local toiletSeat = CollectionService:GetTagged("ToiletSeat")[1]
 local toiletBody = CollectionService:GetTagged("ToiletBody")[1]
 local particles = CollectionService:GetTagged("WaterParticleActive")[1]
+local waterParticles = {}
 local particlesNormalSetting = {}
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
 for _, particle in ipairs(particles:GetDescendants()) do
 	if particle:IsA("ParticleEmitter") then
-		table.insert(particlesNormalSetting, particle.Rate)
+		table.insert(waterParticles, particle)
+		table.insert(particlesNormalSetting, particle.Rate) --<- Index isn't the same anymore
 	end
 end
 
@@ -63,7 +65,7 @@ local function getIntensity(maxAmp, standardPercent: number?): number
 end
 
 local function SetParticlesEnabled(enabled: boolean)
-	for i, descendant in ipairs(particles:GetDescendants()) do
+	for i, descendant in ipairs(waterParticles) do
 		if descendant:IsA("ParticleEmitter") then
 			descendant.Rate = getIntensity(particlesNormalSetting[i])
 			descendant.Enabled = enabled

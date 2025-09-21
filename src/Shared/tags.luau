@@ -5,6 +5,11 @@ local tags = {
 	ONLY_FIRST_TAG = "OnlyFirst",
 	LOBBYZONE = "LobbyZone",
 	GOLDEN_TOILET = "GoldenToilet",
+	Sound_On_Hover = "SoundOnHover",
+	Sound_On_Click = "SoundOnClick",
+	Sound_On_Click_Flush = "SoundOnClickFlush",
+	Sound_On_Visible_Win = "SoundOnVisibleWin",
+	Sound_On_Visible_Lose = "SoundOnVisibleLose",
 }
 
 return tags
