@@ -5,6 +5,7 @@ local tags = {
 	ONLY_FIRST_TAG = "OnlyFirst",
 	LOBBYZONE = "LobbyZone",
 	GOLDEN_TOILET = "GoldenToilet",
+	SHOP_PROXIMITY = "ShopProximity",
 }
 
 return tags
