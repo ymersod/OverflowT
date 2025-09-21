@@ -19,6 +19,7 @@ local tags = {
 	BROKEN_TOILET = "BrokenToilet",
 	GOLDEN_PART = "GoldenMesh",
 	BROKEN_PART = "BrokenMesh",
+	BROKEN_PARTICLE = "BrokenParticle",
 }
 
 return tags

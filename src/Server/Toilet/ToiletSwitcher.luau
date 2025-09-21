@@ -8,11 +8,20 @@ local destroyedToilet = CollectionService:GetTagged(tags.BROKEN_TOILET)[1]
 
 local mainParts = CollectionService:GetTagged(tags.GOLDEN_PART)
 local brokenParts = CollectionService:GetTagged(tags.BROKEN_PART)
+local brokenParticles = CollectionService:GetTagged(tags.BROKEN_PARTICLE)
 
 local standardPosition = mainToilet.PrimaryPart and mainToilet.PrimaryPart.Position
 	or mainToilet:GetModelCFrame().Position
 
 local ToiletSwitcher = {}
+
+local function enableBrokenToiletParticles(enabled: boolean)
+	for _, descendant in ipairs(brokenParticles) do
+		if descendant:IsA("ParticleEmitter") then
+			descendant.Enabled = enabled
+		end
+	end
+end
 
 local function setPartsTransparency(parts, transparency)
 	for _, part in ipairs(parts) do
@@ -26,10 +35,11 @@ function ToiletSwitcher.SwitchToilet(toStandard: boolean)
 	if toStandard then
 		setPartsTransparency(mainParts, 0) -- show main
 		setPartsTransparency(brokenParts, 1) -- hide broken
+		enableBrokenToiletParticles(false)
 	else
 		setPartsTransparency(mainParts, 1) -- hide main
 		setPartsTransparency(brokenParts, 0) -- show broken
-
+		enableBrokenToiletParticles(true)
 		-- Visual explosion above original toilet
 		local explosion = Instance.new("Explosion")
 		explosion.Position = standardPosition + Vector3.new(0, 5, 0)
