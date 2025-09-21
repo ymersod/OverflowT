@@ -109,30 +109,23 @@ local function CleanupPreviousParticleObjects(obj: Instance)
 
 	local remaining = 0
 
-	-- local function markDone()
-	-- 	remaining -= 1
-	-- 	if remaining <= 0 then
-	-- 		print("Old particles cleaned up!")
-	-- 		obj:Destroy()
-	-- 	end
-	-- end
+	local function markDone()
+		remaining -= 1
+		if remaining <= 0 then
+			print("Old particles cleaned up!")
+			obj:Destroy()
+		end
+	end
 
-	-- for _, child in ipairs(obj:GetChildren()) do
-	-- 	if child:IsA("Sound") then
-	-- 		if child.Playing then
-	-- 			remaining += 1
-	-- 			child.Ended:Once(function()
-	-- 				markDone()
-	-- 			end)
-	-- 		end
-	-- 	elseif child:IsA("ParticleEmitter") then
-	-- 		child.Enabled = false
-	-- 		remaining += 1
-	-- 		task.delay(child.Lifetime.Max, function()
-	-- 			markDone()
-	-- 		end)
-	-- 	end
-	-- end
+	for _, child in ipairs(obj:GetChildren()) do
+		if child:IsA("ParticleEmitter") then
+			child.Enabled = false
+			remaining += 1
+			task.delay(child.Lifetime.Max, function()
+				markDone()
+			end)
+		end
+	end
 
 	-- if nothing to wait for, destroy immediately
 	if remaining == 0 then

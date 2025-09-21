@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-local Stats = game:GetService("Stats")
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local types = require(ReplicatedStorage.Shared.types)
@@ -35,6 +34,7 @@ getShopItemsEvent.OnServerInvoke = function(_: Player)
 			ShopFunction = item:GetAttribute("ShopItemType"),
 			PriceMoney = item:GetAttribute("PriceMoney"),
 			PriceRobux = item:GetAttribute("PriceRobux"),
+			ImageId = item:GetAttribute("ImageId"),
 		}
 		table.insert(filteredShopItems, shopItem)
 	end

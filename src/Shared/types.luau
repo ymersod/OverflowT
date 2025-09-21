@@ -6,6 +6,7 @@ export type ShopItem = {
 	ShopFunction: string?,
 	PriceMoney: number?,
 	PriceRobux: number?,
+	ImageId: string?,
 }
 
 return types

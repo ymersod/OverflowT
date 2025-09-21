@@ -2,7 +2,9 @@ local players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local dataStoreDevManagement = require(script.Parent.dataStoreDevManagement)
+local serverUtils = require(script.Parent.serverUtils)
 
 local function subSet(array: { any }, iStart: number, iEnd: number?)
 	if iEnd == nil then
@@ -70,6 +72,18 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 				if #command.args == 1 or #command.args == 2 and command.args[2] == "stats" then
 					local response = dataStoreDevManagement.removePlayerFromStatsStore(command.args[1])
 					print(response)
+				end
+			end
+		end
+		if command.command == "/addmoney" then
+			if #command.args >= 0 then
+				if #command.args == 1 then
+					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+						currentStats.Coins += command.args[1]
+						currentStats.Wins += 0
+						return currentStats
+					end)
+					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
 				end
 			end
 		end
