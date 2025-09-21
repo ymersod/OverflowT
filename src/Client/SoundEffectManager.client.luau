@@ -26,7 +26,6 @@ local function hookEvents()
 
 	insert("UniversalButtonHover", CollectionService:GetTagged(tags.Sound_On_Hover), "Hover")
 	insert("UniversalButtonClick", CollectionService:GetTagged(tags.Sound_On_Click), "Click")
-	insert("WaterPourClick", CollectionService:GetTagged(tags.Sound_On_Click_Flush), "Click")
 	insert("WinRound", CollectionService:GetTagged(tags.Sound_On_Visible_Win), "Visible")
 	insert("LoseRound", CollectionService:GetTagged(tags.Sound_On_Visible_Lose), "Visible")
 
@@ -38,40 +37,30 @@ local function hookEvents()
 		if event == "Click" then
 			for j = 1, #components do
 				local current = components[j]
-				if current:IsA("GuiButton") then
-					current.MouseButton1Click:Connect(function()
-						soundHandler.Play(soundName)
-					end)
-				end
+				current.MouseButton1Click:Connect(function()
+					soundHandler.Play(soundName)
+				end)
 			end
 		elseif event == "Hover" then
 			for j = 1, #components do
 				local current = components[j]
-				if current:IsA("GuiObject") then
-					current.MouseEnter:Connect(function()
-						soundHandler.Play(soundName)
-					end)
-				end
+				current.MouseEnter:Connect(function()
+					soundHandler.Play(soundName)
+				end)
 			end
 		elseif event == "Visible" then
 			for j = 1, #components do
 				local current = components[j]
-				if current:IsA("GuiObject") then
-					current:GetPropertyChangedSignal("Visible"):Connect(function()
-						if current.Visible then
-							soundHandler.Play(soundName)
-						end
-					end)
-				end
+				current:GetPropertyChangedSignal("Visible"):Connect(function()
+					if current.Visible then
+						soundHandler.Play(soundName)
+					end
+				end)
 			end
 		end
 	end
 end
 
--- run once
-hookEvents()
-
--- re-run whenever a new gui gets added
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 

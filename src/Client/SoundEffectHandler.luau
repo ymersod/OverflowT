@@ -35,7 +35,7 @@ for name, id in pairs(trackList) do
 	local sound = Instance.new("Sound")
 	sound.Name = name
 	sound.SoundId = "rbxassetid://" .. id
-	sound.Volume = 1
+	sound.Volume = 0.2
 	sound.Looped = false
 	sound.Parent = SoundService
 	sounds[name] = sound
