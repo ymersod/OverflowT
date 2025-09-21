@@ -21,7 +21,6 @@ type PlayerHeld = {
 }
 
 local hardCap = 15 -- Seconds
--- TODO: Used for giving rewards later
 local playerHeldTime: { PlayerHeld } = {}
 
 local function calcCoins(playerId: number)
@@ -34,12 +33,10 @@ local function calcCoins(playerId: number)
 			break
 		end
 	end
-
 	return math.ceil(timeHeld * 10)
 end
 
 local function RewardWinners()
-	-- TODO: Coins should be rewarded from held time
 	local playerIds = LineArray:GetLine()
 
 	local losingPlayer = playerIds[1]
