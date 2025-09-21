@@ -56,38 +56,50 @@ local function SetupOpenCloseConnections()
 end
 
 local function GetOwnedShopObjects()
-	ownedShopItems = getOwnedShopItems:InvokeServer(Player)
-
+	ownedShopItems = getOwnedShopItems:InvokeServer()
 	if #ownedShopItems == 0 then
-		ownedShopItems = buyShopItems:InvokeServer(Player, 1)
+		ownedShopItems = buyShopItems:InvokeServer(1)
 	end
 end
+
 local buttonConnections = {} -- [button] = connection
 
-local function SetupButton(button: ImageButton, mode: "GroupClaim" | "Buy" | "Equip", id: number)
+local function SetupButton(
+	button: ImageButton,
+	actionButtonText: TextLabel,
+	mode: "GroupClaim" | "Buy" | "Equip",
+	id: number
+)
 	if buttonConnections[button] then
 		buttonConnections[button]:Disconnect()
 		buttonConnections[button] = nil
 	end
 	local conn
 	if mode == "GroupClaim" then
+		actionButtonText.Text = "Claim!"
 		conn = button.MouseButton1Click:Connect(function()
 			print("GroupClaim clicked")
 		end)
 	elseif mode == "Equip" then
+		actionButtonText.Text = "Equip"
 		conn = button.MouseButton1Click:Connect(function()
 			equipShopItem:InvokeServer(id)
 		end)
 	elseif mode == "Buy" then
+		actionButtonText.Text = "Buy"
 		conn = button.MouseButton1Click:Connect(function()
 			ownedShopItems = buyShopItems:InvokeServer(id)
-			updateGUI()
+
+			if table.find(ownedShopItems, id) then
+				SetupButton(button, actionButtonText, "Equip", id)
+			end
 		end)
 	end
 	buttonConnections[button] = conn
 end
 
 updateGUI = function()
+	-- print(#filteredShopItems)
 	for _, shopItem in ipairs(filteredShopItems) do
 		-- TODO: Image also needed
 		local shopItemPrefabClone = shopItemPrefab:Clone()
@@ -97,14 +109,11 @@ updateGUI = function()
 		local actionButtonText = actionButton:FindFirstChildOfClass("TextLabel")
 
 		if table.find(ownedShopItems, shopItem.Id) then
-			actionButtonText.Text = "Equip"
-			SetupButton(actionButton, "Equip", shopItem.Id)
+			SetupButton(actionButton, actionButtonText, "Equip", shopItem.Id)
 		elseif shopItem.ShopFunction == enums.ShopItemType.GroupJoin then
-			actionButtonText.Text = "Claim!"
-			SetupButton(actionButton, "GroupClaim", shopItem.Id)
+			SetupButton(actionButton, actionButtonText, "GroupClaim", shopItem.Id)
 		else
-			actionButtonText.Text = "Buy"
-			SetupButton(actionButton, "Buy", shopItem.Id)
+			SetupButton(actionButton, actionButtonText, "Buy", shopItem.Id)
 		end
 
 		price.Text = shopItem.PriceMoney
@@ -116,7 +125,7 @@ updateGUI = function()
 end
 
 local function SetupShop()
-	filteredShopItems = getShopItemsEvents:InvokeServer(Player)
+	filteredShopItems = getShopItemsEvents:InvokeServer()
 	updateGUI()
 end
 

@@ -5,7 +5,7 @@ local Stats = require(ServerScriptService.Server.Persistence.Stats)
 
 Players.PlayerAdded:Connect(function(player)
 	local localStats = Instance.new("Folder")
-	localStats.Name = "LocalStats"
+	localStats.Name = "localstats"
 	localStats.Parent = player
 
 	local states = Instance.new("Folder")
@@ -31,6 +31,11 @@ Players.PlayerAdded:Connect(function(player)
 	Money.Value = 0
 	Money.Name = "Money"
 	Money.Parent = leaderStats
+
+	local EquippedShopItem = Instance.new("IntValue")
+	EquippedShopItem.Value = 1
+	EquippedShopItem.Name = "EquippedShopItem"
+	EquippedShopItem.Parent = localStats
 
 	local playerStats = Stats.GetPlayerStats(player.UserId)
 	serverUtils.updatePlayerLeaderStats(player.UserId, playerStats)

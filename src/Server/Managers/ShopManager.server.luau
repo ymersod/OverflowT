@@ -12,7 +12,7 @@ local getShopItemsEvent = ReplicatedStorage:WaitForChild("Shared")
 local getOwnedShopItemsEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ShopEvents")
-	:WaitForChild("GetShopItems")
+	:WaitForChild("GetOwnedShopItems")
 local buyShopItemEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ShopEvents")
@@ -20,7 +20,7 @@ local buyShopItemEvent = ReplicatedStorage:WaitForChild("Shared")
 local equipShopItemEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ShopEvents")
-	:WaitForChild("BuyShopItem")
+	:WaitForChild("EquipShopItem")
 
 local shopItems = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
 
@@ -47,7 +47,8 @@ getShopItemsEvent.OnServerInvoke = function(_: Player)
 end
 
 getOwnedShopItemsEvent.OnServerInvoke = function(player: Player)
-	return ShopObjects.GetPlayerOwnedShopObjects(tostring(player.UserId))
+	local ownedItems = ShopObjects.GetPlayerOwnedShopObjects(tostring(player.UserId))
+	return ownedItems
 end
 
 buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
@@ -61,5 +62,12 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 end
 
 equipShopItemEvent.OnServerInvoke = function(player: Player, id: number)
-	FlushHandler.UpdatePlayerEquippedParticles(tostring(player.UserId), id)
+	local localstats = player:FindFirstChild("localstats")
+	local equippedItem: IntValue? = localstats and localstats:FindFirstChild("EquippedShopItem")
+
+	if equippedItem and equippedItem:IsA("IntValue") then
+		equippedItem.Value = id --TODO: Should prob do a server check to make sure player owns the thing
+	else
+		warn("Could not find the intvalue corresponding to the equipped item")
+	end
 end

@@ -71,6 +71,4 @@ function flushHandler.StartToilet()
 	playerHeldTime = {}
 end
 
-function flushHandler.UpdatePlayerEquippedParticles(playerId: string, shopItemId: number) end
-
 return flushHandler
