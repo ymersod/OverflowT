@@ -16,6 +16,8 @@ local toiletBody = CollectionService:GetTagged("ToiletBody")[1]
 local particles = CollectionService:GetTagged("WaterParticleActive")[1]
 local particlesNormalSetting = {}
 
+local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
+
 for _, particle in ipairs(particles:GetDescendants()) do
 	if particle:IsA("ParticleEmitter") then
 		table.insert(particlesNormalSetting, particle.Rate)
@@ -32,6 +34,15 @@ local toiletSeatSpeed = 0.2
 local lastTimeIteration = 0
 local inactive = true
 local currentHolder = nil
+
+local function getPercentageFull(): number
+	local curCap = FlushHandler.curCap
+	local timeHeld = FlushHandler.totalTimeHeld
+	if curCap == 0 or timeHeld == 0 then
+		return 0
+	end
+	return timeHeld / curCap
+end
 
 local function getIntensity(maxAmp, standardPercent: number?): number
 	standardPercent = standardPercent or 0.1
@@ -84,6 +95,7 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	inactive = false
 	turnOnRumbleAnimation()
 	SetParticlesEnabled(true)
+	Sound.Update(getPercentageFull())
 end)
 
 FinishFlushEvent.OnServerInvoke = function(_: Player)
@@ -93,6 +105,7 @@ FinishFlushEvent.OnServerInvoke = function(_: Player)
 	inactive = true
 	turnOfRumbleAnimation()
 	SetParticlesEnabled(false)
+	Sound.Stop()
 	return true
 end
 
@@ -102,6 +115,7 @@ RunService.Heartbeat:Connect(function()
 	end
 	updateRumbleAnimation()
 	SetParticlesEnabled(true)
+	Sound.Update(getPercentageFull())
 	local currentTime = os.clock()
 	local clockedTime = currentTime - lastTimeIteration
 	lastTimeIteration = currentTime
@@ -110,5 +124,6 @@ RunService.Heartbeat:Connect(function()
 		inactive = true
 		turnOfRumbleAnimation()
 		SetParticlesEnabled(false)
+		Sound.Reset()
 	end
 end)
