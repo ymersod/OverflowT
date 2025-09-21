@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local tags = require(ReplicatedStorage.Shared.tags)
 local enums = require(ReplicatedStorage.Shared.enums)
 local types = require(ReplicatedStorage.Shared.types)
+local RunService = game:GetService("RunService")
 
 local getShopItemsEvents = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
@@ -31,14 +32,17 @@ local shopFrame: Frame = ScreenGUI:WaitForChild("Shop")
 local scrollingFrame = shopFrame:FindFirstChildOfClass("ScrollingFrame")
 local closeButton = shopFrame:FindFirstChildOfClass("ImageButton")
 
+local shop = CollectionService:GetTagged(tags.SHOP_PROXIMITY)[1]
+
 local filteredShopItems: { types.ShopItem } = {}
 local ownedShopItems: { number } = {}
+
+local DISTANCE_THRESHOLD = 20
 
 local updateGUI
 
 local function SetupOpenCloseConnections()
 	-- Open Connection
-	local shop = CollectionService:GetTagged(tags.SHOP_PROXIMITY)[1]
 
 	if not shop:IsA("ProximityPrompt") then
 		warn("Somehow this is not a proximity prompt, something when wrong here")
@@ -135,3 +139,23 @@ local function start()
 	SetupShop()
 end
 start()
+
+-- Close Connection (distance-based)
+RunService.Heartbeat:Connect(function()
+	if shopFrame.Visible then
+		local character = Player.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+		if hrp and shop and shop.Parent then
+			local shopPos = shop.Parent:IsA("BasePart") and shop.Parent.Position
+				or shop.Parent.PrimaryPart and shop.Parent.PrimaryPart.Position
+
+			if shopPos then
+				local distance = (hrp.Position - shopPos).Magnitude
+				if distance > DISTANCE_THRESHOLD then
+					shopFrame.Visible = false
+				end
+			end
+		end
+	end
+end)
