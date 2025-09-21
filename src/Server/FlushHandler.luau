@@ -22,17 +22,13 @@ type PlayerHeld = {
 }
 
 local hardCap = 15 -- Seconds
-local playerHeldTime: { PlayerHeld } = {}
+local playerHeldTime = {}
 
 local function calcCoins(playerId: number)
-	local timeHeld = 1
-	for _, entry in ipairs(playerHeldTime) do
-		if entry.player.UserId == playerId then
-			if entry.timeHeld > timeHeld then
-				timeHeld = entry.timeHeld
-			end
-			break
-		end
+	local timeHeld = playerHeldTime[playerId]
+	print(playerId .. " | " .. timeHeld)
+	if not timeHeld or timeHeld < 1 then
+		timeHeld = 1
 	end
 	return math.ceil(timeHeld * 10)
 end
@@ -76,7 +72,13 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
 	if flushHandler.totalTimeHeld >= flushHandler.curCap then
 		Overflow()
 	else
-		table.insert(playerHeldTime, { player = curPlayer, timeHeld = flushedTime })
+		local timeHeld = playerHeldTime[curPlayer.UserId]
+		if timeHeld then
+			playerHeldTime[curPlayer.UserId] = timeHeld + flushedTime
+		else
+			playerHeldTime[curPlayer.UserId] = flushedTime
+		end
+		--table.insert(playerHeldTime, { player = curPlayer, timeHeld = flushedTime })
 	end
 end
 
