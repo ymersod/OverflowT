@@ -8,6 +8,10 @@ local TopBarUpdateEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("TopBarUpdate")
+local GameCancelledEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("GameCancelled")
 
 local FlushHandler = require(script.Parent.FlushHandler)
 local Line = require(ServerScriptService.Server.LineArray)
@@ -54,7 +58,7 @@ task.spawn(function()
 				Line:Fill(players)
 				FlushHandler.StartToilet()
 			else
-				warn("need more than one player to start the game!!")
+				GameCancelledEvent:FireAllClients("Cant start game, need at least 2 players ...")
 			end
 		end
 		task.wait(1)
@@ -77,10 +81,13 @@ end
 
 RunService.Heartbeat:Connect(function()
 	local currentLine = Line:GetLine()
-	if #currentLine > 0 then
+	if #currentLine > 1 and FlushHandler.gameOnGoing then
 		TopBarUpdateEvent:FireAllClients(Players:GetPlayerByUserId(currentLine[1]).Name, "Ongoing")
-	else
+	elseif #currentLine == 0 and not FlushHandler.gameOnGoing then
 		TopBarUpdateEvent:FireAllClients(math.max(0, math.floor(timer)), "Intermission")
+	elseif #currentLine <= 1 and FlushHandler.gameOnGoing then
+		FlushHandler.Overflow()
+		GameCancelledEvent:FireAllClients("Game cancelled too few players !")
 	end
 
 	if arraysEqual(prevLine, currentLine) then
