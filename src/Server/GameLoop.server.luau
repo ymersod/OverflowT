@@ -49,8 +49,13 @@ task.spawn(function()
 				timer -= 1
 			end
 
-			Line:Fill(GetPlayersInLobby())
-			FlushHandler.StartToilet()
+			local players = GetPlayersInLobby()
+			if #players >= 2 then
+				Line:Fill(players)
+				FlushHandler.StartToilet()
+			else
+				warn("need more than one player to start the game!!")
+			end
 		end
 		task.wait(1)
 	end

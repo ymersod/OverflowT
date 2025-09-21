@@ -9,7 +9,6 @@ local nextEvent = lineEvents:WaitForChild("Next")
 local cutAllEvent = lineEvents:WaitForChild("CutAll")
 local skipAheadEvent = lineEvents:WaitForChild("SkipAhead")
 local startFlushEvent = gameEvents:WaitForChild("StartFlush")
-local finishFlushEvent = gameEvents:WaitForChild("FinishFlush")
 
 -- UI
 local StaterGUI = Player:WaitForChild("PlayerGui")
@@ -24,11 +23,8 @@ local flushButton = actionMenu:WaitForChild("Flush"):FindFirstChildOfClass("Text
 flushButton.MouseButton1Down:Connect(function()
 	startFlushEvent:FireServer()
 end)
-
 flushButton.MouseButton1Up:Connect(function()
-	if finishFlushEvent:InvokeServer() then
-		nextEvent:FireServer()
-	end
+	nextEvent:FireServer()
 end)
 
 -- More less button

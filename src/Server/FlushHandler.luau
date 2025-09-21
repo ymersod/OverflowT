@@ -13,6 +13,7 @@ local LineArray = require(ServerScriptService.Server.LineArray)
 local flushHandler = {
 	curCap = 0,
 	totalTimeHeld = 0,
+	gameOnGoing = false,
 }
 
 type PlayerHeld = {
@@ -29,7 +30,7 @@ local function RewardWinners()
 	local playerIds = LineArray:GetLine()
 
 	local losingPlayer = playerIds[1]
-	EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(losingPlayer, false))
+	EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(losingPlayer), false)
 
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
@@ -40,32 +41,35 @@ local function RewardWinners()
 			return currentStats
 		end)
 		serverUtils.updatePlayerLeaderStats(playerId, newStats)
-		print(newStats)
 
-		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId, true, 50))
+		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId), true, 50)
 	end
 end
 
 local function Overflow()
 	print("OVERFLOW!!!!!")
+	flushHandler.gameOnGoing = false
 	RewardWinners()
 	LineArray:ResetLine()
 end
 
-function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player): boolean
+function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
+	if not flushHandler.gameOnGoing then
+		return
+	end
+
 	flushHandler.totalTimeHeld += flushedTime
 	print("TotalTimeHeld: " .. flushHandler.totalTimeHeld)
 
 	if flushHandler.totalTimeHeld >= flushHandler.curCap then
 		Overflow()
-		return false
 	else
 		table.insert(playerHeldTime, { player = curPlayer, timeHeld = flushedTime })
 	end
-	return true
 end
 
 function flushHandler.StartToilet()
+	flushHandler.gameOnGoing = true
 	flushHandler.curCap = math.random(hardCap - 2, hardCap + 2)
 	flushHandler.totalTimeHeld = 0
 	playerHeldTime = {}

@@ -2,6 +2,7 @@ local Player = game:GetService("Players").LocalPlayer
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
+local Players = game:GetService("Players")
 local FREEZE_ACTION = "freezeMovement"
 
 local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
@@ -30,13 +31,11 @@ local function getWorldObjects()
 end
 getWorldObjects()
 
-local function MovePlayersToLobbyCenter()
-	local character = Player.Character
-	if character and character:FindFirstChild("HumanoidRootPart") then
-		local hrp = character.HumanoidRootPart
+local function MovePlayersToLobbyCenter(player: Player)
+	local character = player.Character or player.CharacterAdded:Wait()
+	character:WaitForChild("HumanoidRootPart")
 
-		hrp.CFrame = CFrame.new(lobbyZone[1].Position)
-	end
+	character:PivotTo(CFrame.new(lobbyZone[1].Position))
 end
 
 function updateHumanoid(newval: number)
@@ -55,12 +54,13 @@ function updateHumanoid(newval: number)
 
 	-- put them in spawn
 	if newval == 0 then
+		print("MY NEW SPOT: " .. newval)
 		-- Unfreeze player
 		ContextActionService:UnbindAction(FREEZE_ACTION)
 
 		hum.WalkSpeed = 16
 		if lobbyZone then
-			MovePlayersToLobbyCenter()
+			MovePlayersToLobbyCenter(Players.LocalPlayer)
 		end
 	elseif newval > 0 then
 		-- Freeze player

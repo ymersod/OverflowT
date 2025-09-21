@@ -11,11 +11,13 @@ local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
 
 local ServerStorage = game:GetService("ServerStorage")
+local LineArray = require(ServerScriptService.Server.LineArray)
 local tags = require(ReplicatedStorage.Shared.tags)
 local toiletLid = CollectionService:GetTagged(tags.TOILET_LID)[1]
 local toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1]
 local toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1]
 local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
+local particleBase: Part = CollectionService:GetTagged(tags.TOILET_PARTICLE_BASE)[1]
 local particlesNormalSetting = {}
 local waterParticles = {}
 
@@ -39,7 +41,7 @@ local toiletSeatMaxAmp = 30
 local toiletSeatSpeed = 0.2
 
 local lastTimeIteration = 0
-local inactive = true
+local flushStarted = false
 local currentHolder = nil
 
 for _, particle in ipairs(curBubbles:GetDescendants()) do
@@ -103,36 +105,40 @@ local function turnOfRumbleAnimation()
 end
 
 local function CleanupPreviousParticleObjects(obj: Instance)
-	local tasks = {}
 	print("Cleaning up old particles...")
-	for _, child in ipairs(obj:GetChildren()) do
-		if child:IsA("Sound") then
-			if child.Playing then
-				local t = Instance.new("BindableEvent")
-				child.Ended:Connect(function()
-					t:Fire()
-					t:Destroy()
-				end)
-				table.insert(tasks, t.Event)
-			end
-		elseif child:IsA("ParticleEmitter") then
-			child.Enabled = false
-			local t = Instance.new("BindableEvent")
-			task.delay(child.Lifetime.Max, function()
-				t:Fire()
-				t:Destroy()
-			end)
-			table.insert(tasks, t.Event)
-		end
-	end
 
-	if #tasks > 0 then
-		for _, event in ipairs(tasks) do
-			event:Wait()
-		end
+	local remaining = 0
+
+	-- local function markDone()
+	-- 	remaining -= 1
+	-- 	if remaining <= 0 then
+	-- 		print("Old particles cleaned up!")
+	-- 		obj:Destroy()
+	-- 	end
+	-- end
+
+	-- for _, child in ipairs(obj:GetChildren()) do
+	-- 	if child:IsA("Sound") then
+	-- 		if child.Playing then
+	-- 			remaining += 1
+	-- 			child.Ended:Once(function()
+	-- 				markDone()
+	-- 			end)
+	-- 		end
+	-- 	elseif child:IsA("ParticleEmitter") then
+	-- 		child.Enabled = false
+	-- 		remaining += 1
+	-- 		task.delay(child.Lifetime.Max, function()
+	-- 			markDone()
+	-- 		end)
+	-- 	end
+	-- end
+
+	-- if nothing to wait for, destroy immediately
+	if remaining == 0 then
+		print("No particles/sounds active, destroying immediately")
+		obj:Destroy()
 	end
-	print("Old particles cleaned up!")
-	obj:Destroy()
 end
 
 local function SetupPlayerBubbleType(player: Player): Part
@@ -157,6 +163,7 @@ local function SetupPlayerBubbleType(player: Player): Part
 	for _, child in ipairs(mainToilet:GetChildren()) do
 		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
 			task.spawn(function()
+				print("doing t")
 				CleanupPreviousParticleObjects(child)
 			end)
 		end
@@ -164,6 +171,8 @@ local function SetupPlayerBubbleType(player: Player): Part
 
 	local clone = selectedBubble:Clone()
 	clone.Parent = mainToilet
+	clone.CFrame = particleBase.CFrame
+	clone.Size = particleBase.Size
 	print("New bubbles!: ", clone)
 	return clone
 end
@@ -171,7 +180,7 @@ end
 StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	currentHolder = player
 	lastTimeIteration = os.clock()
-	inactive = false
+	flushStarted = true
 
 	curBubbles = SetupPlayerBubbleType(player)
 	table.clear(particlesNormalSetting)
@@ -194,33 +203,36 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	Sound.Update(getPercentageFull())
 end)
 
-FinishFlushEvent.OnServerInvoke = function(_: Player)
-	if inactive then
-		return false --This is to say, there has happened an overflow
-	end
-	inactive = true
+local function stopFlushing()
+	flushStarted = false
 
 	turnOfRumbleAnimation()
 	SetParticlesEnabled(false)
 	Sound.Stop()
-	return true
 end
 
 RunService.Heartbeat:Connect(function()
-	if inactive then
+	local line = LineArray:GetLine()
+	if #line > 0 and line[1] and currentHolder then
+		if currentHolder.UserId ~= line[1] then
+			print("We should stop!")
+			stopFlushing()
+		end
+	end
+
+	if not flushStarted then
 		return
 	end
+
 	updateRumbleAnimation()
 	SetParticlesEnabled(true)
 	Sound.Update(getPercentageFull())
 	local currentTime = os.clock()
 	local clockedTime = currentTime - lastTimeIteration
 	lastTimeIteration = currentTime
-	local isStillRunning = FlushHandler.AddFlushedTime(clockedTime, currentHolder)
-	if not isStillRunning then
-		inactive = true
-		turnOfRumbleAnimation()
-		SetParticlesEnabled(false)
-		Sound.Reset()
+	FlushHandler.AddFlushedTime(clockedTime, currentHolder)
+
+	if not FlushHandler.gameOnGoing then
+		stopFlushing()
 	end
 end)
