@@ -50,10 +50,16 @@ local function rumble(obj: BasePart, axis: "X" | "Y", angle: number, speed: numb
 end
 
 function Rumble.Horizontal(obj: BasePart, amplitude: number, speed: number)
+	if activeRumbles[obj] then
+		return
+	end
 	rumble(obj, "X", amplitude, speed)
 end
 
 function Rumble.Vertical(obj: BasePart, amplitude: number, speed: number)
+	if activeRumbles[obj] then
+		return
+	end
 	rumble(obj, "Y", amplitude, speed)
 end
 

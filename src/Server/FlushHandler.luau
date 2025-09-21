@@ -10,16 +10,17 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
-local flushHandler = {}
+local flushHandler = {
+	curCap = 0,
+	totalTimeHeld = 0,
+}
 
 type PlayerHeld = {
 	player: Player,
 	timeHeld: number,
 }
 
-local hardCap = 10 -- Seconds
-local curCap = 0
-local totalTimeHeld = 0
+local hardCap = 15 -- Seconds
 -- TODO: Used for giving rewards later
 local playerHeldTime: { PlayerHeld } = {}
 
@@ -52,10 +53,10 @@ local function Overflow()
 end
 
 function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player): boolean
-	totalTimeHeld += flushedTime
-	print("TotalTimeHeld: " .. totalTimeHeld)
+	flushHandler.totalTimeHeld += flushedTime
+	print("TotalTimeHeld: " .. flushHandler.totalTimeHeld)
 
-	if totalTimeHeld >= curCap then
+	if flushHandler.totalTimeHeld >= flushHandler.curCap then
 		Overflow()
 		return false
 	else
@@ -65,8 +66,8 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player): bo
 end
 
 function flushHandler.StartToilet()
-	curCap = math.random(hardCap - 2, hardCap + 2)
-	totalTimeHeld = 0
+	flushHandler.curCap = math.random(hardCap - 2, hardCap + 2)
+	flushHandler.totalTimeHeld = 0
 	playerHeldTime = {}
 end
 
