@@ -1,8 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-local FlushHandler = require(ServerScriptService.Server.FlushHandler)
+local Stats = game:GetService("Stats")
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local types = require(ReplicatedStorage.Shared.types)
 
 local getShopItemsEvent = ReplicatedStorage:WaitForChild("Shared")
@@ -52,13 +53,40 @@ getOwnedShopItemsEvent.OnServerInvoke = function(player: Player)
 end
 
 buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
-	return ShopObjects.UpdatePlayerOwnedShopObjects(tostring(player.UserId), function(ownedObjects)
-		if not table.find(ownedObjects, id) then
-			table.insert(ownedObjects, id)
+	local itemToBuy
+	for _, shopItem in ipairs(shopItems) do
+		local itemId = shopItem:GetAttribute("Id")
+		if itemId and itemId == id then
+			itemToBuy = shopItem
 		end
+	end
 
-		return ownedObjects
-	end)
+	local itemPrice = itemToBuy and itemToBuy:GetAttribute("PriceMoney")
+
+	local localstats = player:FindFirstChild("leaderstats")
+	local money: IntValue? = localstats and localstats:FindFirstChild("Money")
+
+	if itemPrice and money then
+		if money.Value >= itemPrice then
+			money.Value = money.Value - itemPrice
+
+			Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+				currentStats.Coins -= itemPrice
+				currentStats.Wins += 0
+				return currentStats
+			end)
+
+			return ShopObjects.UpdatePlayerOwnedShopObjects(tostring(player.UserId), function(ownedObjects)
+				if not table.find(ownedObjects, id) then
+					table.insert(ownedObjects, id)
+				end
+
+				return ownedObjects
+			end)
+		end
+	end
+
+	return ShopObjects.GetPlayerOwnedShopObjects(tostring(player.UserId))
 end
 
 equipShopItemEvent.OnServerInvoke = function(player: Player, id: number)

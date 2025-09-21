@@ -16,7 +16,7 @@ local prevLine = { table.unpack(Line:GetLine()) }
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
 
-local INTERMISSION_TIME = 10 -- seconds
+local INTERMISSION_TIME = 25 -- seconds
 local timer = INTERMISSION_TIME
 
 local function GetPlayersInLobby(): { Player }
@@ -50,7 +50,7 @@ task.spawn(function()
 			end
 
 			local players = GetPlayersInLobby()
-			if #players >= 1 then
+			if #players >= 2 then
 				Line:Fill(players)
 				FlushHandler.StartToilet()
 			else
