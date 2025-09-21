@@ -70,6 +70,10 @@ end
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+player.CharacterAdded:Connect(function()
+	soundHandler.Play("Teleport")
+end)
+
 playerGui.ChildAdded:Connect(function(newGui)
 	print("New Gui added:", newGui.Name)
 	hookEvents()
