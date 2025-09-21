@@ -7,6 +7,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
 
+local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
 local flushHandler = {
@@ -33,12 +34,13 @@ local function RewardWinners()
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
 		local playerId = playerIds[i]
-		local stats = Stats.UpdatePlayerStats(playerId, function(currentStats)
+		local newStats = Stats.UpdatePlayerStats(playerId, function(currentStats)
 			currentStats.Coins += 50
 			currentStats.Wins += 1
 			return currentStats
 		end)
-		print(stats)
+		serverUtils.updatePlayerLeaderStats(playerId, newStats)
+		print(newStats)
 
 		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId, true, 50))
 	end
