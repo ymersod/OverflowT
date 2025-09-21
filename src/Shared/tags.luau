@@ -10,6 +10,7 @@ local tags = {
 	Sound_On_Click_Flush = "SoundOnClickFlush",
 	Sound_On_Visible_Win = "SoundOnVisibleWin",
 	Sound_On_Visible_Lose = "SoundOnVisibleLose",
+	SHOP_PROXIMITY = "ShopProximity",
 }
 
 return tags

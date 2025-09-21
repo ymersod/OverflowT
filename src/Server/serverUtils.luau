@@ -4,7 +4,7 @@ local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local serverUtils = {}
 
 function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stats.PlayerStats)
-	print("do it")
+	-- print("do it")
 	local player = Players:GetPlayerByUserId(playerId)
 	local leaderStats = player:FindFirstChild("leaderstats")
 
