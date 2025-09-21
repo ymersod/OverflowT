@@ -2,10 +2,13 @@ local humanoidUtils = {}
 
 function humanoidUtils.MoveTo(humanoid, targetPoint, andThen)
 	local targetReached = false
+	local canceled = false
 
-	-- listen for the humanoid reaching its target
 	local connection
 	connection = humanoid.MoveToFinished:Connect(function(reached)
+		if canceled then
+			return
+		end
 		targetReached = true
 		connection:Disconnect()
 		connection = nil
@@ -14,31 +17,35 @@ function humanoidUtils.MoveTo(humanoid, targetPoint, andThen)
 		end
 	end)
 
-	-- start walking
 	humanoid:MoveTo(targetPoint)
 
-	-- execute on a new thread so as to not yield function
-	task.spawn(function()
-		while not targetReached do
-			-- does the humanoid still exist?
+	local taskThread = task.spawn(function()
+		while not targetReached and not canceled do
 			if not (humanoid and humanoid.Parent) then
 				break
 			end
-			-- has the target changed?
 			if humanoid.WalkToPoint ~= targetPoint then
 				break
 			end
-			-- refresh the timeout
 			humanoid:MoveTo(targetPoint)
 			task.wait(6)
 		end
 
-		-- disconnect the connection if it is still connected
 		if connection then
 			connection:Disconnect()
 			connection = nil
 		end
 	end)
+
+	return {
+		Cancel = function()
+			canceled = true
+			if connection then
+				connection:Disconnect()
+				connection = nil
+			end
+		end,
+	}
 end
 
 return humanoidUtils

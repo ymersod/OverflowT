@@ -3,7 +3,6 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
 
-local Players = game:GetService("Players")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local FREEZE_ACTION = "freezeMovement"
@@ -13,7 +12,6 @@ local tags = require(ReplicatedStorage.Shared.tags)
 local soundHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
-local newLinePosition = 0
 local prevLinePosition = 0
 
 -- World objects
@@ -50,69 +48,91 @@ local function MovePlayersToLobbyCenter()
 		end)
 	end
 end
-function updateHumanoid(newval: number)
-	if #spots ~= 6 then
-		warn("Theres not exactly 6 spots only " .. #spots .. " were found")
-		return
-	end
 
+local isInLine: boolean = false
+
+local function placeInLine(lineNr)
 	local char = Player.Character
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
 	local hrp = char and char.PrimaryPart
 
-	if not char or not hum or not hrp then
-		warn("Humanoid or humanoidrootpart doesnt exist")
-	end
+	ContextActionService:BindAction(FREEZE_ACTION, function()
+		return Enum.ContextActionResult.Sink
+	end, false, unpack(Enum.PlayerActions:GetEnumItems()))
 
-	-- put them in spawn
-	if newval == 0 then
-		print("MY NEW SPOT: " .. newval)
-		-- Unfreeze player
-		ContextActionService:UnbindAction(FREEZE_ACTION)
-
-		hum.WalkSpeed = 16
-		if lobbyZone then
-			task.defer(MovePlayersToLobbyCenter)
-		end
-	elseif newval > 0 then
-		-- Freeze player
-		ContextActionService:BindAction(FREEZE_ACTION, function()
-			return Enum.ContextActionResult.Sink
-		end, false, unpack(Enum.PlayerActions:GetEnumItems()))
-
-		hum.WalkSpeed = 32
-		local spot
-		for _, lilSpot in ipairs(spots) do
-			if lilSpot:GetAttribute("ArrayIndex") == newval then
-				spot = lilSpot
-				break
-			end
-		end
-
-		if not spot then
-			warn("Spot not found yikers")
-			return
-		end
-		print("MY NEW SPOT: " .. spot:GetAttribute("ArrayIndex") .. " and newline is:  " .. newval)
-
-		if prevLinePosition == 0 then
-			hrp.CFrame = CFrame.new(spot.Position + Vector3.new(0, 3, 0))
-			soundHandler.Play("Teleport")
-		else
-			humanoidUtils.MoveTo(hum, spot.Position, function()
-				hrp.CFrame = CFrame.new(Vector3.new(spot.Position.X, hrp.Position.Y, spot.Position.Z))
-				local targetPart = toilet[1].PrimaryPart
-				hrp:PivotTo(CFrame.lookAt(hrp.Position, targetPart.Position))
-			end)
+	hum.WalkSpeed = 32
+	local spot
+	for _, lilSpot in ipairs(spots) do
+		if lilSpot:GetAttribute("ArrayIndex") == lineNr then
+			spot = lilSpot
+			break
 		end
 	end
+
+	if not spot then
+		warn("Spot not found yikers")
+		return
+	end
+	print("MY NEW SPOT: " .. spot:GetAttribute("ArrayIndex") .. " and newline is:  " .. lineNr)
+	hrp.CFrame = CFrame.new(spot.Position + Vector3.new(0, 3, 0))
+	soundHandler.Play("Teleport")
+	isInLine = true
 end
 
-function startListen()
-	linePosition.Changed:Connect(function(val)
-		prevLinePosition = newLinePosition
-		newLinePosition = linePosition.Value
-		updateHumanoid(val)
+local function removeFromLine(lineNr)
+	local char = Player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	print("MY NEW SPOT: " .. lineNr)
+	-- Unfreeze player
+	ContextActionService:UnbindAction(FREEZE_ACTION)
+
+	hum.WalkSpeed = 16
+	if lobbyZone then
+		task.defer(MovePlayersToLobbyCenter)
+	end
+	isInLine = false
+end
+
+local prevMover = nil
+
+local function moveInLine(lineNr)
+	local char = Player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	local hrp = char and char.PrimaryPart
+	if prevMover then
+		prevMover.Cancel()
+	end
+
+	local spot
+	for _, lilSpot in ipairs(spots) do
+		if lilSpot:GetAttribute("ArrayIndex") == lineNr then
+			spot = lilSpot
+			break
+		end
+	end
+
+	if not spot then
+		warn("Spot not found yikers")
+		return
+	end
+
+	prevMover = humanoidUtils.MoveTo(hum, spot.Position, function()
+		hrp.CFrame = CFrame.new(Vector3.new(spot.Position.X, hrp.Position.Y, spot.Position.Z))
+		local targetPart = toilet[1].PrimaryPart
+		hrp:PivotTo(CFrame.lookAt(hrp.Position, targetPart.Position))
 	end)
 end
-startListen()
+
+linePosition:GetPropertyChangedSignal("Value"):Connect(function()
+	local newValue = linePosition.Value
+
+	if newValue > 0 and prevLinePosition == 0 and not isInLine then
+		placeInLine(newValue)
+	elseif newValue == 0 and prevLinePosition > 0 and isInLine then
+		removeFromLine(newValue)
+	elseif isInLine and newValue ~= 0 and newValue ~= prevLinePosition then
+		moveInLine(newValue)
+	end
+
+	prevLinePosition = newValue
+end)

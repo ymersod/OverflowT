@@ -78,7 +78,6 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
 		else
 			playerHeldTime[curPlayer.UserId] = flushedTime
 		end
-		--table.insert(playerHeldTime, { player = curPlayer, timeHeld = flushedTime })
 	end
 end
 
