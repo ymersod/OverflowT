@@ -16,6 +16,9 @@ local tags = {
 	Sound_On_Visible_Win = "SoundOnVisibleWin",
 	Sound_On_Visible_Lose = "SoundOnVisibleLose",
 	SHOP_PROXIMITY = "ShopProximity",
+	BROKEN_TOILET = "BrokenToilet",
+	GOLDEN_PART = "GoldenMesh",
+	BROKEN_PART = "BrokenMesh",
 }
 
 return tags

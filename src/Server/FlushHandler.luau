@@ -10,6 +10,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
+local ToiletSwitcher = require(ServerScriptService.Server.Toilet.ToiletSwitcher)
 local flushHandler = {
 	curCap = 0,
 	totalTimeHeld = 0,
@@ -26,7 +27,6 @@ local playerHeldTime = {}
 
 local function calcCoins(playerId: number)
 	local timeHeld = playerHeldTime[playerId]
-	print(playerId .. " | " .. timeHeld)
 	if not timeHeld or timeHeld < 1 then
 		timeHeld = 1
 	end
@@ -59,6 +59,7 @@ function flushHandler.Overflow()
 	flushHandler.gameOnGoing = false
 	RewardWinners()
 	LineArray:ResetLine()
+	ToiletSwitcher.SwitchToilet(flushHandler.gameOnGoing)
 end
 
 function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
@@ -86,6 +87,7 @@ function flushHandler.StartToilet()
 	flushHandler.curCap = math.random(hardCap - 2, hardCap + 2)
 	flushHandler.totalTimeHeld = 0
 	playerHeldTime = {}
+	ToiletSwitcher.SwitchToilet(flushHandler.gameOnGoing)
 end
 
 return flushHandler
