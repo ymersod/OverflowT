@@ -215,7 +215,6 @@ RunService.Heartbeat:Connect(function()
 	local line = LineArray:GetLine()
 	if #line > 0 and line[1] and currentHolder then
 		if currentHolder.UserId ~= line[1] then
-			print("We should stop!")
 			stopFlushing()
 		end
 	end

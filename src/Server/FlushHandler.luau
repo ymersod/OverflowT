@@ -54,7 +54,7 @@ local function RewardWinners()
 	end
 end
 
-local function Overflow()
+function flushHandler.Overflow()
 	print("OVERFLOW!!!!!")
 	flushHandler.gameOnGoing = false
 	RewardWinners()
@@ -70,7 +70,7 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
 	print("TotalTimeHeld: " .. flushHandler.totalTimeHeld)
 
 	if flushHandler.totalTimeHeld >= flushHandler.curCap then
-		Overflow()
+		flushHandler.Overflow()
 	else
 		local timeHeld = playerHeldTime[curPlayer.UserId]
 		if timeHeld then

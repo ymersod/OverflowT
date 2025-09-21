@@ -9,6 +9,11 @@ local EndGameScreen = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
+local GameCancelledEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("GameCancelled")
+local clientUitls = require(ReplicatedStorage.Shared.clientUitls)
 local uiConstants = require(ReplicatedStorage.Shared.uiConstants)
 
 -- UI Elements
@@ -47,6 +52,11 @@ EndGameScreen.OnClientEvent:Connect(function(didWin: boolean, money: number?)
 	task.delay(5, function()
 		frame.Visible = false
 	end)
+end)
+
+-- Game cancelled event
+GameCancelledEvent.OnClientEvent:Connect(function(msg: string)
+	clientUitls.showWarning(msg)
 end)
 
 task.spawn(function()

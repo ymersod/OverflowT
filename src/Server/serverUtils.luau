@@ -9,7 +9,7 @@ function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stat
 	local leaderStats = player:FindFirstChild("leaderstats")
 
 	local money: IntValue? = leaderStats:FindFirstChild("Money")
-	local wins: IntValue? = leaderStats:FindFirstChild("wins")
+	local wins: IntValue? = leaderStats:FindFirstChild("Wins")
 
 	if money and money:IsA("IntValue") then
 		money.Value = playerStats.Coins
