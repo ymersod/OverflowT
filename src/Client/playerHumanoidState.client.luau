@@ -2,11 +2,15 @@ local Player = game:GetService("Players").LocalPlayer
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
+
 local Players = game:GetService("Players")
+local StarterPlayer = game:GetService("StarterPlayer")
+
 local FREEZE_ACTION = "freezeMovement"
 
 local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
+local soundHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
 local newLinePosition = 0
@@ -36,6 +40,8 @@ local function MovePlayersToLobbyCenter(player: Player)
 	character:WaitForChild("HumanoidRootPart")
 
 	character:PivotTo(CFrame.new(lobbyZone[1].Position))
+
+	soundHandler.Play("Teleport")
 end
 
 function updateHumanoid(newval: number)
@@ -85,6 +91,7 @@ function updateHumanoid(newval: number)
 
 		if prevLinePosition == 0 then
 			hrp.CFrame = CFrame.new(spot.Position)
+			soundHandler.Play("Teleport")
 		else
 			humanoidUtils.MoveTo(hum, spot.Position, function()
 				hrp.CFrame = CFrame.new(Vector3.new(spot.Position.X, hrp.Position.Y, spot.Position.Z))
