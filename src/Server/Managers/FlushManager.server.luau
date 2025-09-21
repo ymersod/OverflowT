@@ -1,5 +1,4 @@
 local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local FlushHandler = require(ServerScriptService.Server.FlushHandler)
@@ -43,7 +42,6 @@ local lastTimeIteration = 0
 local inactive = true
 local currentHolder = nil
 
-local curBubbles: Part = bubbleTypes[1]
 for _, particle in ipairs(curBubbles:GetDescendants()) do
 	if particle:IsA("ParticleEmitter") then
 		table.insert(particlesNormalSetting, particle.Rate)
@@ -106,7 +104,7 @@ end
 
 local function CleanupPreviousParticleObjects(obj: Instance)
 	local tasks = {}
-
+	print("Cleaning up old particles...")
 	for _, child in ipairs(obj:GetChildren()) do
 		if child:IsA("Sound") then
 			if child.Playing then
@@ -133,7 +131,7 @@ local function CleanupPreviousParticleObjects(obj: Instance)
 			event:Wait()
 		end
 	end
-
+	print("Old particles cleaned up!")
 	obj:Destroy()
 end
 
@@ -158,13 +156,15 @@ local function SetupPlayerBubbleType(player: Player): Part
 	-- Cleanup
 	for _, child in ipairs(mainToilet:GetChildren()) do
 		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
-			task.spawn(CleanupPreviousParticleObjects(child))
+			task.spawn(function()
+				CleanupPreviousParticleObjects(child)
+			end)
 		end
 	end
 
 	local clone = selectedBubble:Clone()
 	clone.Parent = mainToilet
-
+	print("New bubbles!: ", clone)
 	return clone
 end
 
@@ -175,10 +175,17 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 
 	curBubbles = SetupPlayerBubbleType(player)
 	table.clear(particlesNormalSetting)
+	table.clear(waterParticles)
 	for _, particle in ipairs(curBubbles:GetDescendants()) do
 		if particle:IsA("ParticleEmitter") then
 			table.insert(waterParticles, particle)
 			table.insert(particlesNormalSetting, particle.Rate) --<- Index isn't the same anymore
+		end
+	end
+	table.clear(particlesNormalSetting)
+	for _, particle in ipairs(curBubbles:GetDescendants()) do
+		if particle:IsA("ParticleEmitter") then
+			table.insert(particlesNormalSetting, particle.Rate)
 		end
 	end
 
