@@ -20,7 +20,7 @@ local prevLine = { table.unpack(Line:GetLine()) }
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
 
-local INTERMISSION_TIME = 5 -- seconds
+local INTERMISSION_TIME = 25 -- seconds
 local timer = INTERMISSION_TIME
 
 local function GetPlayersInLobby(): { Player }
@@ -54,7 +54,7 @@ task.spawn(function()
 			end
 
 			local players = GetPlayersInLobby()
-			if #players >= 1 then
+			if #players >= 2 then
 				Line:Fill(players)
 				FlushHandler.StartToilet()
 			else
@@ -85,7 +85,7 @@ RunService.Heartbeat:Connect(function()
 		TopBarUpdateEvent:FireAllClients(Players:GetPlayerByUserId(currentLine[1]).Name, "Ongoing")
 	elseif #currentLine == 0 and not FlushHandler.gameOnGoing then
 		TopBarUpdateEvent:FireAllClients(math.max(0, math.floor(timer)), "Intermission")
-	elseif #currentLine <= 0 and FlushHandler.gameOnGoing then
+	elseif #currentLine <= 1 and FlushHandler.gameOnGoing then
 		FlushHandler.Overflow()
 		GameCancelledEvent:FireAllClients("Game cancelled too few players !")
 	end
