@@ -32,7 +32,7 @@ type Particle = {
 local waterParticles: { Particle } = {}
 local explParticles: { Particle } = {}
 
-local CLICK_EXPL_LENGTH = 0.3
+local CLICK_EXPL_LENGTH = 0.2
 
 local function updateParticleTables(particleParent)
 	table.clear(waterParticles)
@@ -119,35 +119,45 @@ local function turnOfRumbleAnimation()
 end
 
 local function CleanupPreviousParticleObjects(obj: Instance)
-	print("Cleaning up old particles...")
+	print("Cleaning up old particles and sounds...")
 
 	local remaining = 0
+	CollectionService:AddTag(obj, tags.CLEANUP_MARK)
 
 	local function markDone()
 		remaining -= 1
 		if remaining <= 0 then
-			print("Old particles cleaned up!")
+			print("Old particles and sounds cleaned up!")
 			obj:Destroy()
 		end
 	end
 
 	for _, child in ipairs(obj:GetChildren()) do
+		-- Handle particles
 		if child:IsA("ParticleEmitter") then
 			child.Enabled = false
 			remaining += 1
 			task.delay(child.Lifetime.Max, function()
 				markDone()
 			end)
+
+		-- Handle sounds
+		elseif child:IsA("Sound") then
+			if child.IsPlaying then
+				remaining += 1
+				local timeLeft = child.TimeLength - child.TimePosition
+				task.delay(timeLeft, function()
+					markDone()
+				end)
+			end
 		end
 	end
 
-	-- if nothing to wait for, destroy immediately
 	if remaining == 0 then
 		print("No particles/sounds active, destroying immediately")
 		obj:Destroy()
 	end
 end
-
 local function SetupPlayerBubbleType(player: Player): Part
 	local localstats = player:FindFirstChild("localstats")
 	local equippedBubbles: IntValue? = localstats and localstats:FindFirstChild("EquippedShopItem")
@@ -170,7 +180,9 @@ local function SetupPlayerBubbleType(player: Player): Part
 	for _, child in ipairs(mainToilet:GetChildren()) do
 		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
 			task.spawn(function()
-				CleanupPreviousParticleObjects(child)
+				if not child:HasTag(tags.CLEANUP_MARK) then
+					CleanupPreviousParticleObjects(child)
+				end
 			end)
 		end
 	end
@@ -191,13 +203,16 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	curBubbles = SetupPlayerBubbleType(player)
 	updateParticleTables(curBubbles)
 
-	Sound.FillSounds()
+	Sound.FillSounds(curBubbles)
 	turnOnRumbleAnimation()
 	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
+
 	SetParticlesEnabled(true, tags.CLICK_PARTICLES, explParticles)
+	Sound.PlayClickExpl(getPercentageFull() + 1)
 	task.delay(CLICK_EXPL_LENGTH, function()
 		SetParticlesEnabled(false, tags.CLICK_PARTICLES, explParticles)
 	end)
+
 	Sound.Update(getPercentageFull())
 end)
 

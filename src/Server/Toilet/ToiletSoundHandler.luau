@@ -12,13 +12,24 @@ local ranges = {
 }
 
 local taggedSounds = {}
+local soundExpl: Sound
 
-function SoundHandler.FillSounds()
+function SoundHandler.FillSounds(curParticleObj: Instance)
 	taggedSounds = {
-		Soft = CollectionService:GetTagged("Soft"),
-		Medium = CollectionService:GetTagged("Medium"),
-		High = CollectionService:GetTagged("High"),
+		Soft = {},
+		Medium = {},
+		High = {},
 	}
+
+	for _, tag in ipairs({ "Soft", "Medium", "High", "Expl" }) do
+		for _, obj in ipairs(CollectionService:GetTagged(tag)) do
+			if obj:IsDescendantOf(curParticleObj) and tag == "Expl" then
+				soundExpl = obj
+			elseif obj:IsDescendantOf(curParticleObj) then
+				table.insert(taggedSounds[tag], obj)
+			end
+		end
+	end
 end
 
 local function getVolumeForRange(value, minRange, maxRange)
@@ -68,6 +79,11 @@ function SoundHandler.Reset()
 			sound.TimePosition = 0
 		end
 	end
+end
+
+function SoundHandler.PlayClickExpl(value)
+	soundExpl.Volume = value
+	soundExpl:Play()
 end
 
 return SoundHandler

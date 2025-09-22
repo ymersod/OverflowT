@@ -25,6 +25,7 @@ local tags = {
 	FOAM_PARTICLE = "Foam",
 	WATER1_PARTICLE = "Water1",
 	WATER2_PARTICLE = "Water2",
+	CLEANUP_MARK = "CleanupMark",
 }
 
 return tags
