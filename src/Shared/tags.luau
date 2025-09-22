@@ -26,6 +26,14 @@ local tags = {
 	WATER1_PARTICLE = "Water1",
 	WATER2_PARTICLE = "Water2",
 	CLEANUP_MARK = "CleanupMark",
+	OBBY_FOLDER = "ObbyFolder",
+	OBBY_LEVEL = "ObbyLevel",
+	EASY_OBBY = "EasyObby",
+	RESET_BLOCK = "ResetBlock",
+	FALL_RESET_BLOCK = "FallResetBlock",
+	RESPAWN_POS = "RespawnPos",
+	TROPHY_COL = "TrophyCol",
+	OBBY_STATE_TEXT = "ObbyStateText",
 }
 
 return tags

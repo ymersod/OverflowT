@@ -13,6 +13,10 @@ local GameCancelledEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("GameCancelled")
+local RespawnToObbyEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("RespawnToObby")
 local clientUitls = require(ReplicatedStorage.Shared.clientUitls)
 local uiConstants = require(ReplicatedStorage.Shared.uiConstants)
 
@@ -57,6 +61,19 @@ end)
 -- Game cancelled event
 GameCancelledEvent.OnClientEvent:Connect(function(msg: string)
 	clientUitls.showWarning(msg)
+end)
+
+-- Teleport player event
+RespawnToObbyEvent.OnClientEvent:Connect(function(pos: Vector3)
+	if pos then
+		local character = Player.Character
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			local hrp = character.HumanoidRootPart
+
+			local rotation = CFrame.Angles(0, math.rad(-90), 0)
+			hrp.CFrame = CFrame.new(pos) * rotation
+		end
+	end
 end)
 
 task.spawn(function()
