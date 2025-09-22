@@ -2,7 +2,7 @@ local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local tags = require(ReplicatedStorage.Shared.tags)
 
-local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
+local actionGuiState = {}
 
 -- UI Elements
 local shadePrefab: Frame = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Shade")
@@ -87,7 +87,7 @@ function notInLineState()
 	actionMenu.Visible = false
 end
 
-function updateGUI(linePositionValue: number)
+function actionGuiState.updateGUI(linePositionValue: number)
 	if linePositionValue == 1 then
 		firstInLineState()
 	elseif linePositionValue > 1 then
@@ -97,13 +97,4 @@ function updateGUI(linePositionValue: number)
 	end
 end
 
-function startListen()
-	local newVal = linePosition.Value
-	updateGUI(newVal)
-
-	linePosition.Changed:Connect(function()
-		newVal = linePosition.Value
-		updateGUI(newVal)
-	end)
-end
-startListen()
+return actionGuiState

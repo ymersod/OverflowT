@@ -7,6 +7,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 
 local FREEZE_ACTION = "freezeMovement"
 
+local actionGuiState = require(script.Parent.actionGuiState)
 local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 local soundHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
@@ -60,7 +61,7 @@ local function placeInLine(lineNr)
 		return Enum.ContextActionResult.Sink
 	end, false, unpack(Enum.PlayerActions:GetEnumItems()))
 
-	hum.WalkSpeed = 32
+	hum.WalkSpeed = 24
 	local spot
 	for _, lilSpot in ipairs(spots) do
 		if lilSpot:GetAttribute("ArrayIndex") == lineNr then
@@ -120,6 +121,10 @@ local function moveInLine(lineNr)
 		hrp.CFrame = CFrame.new(Vector3.new(spot.Position.X, hrp.Position.Y, spot.Position.Z))
 		local targetPart = toilet[1].PrimaryPart
 		hrp:PivotTo(CFrame.lookAt(hrp.Position, targetPart.Position))
+		task.spawn(function()
+			task.wait(0.1)
+			actionGuiState.updateGUI(lineNr)
+		end)
 	end)
 end
 
@@ -128,10 +133,13 @@ linePosition:GetPropertyChangedSignal("Value"):Connect(function()
 
 	if newValue > 0 and prevLinePosition == 0 and not isInLine then
 		placeInLine(newValue)
+		actionGuiState.updateGUI(newValue)
 	elseif newValue == 0 and prevLinePosition > 0 and isInLine then
 		removeFromLine(newValue)
+		actionGuiState.updateGUI(newValue)
 	elseif isInLine and newValue ~= 0 and newValue ~= prevLinePosition then
 		moveInLine(newValue)
+		-- Doing actionState update after moving, this is to ensure people cant spam
 	end
 
 	prevLinePosition = newValue

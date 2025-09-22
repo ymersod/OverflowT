@@ -20,6 +20,7 @@ local contextActionMenu2: Frame = actionMenu:WaitForChild("ActionMenu2")
 
 -- Flush button
 local flushButton = actionMenu:WaitForChild("Flush"):FindFirstChildOfClass("TextButton")
+
 flushButton.MouseButton1Down:Connect(function()
 	startFlushEvent:FireServer()
 end)
