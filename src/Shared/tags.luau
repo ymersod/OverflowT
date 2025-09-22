@@ -20,6 +20,11 @@ local tags = {
 	GOLDEN_PART = "GoldenMesh",
 	BROKEN_PART = "BrokenMesh",
 	BROKEN_PARTICLE = "BrokenParticle",
+	HOLD_PARTICLES = "HoldParticles",
+	CLICK_PARTICLES = "ClickParticles",
+	FOAM_PARTICLE = "Foam",
+	WATER1_PARTICLE = "Water1",
+	WATER2_PARTICLE = "Water2",
 }
 
 return tags

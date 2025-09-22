@@ -18,20 +18,40 @@ local toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1]
 local toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1]
 local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
 local particleBase: Part = CollectionService:GetTagged(tags.TOILET_PARTICLE_BASE)[1]
-local particlesNormalSetting = {}
-local waterParticles = {}
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
 local bubbleTypes: { Part } = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
+
 local curBubbles = bubbleTypes[1]
 
-for _, particle in ipairs(curBubbles:GetDescendants()) do
-	if particle:IsA("ParticleEmitter") then
-		table.insert(waterParticles, particle)
-		table.insert(particlesNormalSetting, particle.Rate) --<- Index isn't the same anymore
+type Particle = {
+	Emitter: ParticleEmitter,
+	Rate: number,
+}
+local waterParticles: { Particle } = {}
+local explParticles: { Particle } = {}
+
+local CLICK_EXPL_LENGTH = 0.3
+
+local function updateParticleTables(particleParent)
+	table.clear(waterParticles)
+	table.clear(explParticles)
+	for _, particle: Instance in ipairs(particleParent:GetDescendants()) do
+		if particle:IsA("ParticleEmitter") and particle:HasTag(tags.HOLD_PARTICLES) then
+			table.insert(waterParticles, {
+				Emitter = particle,
+				Rate = particle.Rate,
+			})
+		elseif particle:IsA("ParticleEmitter") and particle:HasTag(tags.CLICK_PARTICLES) then
+			table.insert(explParticles, {
+				Emitter = particle,
+				Rate = particle.Rate,
+			})
+		end
 	end
 end
+updateParticleTables(curBubbles)
 
 local toiletLidMaxAmp = 50
 local toiletLidSpeed = 0.1
@@ -43,12 +63,6 @@ local toiletSeatSpeed = 0.2
 local lastTimeIteration = 0
 local flushStarted = false
 local currentHolder = nil
-
-for _, particle in ipairs(curBubbles:GetDescendants()) do
-	if particle:IsA("ParticleEmitter") then
-		table.insert(particlesNormalSetting, particle.Rate)
-	end
-end
 
 local function getPercentageFull(): number
 	local curCap = FlushHandler.curCap
@@ -77,11 +91,11 @@ local function getIntensity(maxAmp, standardPercent: number?): number
 	return standard + ((maxAmp - standard) * curvedCap)
 end
 
-local function SetParticlesEnabled(enabled: boolean)
-	for i, descendant in ipairs(waterParticles) do
-		if descendant:IsA("ParticleEmitter") then
-			descendant.Rate = getIntensity(particlesNormalSetting[i])
-			descendant.Enabled = enabled
+local function SetParticlesEnabled(enabled: boolean, tag: string, particleArr: { Particle })
+	for _, descendant in ipairs(particleArr) do
+		if descendant.Emitter:IsA("ParticleEmitter") and descendant.Emitter:HasTag(tag) then
+			descendant.Emitter.Rate = getIntensity(descendant.Rate)
+			descendant.Emitter.Enabled = enabled
 		end
 	end
 end
@@ -156,7 +170,6 @@ local function SetupPlayerBubbleType(player: Player): Part
 	for _, child in ipairs(mainToilet:GetChildren()) do
 		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
 			task.spawn(function()
-				print("doing t")
 				CleanupPreviousParticleObjects(child)
 			end)
 		end
@@ -176,23 +189,15 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	flushStarted = true
 
 	curBubbles = SetupPlayerBubbleType(player)
-	table.clear(particlesNormalSetting)
-	table.clear(waterParticles)
-	for _, particle in ipairs(curBubbles:GetDescendants()) do
-		if particle:IsA("ParticleEmitter") then
-			table.insert(waterParticles, particle)
-			table.insert(particlesNormalSetting, particle.Rate) --<- Index isn't the same anymore
-		end
-	end
-	table.clear(particlesNormalSetting)
-	for _, particle in ipairs(curBubbles:GetDescendants()) do
-		if particle:IsA("ParticleEmitter") then
-			table.insert(particlesNormalSetting, particle.Rate)
-		end
-	end
+	updateParticleTables(curBubbles)
+
 	Sound.FillSounds()
 	turnOnRumbleAnimation()
-	SetParticlesEnabled(true)
+	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
+	SetParticlesEnabled(true, tags.CLICK_PARTICLES, explParticles)
+	task.delay(CLICK_EXPL_LENGTH, function()
+		SetParticlesEnabled(false, tags.CLICK_PARTICLES, explParticles)
+	end)
 	Sound.Update(getPercentageFull())
 end)
 
@@ -200,7 +205,7 @@ local function stopFlushing()
 	flushStarted = false
 
 	turnOfRumbleAnimation()
-	SetParticlesEnabled(false)
+	SetParticlesEnabled(false, tags.HOLD_PARTICLES, waterParticles)
 	Sound.Stop()
 end
 
@@ -217,7 +222,7 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	updateRumbleAnimation()
-	SetParticlesEnabled(true)
+	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
 	Sound.Update(getPercentageFull())
 	local currentTime = os.clock()
 	local clockedTime = currentTime - lastTimeIteration

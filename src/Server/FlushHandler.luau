@@ -37,7 +37,7 @@ local function RewardWinners()
 	local playerIds = LineArray:GetLine()
 
 	local losingPlayer = playerIds[1]
-	EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(losingPlayer), false)
+	_ = losingPlayer and EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(losingPlayer), false)
 
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
