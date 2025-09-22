@@ -14,17 +14,14 @@ local runtimeObbyFolder: Folder = ReplicatedStorage:WaitForChild("ObbyRuntimeSto
 local obbySignText: TextLabel = CollectionService:GetTagged(tags.OBBY_STATE_TEXT)[1]
 local resetFallBlock: Part = CollectionService:GetTagged(tags.FALL_RESET_BLOCK)[1]
 local respawnPos: Part = CollectionService:GetTagged(tags.RESPAWN_POS)[1]
-local obbyLevels: { Folder } = CollectionService:GetTagged(tags.OBBY_LEVEL)
-for _, obbyLevel in ipairs(obbyLevels) do
-	obbyLevel.Parent = runtimeObbyFolder
-end
 
 local obbyWorkSpaceFolder: Folder = CollectionService:GetTagged(tags.OBBY_FOLDER)[1]
--- runtimeObbyFolder = ReplicatedStorage:WaitForChild("ObbyRuntimeStorage") -- I think we have to it again to update reference
 
-local OBBY_ACTIVE_TIME_CAP = 10
+local OBBY_ACTIVE_TIME_CAP = 120
 local curTimeAlive = 0
 local lastOsCheck = os.clock()
+
+local obbyManager = {}
 
 local function CheckForPlayer(hit): Player?
 	if hit and hit.Parent and hit.Parent:IsA("Model") then
@@ -65,8 +62,15 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win")
 	end)
 end
 
-local function SpawnObby()
-	local obby = #runtimeObbyFolder:GetChildren() > 0 and runtimeObbyFolder:GetChildren()[1]
+function obbyManager.SpawnObby(obbyId: number)
+	local obby
+	for _, runtimeObby in ipairs(runtimeObbyFolder:GetChildren()) do
+		local obbyAtrrId = runtimeObby:GetAttribute("ObbyId")
+
+		if obbyAtrrId and tostring(obbyAtrrId) == tostring(obbyId) then
+			obby = runtimeObby
+		end
+	end
 
 	if obby then
 		local obbyClone = obby:Clone() :: Instance
@@ -86,12 +90,23 @@ local function SpawnObby()
 	end
 end
 
-local function DespawnObby(obby: Instance)
-	obby:Destroy()
+function obbyManager.DespawnObbys()
+	local curObbyLevel: { Instance } = {}
+	for _, obj in ipairs(obbyWorkSpaceFolder:GetChildren()) do
+		if obj:HasTag(tags.OBBY_LEVEL) then
+			table.insert(curObbyLevel, obj)
+		end
+	end
+	if curObbyLevel and #curObbyLevel > 0 then
+		for _, obby in curObbyLevel do
+			obby:Destroy()
+		end
+	else
+		warn("Didnt find obby(s) to despawn??")
+	end
 end
 
 local function Start()
-	SpawnObby()
 	SetupConnection(resetFallBlock, "Kill")
 
 	RunService.Heartbeat:Connect(function()
@@ -101,20 +116,17 @@ local function Start()
 		if curTimeAlive >= OBBY_ACTIVE_TIME_CAP then
 			curTimeAlive = 0
 
-			local curObbyLevel
-			for _, obj in ipairs(obbyWorkSpaceFolder:GetChildren()) do
-				if obj:HasTag(tags.OBBY_LEVEL) then
-					curObbyLevel = obj
-				end
-			end
-			if curObbyLevel then
-				DespawnObby(curObbyLevel)
-				SpawnObby()
+			obbyManager.DespawnObbys()
+			local obbysCount = #runtimeObbyFolder:GetChildren()
+			if obbysCount and obbysCount > 0 then
+				obbyManager.SpawnObby(math.random(1, obbysCount))
 			else
-				warn("Didnt find obby to despawn??")
+				warn("Didnt find any obbys in storage")
 			end
 		end
 		obbySignText.Text = "Next obby spawning in: " .. math.floor(OBBY_ACTIVE_TIME_CAP - curTimeAlive)
 	end)
 end
 Start()
+
+return obbyManager

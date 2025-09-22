@@ -2,6 +2,7 @@ local players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ObbyManager = require(ServerScriptService.Server.Managers.ObbyManager)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local dataStoreDevManagement = require(script.Parent.dataStoreDevManagement)
 local serverUtils = require(script.Parent.serverUtils)
@@ -63,6 +64,13 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 				return
 			end
 		end
+		-- USED TO REMOVE A SPECIFC PLAYER FROM DATABASE - USEFUL TO RESET YOUR MONEY / BOUGHT BUBBLETYPES AND MORE
+		-- You can find ur own userid by going to Explorer tab -> Players -> {Find urself} -> Open properties window -> find CharacterAppearanceId -> insert as userid in command
+		-- ex. writing the command on the next line in chat would remove player with userid 1111111111 from all databases
+		-- /removeplayerfromstore 1111111111
+		-- ex. writing the command on the next line in chat would remove player with userid 1111111111 from the specified database, in this case stats(money & wins)
+		-- /removeplayerfromstore 1111111111 stats
+
 		if command.command == "/removeplayerfromstore" then -- If u want to delete urself you have to open a localplayer and delete ur id from there (caches arent deleted with this approach atm)
 			if #command.args >= 0 then
 				if #command.args == 1 or #command.args == 2 and command.args[2] == "shopobjects" then
@@ -75,6 +83,9 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 				end
 			end
 		end
+		-- USED TO INSTANTLY ADD MONEY YOURSELF
+		-- ex. writing the command on the next line in chat would add 200 money to your player
+		-- /addmoney 200
 		if command.command == "/addmoney" then
 			if #command.args >= 0 then
 				if #command.args == 1 then
@@ -86,6 +97,22 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
 				end
 			end
+		end
+		-- USED TO INSTANTLY SPAWN A SPECIFIC OBBY USING ID
+		-- ex. writing the command on the next line in chat would spawn obby with the ObbyId 1 from storage
+		-- /spawnobby 1
+		if command.command == "/spawnobby" then
+			if #command.args >= 0 then
+				if #command.args == 1 then
+					ObbyManager.SpawnObby(command.args[1])
+				end
+			end
+		end
+		-- USED TO INSTANTLY DESPAWN OBBY(S)
+		-- ex. writing the command on the next line in chat despawn obby(s) in the current game
+		-- /despawnobbys
+		if command.command == "/despawnobbys" then
+			ObbyManager.DespawnObbys()
 		end
 	end)
 end)
