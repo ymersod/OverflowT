@@ -34,6 +34,7 @@ local tags = {
 	RESPAWN_POS = "RespawnPos",
 	TROPHY_COL = "TrophyCol",
 	OBBY_STATE_TEXT = "ObbyStateText",
+	BREAKING_SOUND = "BreakingSound",
 }
 
 return tags
