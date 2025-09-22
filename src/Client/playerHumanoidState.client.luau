@@ -34,19 +34,22 @@ local function getWorldObjects()
 end
 getWorldObjects()
 
-local function MovePlayersToLobbyCenter()
+local function MovePlayersToSpawn()
 	local character = Player.Character
 	if character and character:FindFirstChild("HumanoidRootPart") then
 		local hrp = character.HumanoidRootPart
 
-		local targetPos = lobbyZone[1].Position
-		hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+		local spawn = Player.RespawnLocation or workspace:FindFirstChild("SpawnLocation")
+		if spawn then
+			local targetPos = spawn.Position
+			hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
 
-		task.delay(0.2, function()
-			if (hrp.Position - targetPos).Magnitude > 5 then
-				hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
-			end
-		end)
+			task.delay(0.2, function()
+				if (hrp.Position - targetPos).Magnitude > 5 then
+					hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+				end
+			end)
+		end
 	end
 end
 
@@ -88,9 +91,7 @@ local function removeFromLine(lineNr)
 	ContextActionService:UnbindAction(FREEZE_ACTION)
 
 	hum.WalkSpeed = 16
-	if lobbyZone then
-		task.defer(MovePlayersToLobbyCenter)
-	end
+	task.defer(MovePlayersToSpawn)
 	isInLine = false
 end
 
