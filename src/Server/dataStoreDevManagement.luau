@@ -3,6 +3,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local ShopObjects = DataStoreService:GetDataStore("ShopObjects")
 local Stats = DataStoreService:GetDataStore("PlayerStats")
 local Actions = DataStoreService:GetDataStore("Actions")
+local OrderedStatsStore = DataStoreService:GetOrderedDataStore("PlayerStatsStore")
 
 dataStoreManagementFunctions = {}
 
@@ -36,6 +37,16 @@ function dataStoreManagementFunctions.removePlayerFromActionsStore(playerId)
 	end)
 	if success then
 		return { success = true, payload = "player " .. playerId .. " removed from actionsstore" }
+	end
+	return { success = false, payload = err }
+end
+
+function dataStoreManagementFunctions.removePlayerFromOrderedStatsStore(playerId)
+	local success, err = pcall(function()
+		return OrderedStatsStore:RemoveAsync(playerId)
+	end)
+	if success then
+		return { success = true, payload = "player " .. playerId .. " removed from ordered stats store" }
 	end
 	return { success = false, payload = err }
 end

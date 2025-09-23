@@ -91,9 +91,13 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local response = dataStoreDevManagement.removePlayerFromActionsStore(command.args[1])
 					print(response)
 				end
+				if #command.args == 1 or #command.args == 2 and command.args[2] == "orderedstats" then
+					local response = dataStoreDevManagement.removePlayerFromOrderedStatsStore(command.args[1])
+					print(response)
+				end
 			end
 		end
-		-- USED TO INSTANTLY ADD MONEY YOURSELF
+		-- USED TO INSTANTLY ADD MONEY TO YOURSELF
 		-- ex. writing the command on the next line in chat would add 200 money to your player
 		-- /addmoney 200
 		if command.command == "/addmoney" then
@@ -102,6 +106,21 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
 						currentStats.Coins += tonumber(command.args[1])
 						currentStats.Wins += 0
+						return currentStats
+					end)
+					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
+				end
+			end
+		end
+		-- USED TO INSTANTLY ADD WINS TO YOURSELF
+		-- ex. writing the command on the next line in chat would add 1 win to your player
+		-- /addmoney 200
+		if command.command == "/addwins" then
+			if #command.args >= 0 then
+				if #command.args == 1 then
+					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+						currentStats.Coins += 0
+						currentStats.Wins += tonumber(command.args[1])
 						return currentStats
 					end)
 					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
@@ -125,8 +144,8 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 			ObbyManager.DespawnObbys()
 		end
 		-- USED TO INSTANTLY GIVE CHARGES ON ACTIONS
-		-- ex. writing the command on the next line in chat despawn obby(s) in the current game
-		-- /despawnobbys
+		-- ex. writing the command on the next line would a charge to action with id 1 and give it 2 charges
+		-- /addaction 1 2
 		if command.command == "/addaction" then
 			if #command.args >= 0 then
 				if #command.args == 2 then

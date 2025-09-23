@@ -35,6 +35,7 @@ local tags = {
 	TROPHY_COL = "TrophyCol",
 	OBBY_STATE_TEXT = "ObbyStateText",
 	BREAKING_SOUND = "BreakingSound",
+	LEADERBOARD = "Leaderboard",
 }
 
 return tags
