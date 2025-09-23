@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local actionGuiState = require(script.Parent.actionGuiState)
 
 local events = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events")
 local lineEvents = events:WaitForChild("LineEvents")
@@ -26,6 +27,11 @@ flushButton.MouseButton1Down:Connect(function()
 end)
 flushButton.MouseButton1Up:Connect(function()
 	nextEvent:FireServer()
+
+	local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
+	linePosition.Changed:Once(function(newVal)
+		actionGuiState.updateGUI(newVal)
+	end)
 end)
 
 -- More less button

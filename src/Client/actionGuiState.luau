@@ -6,6 +6,7 @@ local actionGuiState = {}
 
 -- UI Elements
 local shadePrefab: Frame = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Shade")
+local actionFolder: Folder = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Actions")
 
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
@@ -14,6 +15,23 @@ local flushFrame: Frame = actionMenu:WaitForChild("Flush")
 
 local contextActionMenu1 = actionMenu:WaitForChild("ActionMenu1")
 local contextActionMenu2 = actionMenu:WaitForChild("ActionMenu2")
+
+local function SetupContextActionMenus(contextActionMenu: Instance)
+	local actionIds = contextActionMenu:GetAttribute("ActionIds")
+	local idArr: { string } = actionIds and string.split(actionIds, ",") or {}
+
+	for _, id in ipairs(idArr) do
+		for _, action in ipairs(actionFolder:GetChildren()) do
+			local actionId = action:GetAttribute("ActionId")
+			if tostring(actionId) == tostring(id) then
+				local actionClone = action:Clone()
+				actionClone.Parent = contextActionMenu
+			end
+		end
+	end
+end
+SetupContextActionMenus(contextActionMenu1)
+SetupContextActionMenus(contextActionMenu2)
 
 local function shade(frames: { Frame }, modification: "Add" | "Remove")
 	if modification == "Add" then
