@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local actionGuiAmount = require(script.Parent.actionGuiAmount)
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local actionGuiState = {}
@@ -115,4 +116,5 @@ function actionGuiState.updateGUI(linePositionValue: number)
 	end
 end
 
+actionGuiAmount.setup()
 return actionGuiState

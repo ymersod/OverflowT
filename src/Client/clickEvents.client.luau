@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local actionGuiAmount = require(script.Parent.actionGuiAmount)
 local actionGuiState = require(script.Parent.actionGuiState)
 
 local events = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events")
@@ -10,6 +11,9 @@ local nextEvent = lineEvents:WaitForChild("Next")
 local cutAllEvent = lineEvents:WaitForChild("CutAll")
 local skipAheadEvent = lineEvents:WaitForChild("SkipAhead")
 local startFlushEvent = gameEvents:WaitForChild("StartFlush")
+
+local actionEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ActionsEvents")
+local tryUseActions = actionEvents:WaitForChild("TryUseAction")
 
 -- UI
 local StaterGUI = Player:WaitForChild("PlayerGui")
@@ -49,20 +53,40 @@ moreLessButton.MouseButton1Down:Connect(function()
 	end
 end)
 
+local function useAction(buttonRef: TextButton)
+	local parentFrame = buttonRef.Parent
+	local actionId = parentFrame and parentFrame:GetAttribute("ActionId")
+	local result, canUse = tryUseActions:InvokeServer(tostring(actionId))
+	actionGuiAmount.updateGui(result)
+	return canUse
+end
+
 -- Cut button
 local cutButton = contextActionMenu1:WaitForChild("Cut"):FindFirstChildOfClass("TextButton")
 cutButton.MouseButton1Down:Connect(function()
-	skipAheadEvent:FireServer()
+	if useAction(cutButton) then
+		skipAheadEvent:FireServer()
+	else
+		warn("Not enough charges!!")
+	end
 end)
 
 -- Cut all button
 local cutAllButton = contextActionMenu1:WaitForChild("CutAll"):FindFirstChildOfClass("TextButton")
 cutAllButton.MouseButton1Down:Connect(function()
-	cutAllEvent:FireServer()
+	if useAction(cutAllButton) then
+		cutAllEvent:FireServer()
+	else
+		warn("Not enough charges!!")
+	end
 end)
 
 -- Skip flush button
 local skipFlushButton = contextActionMenu1:WaitForChild("SkipFill"):FindFirstChildOfClass("TextButton")
 skipFlushButton.MouseButton1Down:Connect(function()
-	nextEvent:FireServer()
+	if useAction(skipFlushButton) then
+		nextEvent:FireServer()
+	else
+		warn("Not enough charges!!")
+	end
 end)

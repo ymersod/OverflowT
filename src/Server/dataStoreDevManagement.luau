@@ -2,11 +2,13 @@ local DataStoreService = game:GetService("DataStoreService")
 
 local ShopObjects = DataStoreService:GetDataStore("ShopObjects")
 local Stats = DataStoreService:GetDataStore("PlayerStats")
+local Actions = DataStoreService:GetDataStore("Actions")
 
 dataStoreManagementFunctions = {}
 
 local statPrefix = "Stats_"
 local shopPrefix = "ShopObjects_"
+local actionsPrefix = "Actions_"
 
 function dataStoreManagementFunctions.removePlayerFromStatsStore(playerId)
 	local success, err = pcall(function()
@@ -28,16 +30,14 @@ function dataStoreManagementFunctions.removePlayerFromShopObjectsStore(playerId)
 	return { success = false, payload = err }
 end
 
-function dataStoreManagementFunctions.clearAllKeysInDataStores()
-	local clearSuccessObj = dataStoreManagementFunctions.clearStatsStore()
-	if not clearSuccessObj.success then
-		warn(clearSuccessObj.payload)
+function dataStoreManagementFunctions.removePlayerFromActionsStore(playerId)
+	local success, err = pcall(function()
+		return Actions:RemoveAsync(actionsPrefix .. playerId)
+	end)
+	if success then
+		return { success = true, payload = "player " .. playerId .. " removed from actionsstore" }
 	end
-
-	clearSuccessObj = dataStoreManagementFunctions.clearShopObjectStore()
-	if not clearSuccessObj.success then
-		warn(clearSuccessObj.payload)
-	end
+	return { success = false, payload = err }
 end
 
 return dataStoreManagementFunctions

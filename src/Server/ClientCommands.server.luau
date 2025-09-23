@@ -3,9 +3,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ObbyManager = require(ServerScriptService.Server.Managers.ObbyManager)
+local Actions = require(ServerScriptService.Server.Persistence.Actions)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local dataStoreDevManagement = require(script.Parent.dataStoreDevManagement)
 local serverUtils = require(script.Parent.serverUtils)
+
+local UpdateActionsFromServer = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ActionsEvents")
+	:WaitForChild("UpdateActionsFromServer")
 
 local function subSet(array: { any }, iStart: number, iEnd: number?)
 	if iEnd == nil then
@@ -81,6 +87,10 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local response = dataStoreDevManagement.removePlayerFromStatsStore(command.args[1])
 					print(response)
 				end
+				if #command.args == 1 or #command.args == 2 and command.args[2] == "actions" then
+					local response = dataStoreDevManagement.removePlayerFromActionsStore(command.args[1])
+					print(response)
+				end
 			end
 		end
 		-- USED TO INSTANTLY ADD MONEY YOURSELF
@@ -90,7 +100,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 			if #command.args >= 0 then
 				if #command.args == 1 then
 					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
-						currentStats.Coins += command.args[1]
+						currentStats.Coins += tonumber(command.args[1])
 						currentStats.Wins += 0
 						return currentStats
 					end)
@@ -113,6 +123,33 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 		-- /despawnobbys
 		if command.command == "/despawnobbys" then
 			ObbyManager.DespawnObbys()
+		end
+		-- USED TO INSTANTLY GIVE CHARGES ON ACTIONS
+		-- ex. writing the command on the next line in chat despawn obby(s) in the current game
+		-- /despawnobbys
+		if command.command == "/addaction" then
+			if #command.args >= 0 then
+				if #command.args == 2 then
+					local newActions = Actions.UpdatePlayerOwnedActions(
+						tostring(player.UserId),
+						function(currentActions)
+							local action = currentActions[command.args[1]]
+							if action then
+								action.OwnedAmount += tonumber(command.args[2])
+							else
+								currentActions[command.args[1]] = {
+									ActionId = command.args[1],
+									OwnedAmount = tonumber(command.args[2]),
+								}
+								action = currentActions[command.args[1]]
+							end
+							return currentActions
+						end
+					)
+
+					UpdateActionsFromServer:InvokeClient(player, newActions)
+				end
+			end
 		end
 	end)
 end)

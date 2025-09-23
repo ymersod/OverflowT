@@ -9,4 +9,9 @@ export type ShopItem = {
 	ImageId: string?,
 }
 
+export type Action = {
+	ActionId: number,
+	OwnedAmount: number,
+}
+
 return types
