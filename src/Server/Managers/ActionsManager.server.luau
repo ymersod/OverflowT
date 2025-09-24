@@ -14,7 +14,7 @@ end
 
 TryUseAction.OnServerInvoke = function(player, id: string)
 	local result, canUse = Actions.UpdatePlayerOwnedActions(tostring(player.UserId), function(currentActions)
-		local action = currentActions[tostring(id)]
+		local action = currentActions[id]
 		if action then
 			if action.OwnedAmount > 0 then
 				action.OwnedAmount -= 1

@@ -1,12 +1,12 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local tweenService = game:GetService("TweenService")
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
 local TopBarUpdate = clientEvents:WaitForChild("TopBarUpdate")
 local EndGameScreen = clientEvents:WaitForChild("EndGameScreen")
 local GameCancelledEvent = clientEvents:WaitForChild("GameCancelled")
 local RespawnToObbyEvent = clientEvents:WaitForChild("RespawnToObby")
 local WinObbyEvent = clientEvents:WaitForChild("ObbyWin")
+local PlayTimeRewardEvent = clientEvents:WaitForChild("PlaytimeReward")
 local UpdateStatsEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("StatsEvents")
@@ -36,11 +36,17 @@ local TWEEN_LENGTH = 0.5
 local FADEOUT_LENGTH = 2
 
 local textParent = ObbyWinFrame:WaitForChild("WinFrame"):WaitForChild("TextParent")
-local ObbyWinText: TextLabel = textParent:WaitForChild("WinText")
+local _: TextLabel = textParent:WaitForChild("WinText")
 local moneyText: TextLabel = textParent:WaitForChild("MoneyLabel")
 local earnedText: TextLabel = textParent:WaitForChild("EarnedLabel")
 local TYPE_WRITER_EARNED = 0.1
 local TYPE_WRITER_MONEY = 0.175
+
+local playTimeRewardsFrame = ScreenGUI:WaitForChild("PlayTimeRewards") :: Frame
+local ELASTIC_DUR = 0.4
+local FADEOUT_TIME = 4
+local recievedText: TextLabel = playTimeRewardsFrame:WaitForChild("RecievedText")
+local whyText: TextLabel = playTimeRewardsFrame:WaitForChild("WhyText")
 
 -- Top bar GUI
 TopBarUpdate.OnClientEvent:Connect(function(text: string, mode: "Ongoing" | "Intermission")
@@ -99,7 +105,11 @@ WinObbyEvent.OnClientEvent:Connect(function(money: number)
 		baseObbyWinFrameSize,
 		baseObbyWinFrameEndPos,
 		TWEEN_LENGTH,
-		FADEOUT_LENGTH
+		FADEOUT_LENGTH,
+		function()
+			moneyText.Visible = false
+			earnedText.Visible = false
+		end
 	)
 	task.wait(TWEEN_LENGTH * 2)
 	task.spawn(function()
@@ -114,6 +124,16 @@ WinObbyEvent.OnClientEvent:Connect(function(money: number)
 				end)
 			end)
 		end)
+	end)
+end)
+
+-- Playtime reward event
+PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string)
+	print("rewarding", actionId)
+	local fadeout =
+		clientUtils.PopFrameElastic(playTimeRewardsFrame, playTimeRewardsFrame.Size, ELASTIC_DUR, FADEOUT_TIME)
+	task.delay(2, function()
+		fadeout()
 	end)
 end)
 

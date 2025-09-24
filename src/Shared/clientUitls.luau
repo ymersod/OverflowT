@@ -7,6 +7,38 @@ local WarningContainer = ScreenGui:WaitForChild("WarningContainer")
 
 local ClientUtils = {}
 
+local function fadeOut(frame: Frame, fadeOutTime: number, Destroy: boolean?, callback: (() -> ())?)
+	local fadeInfo = TweenInfo.new(fadeOutTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	local bgTween = TweenService:Create(frame, fadeInfo, { BackgroundTransparency = 1 })
+	bgTween:Play()
+
+	for _, obj in ipairs(frame:GetDescendants()) do
+		if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+			TweenService:Create(obj, fadeInfo, { TextTransparency = 1 }):Play()
+		elseif obj:IsA("UIStroke") then
+			TweenService:Create(obj, fadeInfo, { Transparency = 1 }):Play()
+		end
+	end
+
+	bgTween.Completed:Wait()
+
+	if Destroy then
+		frame:Destroy()
+	else
+		frame.Visible = false
+		for _, obj in ipairs(frame:GetDescendants()) do
+			if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+				obj.TextTransparency = 0
+			elseif obj:IsA("UIStroke") then
+				obj.Transparency = 0
+			end
+		end
+	end
+	if callback then
+		callback()
+	end
+end
 function ClientUtils.showWarning(message)
 	if not WarningContainer then
 		warn("Warning container not found")
@@ -17,7 +49,7 @@ function ClientUtils.showWarning(message)
 	frame.Size = UDim2.new(1, 0, 1, 0)
 	frame.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 	frame.BackgroundTransparency = 0.1
-	frame.LayoutOrder = tick()
+	frame.ZIndex = 0
 	frame.Parent = WarningContainer
 
 	-- round corners
@@ -38,15 +70,7 @@ function ClientUtils.showWarning(message)
 	label.TextWrapped = true
 	label.Parent = frame
 
-	-- optional: fade out after a few seconds
-	task.delay(3, function()
-		for i = 0, 1, 0.05 do
-			frame.BackgroundTransparency = i
-			label.TextTransparency = i
-			task.wait(0.05)
-		end
-		frame:Destroy()
-	end)
+	fadeOut(frame, 3, true)
 end
 
 function ClientUtils.RainbowIfyText(gradient: UIGradient)
@@ -70,7 +94,8 @@ function ClientUtils.PopFrame(
 	targetSize: UDim2,
 	targetPos: UDim2,
 	time: number,
-	fadeOutTime: number
+	fadeOutTime: number,
+	callback: (() -> ())?
 )
 	frame.Visible = true
 	frame.Size = UDim2.new(0, 0, 0, 0)
@@ -81,25 +106,9 @@ function ClientUtils.PopFrame(
 	local tween = TweenService:Create(frame, tweenInfo, goal)
 	tween:Play()
 
-	local function fadeOut()
-		local fadeInfo = TweenInfo.new(fadeOutTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-		local bgTween = TweenService:Create(frame, fadeInfo, { BackgroundTransparency = 1 })
-		bgTween:Play()
-
-		for _, obj in ipairs(frame:GetDescendants()) do
-			if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-				TweenService:Create(obj, fadeInfo, { TextTransparency = 1 }):Play()
-			elseif obj:IsA("UIStroke") then
-				TweenService:Create(obj, fadeInfo, { Transparency = 1 }):Play()
-			end
-		end
-
-		bgTween.Completed:Wait()
-		frame.Visible = false
+	return function()
+		fadeOut(frame, fadeOutTime, false, callback)
 	end
-
-	return fadeOut
 end
 
 function ClientUtils.TypewriterLabel(label: TextLabel, text: string, speed: number, callback: (() -> ())?)
@@ -184,6 +193,20 @@ function ClientUtils.CountUpNumberLabel(
 
 		label.Text = text .. endValue -- ensure exact final value
 	end)
+end
+
+function ClientUtils.PopFrameElastic(frame: Frame, targetSize: UDim2, duration: number, fadeOutTime: number)
+	frame.Size = UDim2.new(0, 0, 0, 0)
+	frame.Visible = true
+
+	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+	local goal = { Size = targetSize }
+	local tween = TweenService:Create(frame, tweenInfo, goal)
+	tween:Play()
+
+	return function()
+		fadeOut(frame, fadeOutTime)
+	end
 end
 
 return ClientUtils
