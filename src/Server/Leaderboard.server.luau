@@ -13,12 +13,47 @@ local leaderboardSpots = leaderboard:WaitForChild("ScoreBlock"):WaitForChild("Le
 local leaderboardNames: { TextLabel } = leaderboardSpots:WaitForChild("Names"):GetChildren()
 local leaderboardPhotos: { ImageLabel } = leaderboardSpots:WaitForChild("Photos"):GetChildren()
 local leaderboardScores: { TextLabel } = leaderboardSpots:WaitForChild("Score"):GetChildren()
-local firstPlaceAvatar: Model = leaderboard:WaitForChild("First Place Avatar")
-local firstPlaceRig = firstPlaceAvatar:FindFirstChildOfClass("Model")
-local firstPlaceCFrame = firstPlaceRig.PrimaryPart.CFrame
+local topPlayers = CollectionService:GetTagged(tags.TOP_PLAYERS)[1]
 
 local LEADERBOARD_UPDATE = 100
 local curTime = 0
+
+local function SetTopModel(userId: string, wins: number, i: number)
+	local spot = topPlayers:FindFirstChild(i)
+
+	if spot then
+		local statue: Model? = spot:FindFirstChild("Statue")
+		local hum: Humanoid? = statue and statue:FindFirstChildOfClass("Humanoid")
+		local animator: Animator? = hum and hum:FindFirstChildOfClass("Animator")
+		local animation: Animation? = statue and statue:FindFirstChildOfClass("Animation")
+
+		if hum and animator and animation then
+			if tonumber(userId) > 0 then
+				hum:ApplyDescription(Players:GetHumanoidDescriptionFromUserId(tonumber(userId)))
+			end
+			local anim
+			pcall(function()
+				anim = animator:LoadAnimation(animation)
+			end)
+			anim:Play()
+		end
+
+		local statsHolder = spot and spot:FindFirstChild("Stats") :: Part?
+		local bb = statsHolder and statsHolder:FindFirstChildOfClass("BillboardGui")
+		local frame = bb and bb:FindFirstChildOfClass("Frame")
+		local winsText: TextLabel? = frame and frame:FindFirstChild("MoneyAmount")
+		local playerName: TextLabel? = frame and frame:FindFirstChild("PlayerName")
+
+		if winsText and playerName then
+			winsText.Text = "WINS: " .. wins
+			if tonumber(userId) > 0 then
+				playerName.Text = "#" .. i .. " " .. Players:GetNameFromUserIdAsync(userId)
+			else
+				playerName.Text = "#" .. i .. " " .. "Player " .. userId
+			end
+		end
+	end
+end
 
 local function UpdateLeaderboardWorldData(top10Arr: { key: string, value: number }?)
 	if not top10Arr then
@@ -55,10 +90,8 @@ local function UpdateLeaderboardWorldData(top10Arr: { key: string, value: number
 			end
 		end
 
-		if i == 1 then
-
-			-- model:PivotTo(firstPlaceCFrame)
-			-- https://www.youtube.com/watch?v=aznei-44QJo tommroow
+		if i <= 3 then
+			SetTopModel(topPlayer.key, topPlayer.value, i)
 		end
 	end
 end

@@ -36,6 +36,7 @@ local tags = {
 	OBBY_STATE_TEXT = "ObbyStateText",
 	BREAKING_SOUND = "BreakingSound",
 	LEADERBOARD = "Leaderboard",
+	TOP_PLAYERS = "TopPlayers",
 }
 
 return tags
