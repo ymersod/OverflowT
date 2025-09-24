@@ -22,7 +22,7 @@ type PlayerHeld = {
 	timeHeld: number,
 }
 
-local hardCap = 15 -- Seconds
+local hardCap = 5 -- Seconds
 local playerHeldTime = {}
 
 local function calcCoins(playerId: number)
@@ -37,20 +37,23 @@ local function RewardWinners()
 	local playerIds = LineArray:GetLine()
 
 	local losingPlayer = playerIds[1]
-	_ = losingPlayer and EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(losingPlayer), false)
+	_ = losingPlayer and EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(losingPlayer), false)
 
 	--Skipping first since he was the one who made it Overflow
 	for i = 2, #playerIds do
 		local playerId = playerIds[i]
 		local coinsEarned = calcCoins(playerId)
-		local newStats = Stats.UpdatePlayerStats(playerId, function(currentStats)
-			currentStats.Coins += coinsEarned
-			currentStats.Wins += 1
-			return currentStats
-		end)
-		serverUtils.updatePlayerLeaderStats(playerId, newStats)
 
-		EndGameScreenEvent:FireClient(Players:GetPlayerByUserId(playerId), true, coinsEarned)
+		local soundLength = EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(playerId), true, coinsEarned)
+
+		task.delay(soundLength, function()
+			local newStats = Stats.UpdatePlayerStats(playerId, function(currentStats)
+				currentStats.Coins += coinsEarned
+				currentStats.Wins += 1
+				return currentStats
+			end)
+			serverUtils.updatePlayerLeaderStats(playerId, newStats)
+		end)
 	end
 end
 

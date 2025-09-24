@@ -14,6 +14,10 @@ export type SoundName =
 	| "WinRound"
 	| "Teleport"
 	| "DailyPlaytimeCashIn"
+	| "TypeWriter"
+	| "Kaching"
+	| "WinObby"
+	| "CountingMoney"
 
 local trackList: { [SoundName]: number } = {
 	UniversalButtonHover = 6042053626,
@@ -27,6 +31,10 @@ local trackList: { [SoundName]: number } = {
 	WinRound = 748978048,
 	Teleport = 93826112721753,
 	DailyPlaytimeCashIn = 3120909354,
+	TypeWriter = 122141604056833,
+	Kaching = 7112275565,
+	WinObby = 80766655803396,
+	CountingMoney = 8545868378,
 }
 
 local sounds: { [SoundName]: Sound } = {}
@@ -57,6 +65,14 @@ function SoundEffects.Stop(name: SoundName)
 	if sound then
 		sound:Stop()
 	end
+end
+
+function SoundEffects.GetSound(name: SoundName)
+	local sound = sounds[name]
+	if sound then
+		return sound
+	end
+	return nil
 end
 
 return SoundEffects

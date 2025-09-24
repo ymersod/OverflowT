@@ -3,15 +3,25 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
+local serverUtils = require(ServerScriptService.Server.serverUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
+local uiConstants = require(ReplicatedStorage.Shared.uiConstants)
 local clientRespawnEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("RespawnToObby")
+local UpdateStatsEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("StatsEvents")
+	:WaitForChild("UpdateStats")
+local clientWinEvent =
+	ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents"):WaitForChild("ObbyWin")
 
 -- Tagged objects
 local runtimeObbyFolder: Folder = ReplicatedStorage:WaitForChild("ObbyRuntimeStorage")
 local obbySignText: TextLabel = CollectionService:GetTagged(tags.OBBY_STATE_TEXT)[1]
+local obbyLevelText: TextLabel = CollectionService:GetTagged(tags.OBBY_LEVEL_TEXT)[1]
 local resetFallBlock: Part = CollectionService:GetTagged(tags.FALL_RESET_BLOCK)[1]
 local respawnPos: Part = CollectionService:GetTagged(tags.RESPAWN_POS)[1]
 
@@ -37,7 +47,7 @@ local function TelePortPlayer(player: Player)
 	clientRespawnEvent:FireClient(player, respawnPos.Position)
 end
 
-local function SetupConnection(part: BasePart, mode: "Kill" | "Win")
+local function SetupConnection(part: BasePart, mode: "Kill" | "Win", winPrize: number?)
 	local playerDebounce = {}
 
 	part.Touched:Connect(function(hit)
@@ -53,7 +63,8 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win")
 
 		TelePortPlayer(player)
 		if mode == "Win" then
-			print(player.Name .. " won!")
+			local winningPrize = winPrize and winPrize or 10
+			clientWinEvent:FireClient(player, winningPrize)
 		end
 
 		task.delay(0.5, function()
@@ -61,7 +72,7 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win")
 		end)
 	end)
 end
-
+local rainbowLoopRunning = false
 function obbyManager.SpawnObby(obbyId: number)
 	local obby
 	for _, runtimeObby in ipairs(runtimeObbyFolder:GetChildren()) do
@@ -73,23 +84,48 @@ function obbyManager.SpawnObby(obbyId: number)
 	end
 
 	if obby then
+		local difficulity: "EASY" | "MEDIUM" | "HARD" | "OP"? = obby:GetAttribute("ObbyDifficulity")
+		local winPrize: number? = obby:GetAttribute("WinPrize")
+		local color: Color3? = difficulity and uiConstants.difficultyColors[difficulity]
+			or uiConstants.difficultyColors.FALLBACK
 		local obbyClone = obby:Clone() :: Instance
 		obbyClone.Parent = obbyWorkSpaceFolder
 
-		local obbyDescendants = obbyClone:GetDescendants()
-
-		for _, desc in ipairs(obbyDescendants) do
-			if desc:IsA("BasePart") and desc:HasTag(tags.RESET_BLOCK) then
+		for _, desc in ipairs(obbyClone:GetDescendants()) do
+			if desc:IsA("BasePart") and desc:HasTag(tags.RESET_BLOCK) and difficulity then
 				SetupConnection(desc, "Kill")
-			elseif desc:IsA("BasePart") and desc:HasTag(tags.TROPHY_COL) then
-				SetupConnection(desc, "Win")
+			elseif desc:IsA("BasePart") and desc:HasTag(tags.TROPHY_COL) and difficulity then
+				SetupConnection(desc, "Win", winPrize)
+			end
+		end
+
+		rainbowLoopRunning = false
+		if difficulity and color then
+			local hex = string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
+			obbyLevelText.RichText = true
+			obbyLevelText.Text = string.format('Level [<font color="%s">%s</font>]', hex, difficulity)
+
+			if difficulity == "OP" then
+				rainbowLoopRunning = true
+				task.spawn(function()
+					local i = 1
+					while rainbowLoopRunning do
+						local gColor = uiConstants.rainbowColor[i]
+						local gHex = string.format("#%02X%02X%02X", gColor.R * 255, gColor.G * 255, gColor.B * 255)
+
+						obbyLevelText.RichText = true
+						obbyLevelText.Text = string.format('Level [<font color="%s">%s</font>]', gHex, difficulity)
+
+						i = (i % #uiConstants.rainbowColor) + 1
+						task.wait(0.2)
+					end
+				end)
 			end
 		end
 	else
 		warn("No obbys found in folder!!")
 	end
 end
-
 function obbyManager.DespawnObbys()
 	local curObbyLevel: { Instance } = {}
 	for _, obj in ipairs(obbyWorkSpaceFolder:GetChildren()) do
@@ -105,6 +141,15 @@ function obbyManager.DespawnObbys()
 		warn("Didnt find obby(s) to despawn??")
 	end
 end
+
+UpdateStatsEvent.OnServerEvent:Connect(function(player, toAdd: number)
+	local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+		currentStats.Coins += toAdd
+		currentStats.Wins += 0
+		return currentStats
+	end)
+	serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
+end)
 
 local function Start()
 	SetupConnection(resetFallBlock, "Kill")
@@ -127,6 +172,7 @@ local function Start()
 		obbySignText.Text = "Next obby spawning in: " .. math.floor(OBBY_ACTIVE_TIME_CAP - curTimeAlive)
 	end)
 end
+obbyManager.SpawnObby(2)
 Start()
 
 return obbyManager

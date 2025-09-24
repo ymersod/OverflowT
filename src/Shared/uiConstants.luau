@@ -20,6 +20,13 @@ local uiUtils = {
 		Color3.fromRGB(75, 0, 130), -- Indigo
 		Color3.fromRGB(148, 0, 211), -- Violet
 	},
+	difficultyColors = {
+		EASY = Color3.fromRGB(0, 255, 0), -- Green
+		MEDIUM = Color3.fromRGB(255, 255, 0), -- Yellow
+		HARD = Color3.fromRGB(255, 0, 0), -- Red
+		OP = Color3.fromRGB(0, 0, 0), -- Black
+		FALLBACK = Color3.fromRGB(128, 128, 128),
+	},
 }
 
 return uiUtils
