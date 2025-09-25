@@ -5,6 +5,12 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local ScreenGui = PlayerGui:WaitForChild("ScreenGui")
 local WarningContainer = ScreenGui:WaitForChild("WarningContainer")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local moneyAnimationEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("StatsEvents")
+	:WaitForChild("MoneyAnimation")
+
 local ClientUtils = {}
 
 local function fadeOut(frame: Frame, fadeOutTime: number, Destroy: boolean?, callback: (() -> ())?)
@@ -185,7 +191,11 @@ function ClientUtils.CountUpNumberLabel(
 		end
 
 		-- count the number
-		for i = 1, steps do
+		for i = 1, steps do --Mod 10 call server event, money animation
+			if i % 6 == 0 then
+				print("got here")
+				moneyAnimationEvent:FireServer()
+			end
 			current = current + stepAmount
 			label.Text = text .. math.floor(current)
 			task.wait(stepDelay)
