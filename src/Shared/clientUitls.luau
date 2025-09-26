@@ -6,6 +6,8 @@ local ScreenGui = PlayerGui:WaitForChild("ScreenGui")
 local WarningContainer = ScreenGui:WaitForChild("WarningContainer")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterPlayer = game:GetService("StarterPlayer")
+local SoundEffectHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
 local moneyAnimationEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("StatsEvents")
@@ -75,6 +77,7 @@ function ClientUtils.showWarning(message)
 	label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	label.TextWrapped = true
 	label.Parent = frame
+	SoundEffectHandler.Play("PopUp")
 
 	fadeOut(frame, 3, true)
 end
@@ -205,7 +208,14 @@ function ClientUtils.CountUpNumberLabel(
 	end)
 end
 
-function ClientUtils.PopFrameElastic(frame: Frame, targetSize: UDim2, duration: number, fadeOutTime: number)
+function ClientUtils.PopFrameElastic(
+	frame: Frame,
+	targetSize: UDim2,
+	duration: number,
+	fadeOutTime: number,
+	destroy: boolean?,
+	callback: (() -> ())?
+)
 	frame.Size = UDim2.new(0, 0, 0, 0)
 	frame.Visible = true
 
@@ -215,7 +225,7 @@ function ClientUtils.PopFrameElastic(frame: Frame, targetSize: UDim2, duration: 
 	tween:Play()
 
 	return function()
-		fadeOut(frame, fadeOutTime)
+		fadeOut(frame, fadeOutTime, destroy, callback)
 	end
 end
 

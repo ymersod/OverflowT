@@ -15,7 +15,7 @@ local leaderboardPhotos: { ImageLabel } = leaderboardSpots:WaitForChild("Photos"
 local leaderboardScores: { TextLabel } = leaderboardSpots:WaitForChild("Score"):GetChildren()
 local topPlayers = CollectionService:GetTagged(tags.TOP_PLAYERS)[1]
 
-local LEADERBOARD_UPDATE = 100
+local LEADERBOARD_UPDATE = 10
 local curTime = 0
 
 local function SetTopModel(userId: string, wins: number, i: number)
@@ -63,11 +63,16 @@ local function UpdateLeaderboardWorldData(top10Arr: { key: string, value: number
 
 	for i, topPlayer in ipairs(top10Arr) do
 		local playerId = tonumber(topPlayer.key)
-		local player = Players:GetPlayerByUserId(playerId)
+		local name
+		if playerId > 0 then
+			name = Players:GetNameFromUserIdAsync(playerId)
+		else
+			name = "Player " .. playerId
+		end
 
 		for _, leaderboardName in ipairs(leaderboardNames) do
 			if leaderboardName.Name == "Name" .. i then
-				leaderboardName.Text = player and player.Name or "Player " .. playerId
+				leaderboardName.Text = name and name or "Player " .. playerId
 			end
 		end
 		for _, leaderboardScore in ipairs(leaderboardScores) do

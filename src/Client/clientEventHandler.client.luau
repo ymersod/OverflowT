@@ -16,6 +16,8 @@ local SoundEffectHandler = require(script.Parent.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
 
 -- UI Elements
+local actionsRefs = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Actions")
+
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 
@@ -42,11 +44,19 @@ local earnedText: TextLabel = textParent:WaitForChild("EarnedLabel")
 local TYPE_WRITER_EARNED = 0.1
 local TYPE_WRITER_MONEY = 0.175
 
-local playTimeRewardsFrame = ScreenGUI:WaitForChild("PlayTimeRewards") :: Frame
+local playTimeRewardsFrame = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("PlayTimeRewards")
 local ELASTIC_DUR = 0.4
 local FADEOUT_TIME = 4
-local recievedText: TextLabel = playTimeRewardsFrame:WaitForChild("RecievedText")
-local whyText: TextLabel = playTimeRewardsFrame:WaitForChild("WhyText")
+local whyTextArr = {
+	"Here’s a little something for you!",
+	"Appreciate you playing!",
+	"You deserve this!",
+	"Enjoy your reward!",
+	"Thanks for spending time with us!",
+	"A little gift for you!",
+	"Here you go!",
+	"Keep enjoying yourself!",
+}
 
 -- Top bar GUI
 TopBarUpdate.OnClientEvent:Connect(function(text: string, mode: "Ongoing" | "Intermission")
@@ -129,10 +139,67 @@ end)
 
 -- Playtime reward event
 PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string)
-	print("rewarding", actionId)
-	local fadeout =
-		clientUtils.PopFrameElastic(playTimeRewardsFrame, playTimeRewardsFrame.Size, ELASTIC_DUR, FADEOUT_TIME)
-	task.delay(2, function()
+	local playTimeRewardsFrameClone = playTimeRewardsFrame:Clone() :: Frame
+	local recievedText: TextLabel = playTimeRewardsFrameClone:WaitForChild("RecievedText")
+	local whyText: TextLabel = playTimeRewardsFrameClone:WaitForChild("WhyText")
+	playTimeRewardsFrameClone.Parent = ScreenGUI
+	playTimeRewardsFrameClone.ZIndex = os.time()
+
+	local color = Color3.fromRGB(255, 255, 255)
+	local text = "???"
+	for _, action in ipairs(actionsRefs:GetChildren()) do
+		local actionRefId = action:GetAttribute("ActionId")
+		if actionRefId and tonumber(actionRefId) == tonumber(actionId) then
+			local textButton = action:FindFirstChildOfClass("TextButton")
+			local textLabel = textButton and textButton:FindFirstChildOfClass("TextLabel")
+
+			if textButton and textLabel then
+				color = textButton.BackgroundColor3
+				text = textLabel.Text
+				break
+			end
+		end
+	end
+
+	local function colorToHex(c)
+		local r = math.floor(c.R * 255 + 0.5)
+		local g = math.floor(c.G * 255 + 0.5)
+		local b = math.floor(c.B * 255 + 0.5)
+		return string.format("#%02X%02X%02X", r, g, b)
+	end
+
+	local function escapeRichText(s)
+		if not s then
+			return ""
+		end
+		return s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+	end
+	local function fitTextToLabel(label)
+		local maxWidth = label.AbsoluteSize.X
+		local maxHeight = label.AbsoluteSize.Y
+
+		local size = label.TextSize
+
+		while (label.TextBounds.X > maxWidth or label.TextBounds.Y > maxHeight) and size > 8 do
+			size -= 1
+			label.TextSize = size
+		end
+	end
+	local hex = colorToHex(color)
+
+	recievedText.Text = "You got 1x [" .. '<font color="' .. hex .. '">' .. escapeRichText(text) .. "</font>" .. "]"
+	whyText.Text = whyTextArr[math.random(1, #whyTextArr)]
+	fitTextToLabel(recievedText)
+	fitTextToLabel(whyText)
+	local fadeout = clientUtils.PopFrameElastic(
+		playTimeRewardsFrameClone,
+		playTimeRewardsFrameClone.Size,
+		ELASTIC_DUR,
+		FADEOUT_TIME,
+		true
+	)
+	SoundEffectHandler.Play("PopUp")
+	task.delay(3, function()
 		fadeout()
 	end)
 end)

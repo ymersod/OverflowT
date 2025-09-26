@@ -125,6 +125,14 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					end)
 					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
 				end
+				if #command.args == 2 then
+					local newStats = Stats.UpdatePlayerStats(command.args[2], function(currentStats)
+						currentStats.Coins += 0
+						currentStats.Wins += tonumber(command.args[1])
+						return currentStats
+					end)
+					-- serverUtils.updatePlayerLeaderStats(command.args[2], newStats)
+				end
 			end
 		end
 		-- USED TO INSTANTLY SPAWN A SPECIFIC OBBY USING ID

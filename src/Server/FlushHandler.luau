@@ -22,7 +22,7 @@ type PlayerHeld = {
 	timeHeld: number,
 }
 
-local hardCap = 5 -- Seconds
+local hardCap = 15 -- Seconds
 local playerHeldTime = {}
 
 local function calcCoins(playerId: number)

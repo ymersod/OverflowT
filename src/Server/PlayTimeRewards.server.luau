@@ -10,10 +10,10 @@ local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Even
 local PlayTimeRewardEvent = clientEvents:WaitForChild("PlaytimeReward")
 
 -- SETTINGS
-local CUT_CD = 5 -- 60
-local CUT_ALL_CD = 20 -- 120
-local SKIP_CD = 30 -- 300
-local RESET_TOILET = 40 -- 600
+local CUT_CD = 60 -- 60
+local CUT_ALL_CD = 120 -- 120
+local SKIP_CD = 300 -- 300
+local RESET_TOILET = 600 -- 600
 
 local activePlayers = {}
 
