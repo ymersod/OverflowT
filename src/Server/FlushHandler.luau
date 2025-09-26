@@ -47,12 +47,15 @@ local function RewardWinners()
 		local soundLength = EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(playerId), true, coinsEarned)
 
 		task.delay(soundLength, function()
-			local newStats = Stats.UpdatePlayerStats(playerId, function(currentStats)
-				currentStats.Coins += coinsEarned
-				currentStats.Wins += 1
-				return currentStats
+			serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)
+			serverUtils.modifyPlayerLeaderStats(playerId, "Wins", 1)
+			task.spawn(function()
+				Stats.UpdatePlayerStats(playerId, function(currentStats)
+					currentStats.Coins += coinsEarned
+					currentStats.Wins += 1
+					return currentStats
+				end)
 			end)
-			serverUtils.updatePlayerLeaderStats(playerId, newStats)
 		end)
 	end
 end

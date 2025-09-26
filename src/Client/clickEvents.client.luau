@@ -1,6 +1,5 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local actionGuiAmount = require(script.Parent.actionGuiAmount)
 local actionGuiState = require(script.Parent.actionGuiState)
 
 local events = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events")
@@ -56,8 +55,7 @@ end)
 local function useAction(buttonRef: TextButton)
 	local parentFrame = buttonRef.Parent
 	local actionId = parentFrame and parentFrame:GetAttribute("ActionId")
-	local result, canUse = tryUseActions:InvokeServer(tostring(actionId))
-	actionGuiAmount.updateGui(result)
+	local canUse = tryUseActions:InvokeServer(tostring(actionId))
 	return canUse
 end
 

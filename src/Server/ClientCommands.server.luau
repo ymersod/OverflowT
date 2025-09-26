@@ -8,11 +8,6 @@ local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local dataStoreDevManagement = require(script.Parent.dataStoreDevManagement)
 local serverUtils = require(script.Parent.serverUtils)
 
-local UpdateActionsFromServer = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ActionsEvents")
-	:WaitForChild("UpdateActionsFromServer")
-
 local function subSet(array: { any }, iStart: number, iEnd: number?)
 	if iEnd == nil then
 		iEnd = #array
@@ -114,7 +109,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 		end
 		-- USED TO INSTANTLY ADD WINS TO YOURSELF
 		-- ex. writing the command on the next line in chat would add 1 win to your player
-		-- /addmoney 200
+		-- /addwins 1
 		if command.command == "/addwins" then
 			if #command.args >= 0 then
 				if #command.args == 1 then
@@ -131,7 +126,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 						currentStats.Wins += tonumber(command.args[1])
 						return currentStats
 					end)
-					-- serverUtils.updatePlayerLeaderStats(command.args[2], newStats)
+					serverUtils.updatePlayerLeaderStats(command.args[2], newStats)
 				end
 			end
 		end
@@ -157,26 +152,12 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 		if command.command == "/addaction" then
 			if #command.args >= 0 then
 				if #command.args == 2 then
-					local newActions = Actions.UpdatePlayerOwnedActions(
-						tostring(player.UserId),
-						function(currentActions)
-							local action = currentActions[command.args[1]]
-							if action then
-								action.OwnedAmount += tonumber(command.args[2])
-							else
-								currentActions[command.args[1]] = {
-									ActionId = command.args[1],
-									OwnedAmount = tonumber(command.args[2]),
-								}
-								action = currentActions[command.args[1]]
-							end
-							return currentActions
-						end
-					)
-
-					UpdateActionsFromServer:InvokeClient(player, newActions)
+					serverUtils.addToAction(tostring(player.UserId), command.args[1], tonumber(command.args[2]))
 				end
 			end
+		end
+		if command.command == "/resetactions" then
+			Actions.ResetActions(tostring(player.UserId))
 		end
 	end)
 end)

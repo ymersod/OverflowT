@@ -143,12 +143,14 @@ function obbyManager.DespawnObbys()
 end
 
 UpdateStatsEvent.OnServerEvent:Connect(function(player, toAdd: number)
-	local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
-		currentStats.Coins += toAdd
-		currentStats.Wins += 0
-		return currentStats
+	serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", toAdd)
+	task.spawn(function()
+		Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+			currentStats.Coins += toAdd
+			currentStats.Wins += 0
+			return currentStats
+		end)
 	end)
-	serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
 end)
 
 local function Start()

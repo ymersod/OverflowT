@@ -3,6 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
+local serverUtils = require(ServerScriptService.Server.serverUtils)
 local types = require(ReplicatedStorage.Shared.types)
 
 local getShopItemsEvent = ReplicatedStorage:WaitForChild("Shared")
@@ -68,12 +69,14 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 
 	if itemPrice and money then
 		if money.Value >= itemPrice then
-			money.Value = money.Value - itemPrice
+			serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", -itemPrice)
 
-			Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
-				currentStats.Coins -= itemPrice
-				currentStats.Wins += 0
-				return currentStats
+			task.spawn(function()
+				Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+					currentStats.Coins -= itemPrice
+					currentStats.Wins += 0
+					return currentStats
+				end)
 			end)
 
 			return ShopObjects.UpdatePlayerOwnedShopObjects(tostring(player.UserId), function(ownedObjects)

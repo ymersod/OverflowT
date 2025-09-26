@@ -1,11 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
-local Actions = require(ServerScriptService.Server.Persistence.Actions)
-local UpdateActionsFromServer = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ActionsEvents")
-	:WaitForChild("UpdateActionsFromServer")
+local serverUtils = require(script.Parent.serverUtils)
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
 local PlayTimeRewardEvent = clientEvents:WaitForChild("PlaytimeReward")
 
@@ -23,20 +18,7 @@ local function randomiseCd(cd: number)
 end
 
 local function giveReward(player, abilityId: string)
-	local newActions = Actions.UpdatePlayerOwnedActions(tostring(player.UserId), function(currentActions)
-		local action = currentActions[abilityId]
-		if action then
-			action.OwnedAmount += 1
-		else
-			currentActions[abilityId] = {
-				ActionId = abilityId,
-				OwnedAmount = 1,
-			}
-			action = currentActions[abilityId]
-		end
-		return currentActions
-	end)
-	UpdateActionsFromServer:InvokeClient(player, newActions)
+	serverUtils.addToAction(tostring(player.UserId), abilityId)
 	PlayTimeRewardEvent:FireClient(player, abilityId)
 end
 

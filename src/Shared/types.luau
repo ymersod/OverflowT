@@ -10,7 +10,7 @@ export type ShopItem = {
 }
 
 export type Action = {
-	ActionId: number,
+	ActionId: string,
 	OwnedAmount: number,
 }
 
