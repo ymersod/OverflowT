@@ -1,8 +1,14 @@
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local tags = require(ReplicatedStorage.Shared.tags)
 local Actions = require(ServerScriptService.Server.Persistence.Actions)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
+
 local serverUtils = {}
+
+local playerSpots = CollectionService:GetTagged(tags.SPOT_TAG)
 
 function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stats.PlayerStats)
 	-- print("do it")
@@ -80,6 +86,31 @@ function serverUtils.addToAction(playerId: string, actionId: string, val: number
 		if currAction then
 			currAction.Value += val or 1
 			Actions.UpdateCache(playerId, actionId, val or 1)
+		end
+	end
+end
+
+function serverUtils.handlePlayerSpots(toEnable: boolean, lineAmount: number?)
+	if not lineAmount then
+		lineAmount = 6
+	end
+	print(lineAmount)
+	for _, spot in ipairs(playerSpots) do
+		local spotId = spot:GetAttribute("ArrayIndex")
+		if spotId and spotId > lineAmount then
+			continue
+		end
+
+		if spot:IsA("BasePart") then
+			spot.Transparency = toEnable and 0 or 1
+			for _, el in ipairs(spot:GetDescendants()) do
+				if el:IsA("BasePart") or el:IsA("UIStroke") then
+					el.Transparency = toEnable and 0 or 1
+				end
+				if el:IsA("TextLabel") then
+					el.TextTransparency = toEnable and 0 or 1
+				end
+			end
 		end
 	end
 end

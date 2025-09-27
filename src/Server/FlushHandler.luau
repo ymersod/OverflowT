@@ -1,7 +1,7 @@
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-
 local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
@@ -11,6 +11,7 @@ local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
 local ToiletSwitcher = require(ServerScriptService.Server.Toilet.ToiletSwitcher)
+
 local flushHandler = {
 	curCap = 0,
 	totalTimeHeld = 0,
@@ -58,6 +59,7 @@ local function RewardWinners()
 			end)
 		end)
 	end
+	serverUtils.handlePlayerSpots(false)
 end
 
 function flushHandler.Overflow()

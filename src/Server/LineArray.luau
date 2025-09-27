@@ -1,3 +1,4 @@
+local RunService = game:GetService("RunService")
 local LineManager = {}
 LineManager.Line = {}
 LineManager.Queue = {}

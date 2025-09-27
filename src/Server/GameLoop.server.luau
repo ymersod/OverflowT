@@ -14,13 +14,14 @@ local GameCancelledEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("GameCancelled")
 
 local FlushHandler = require(script.Parent.FlushHandler)
+local serverUtils = require(script.Parent.serverUtils)
 local Line = require(ServerScriptService.Server.LineArray)
 local prevLine = { table.unpack(Line:GetLine()) }
 
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
 
-local INTERMISSION_TIME = 25 -- seconds
+local INTERMISSION_TIME = 15 -- seconds
 local timer = INTERMISSION_TIME
 
 local function GetPlayersInLobby(): { Player }
@@ -55,6 +56,7 @@ task.spawn(function()
 
 			local players = GetPlayersInLobby()
 			if #players >= 2 then
+				serverUtils.handlePlayerSpots(true, #players)
 				Line:Fill(players)
 				FlushHandler.StartToilet()
 			else

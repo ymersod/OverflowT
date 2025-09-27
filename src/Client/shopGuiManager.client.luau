@@ -33,6 +33,9 @@ local scrollingFrame = shopFrame:FindFirstChildOfClass("ScrollingFrame")
 local closeButton = shopFrame:FindFirstChildOfClass("ImageButton")
 
 local shop = CollectionService:GetTagged(tags.SHOP_PROXIMITY)[1]
+if not shop then
+	shop = CollectionService:GetInstanceAddedSignal(tags.SHOP_PROXIMITY):Wait()
+end
 
 local filteredShopItems: { types.ShopItem } = {}
 local ownedShopItems: { number } = {}

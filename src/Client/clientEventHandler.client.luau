@@ -7,6 +7,7 @@ local GameCancelledEvent = clientEvents:WaitForChild("GameCancelled")
 local RespawnToObbyEvent = clientEvents:WaitForChild("RespawnToObby")
 local WinObbyEvent = clientEvents:WaitForChild("ObbyWin")
 local PlayTimeRewardEvent = clientEvents:WaitForChild("PlaytimeReward")
+local afkWarningEvent = clientEvents:WaitForChild("AfkWarning")
 local UpdateStatsEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("StatsEvents")
@@ -20,6 +21,9 @@ local actionsRefs = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Ac
 
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
+
+local afkWarning = ScreenGUI:WaitForChild("KickedFrame") :: Frame
+local timeLabel: TextLabel = afkWarning:WaitForChild("TextParent"):WaitForChild("Time")
 
 local InfoBar = ScreenGUI:WaitForChild("InfoBar"):WaitForChild("ParentFrame")
 local infoText = InfoBar:WaitForChild("Frame"):FindFirstChildOfClass("TextLabel")
@@ -202,6 +206,14 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string)
 	task.delay(3, function()
 		fadeout()
 	end)
+end)
+
+-- afk warning
+afkWarningEvent.OnClientEvent:Connect(function(setWarning: boolean, timeUntilKick: number?)
+	if timeUntilKick then
+		timeLabel.Text = tostring(timeUntilKick)
+	end
+	afkWarning.Visible = setWarning
 end)
 
 task.spawn(function()
