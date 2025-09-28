@@ -10,7 +10,7 @@ local afkWarning = ReplicatedStorage:WaitForChild("Shared")
 local curFirstInLine
 local warningCalled, warnedPlayer
 local timer = os.clock()
-local AFK_CAP = 20 -- 15
+local AFK_CAP = 20 -- 20
 local UNTIL_WARNING = 5 -- 5
 
 local function checkAfks()

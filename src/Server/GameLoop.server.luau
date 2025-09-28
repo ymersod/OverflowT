@@ -21,7 +21,7 @@ local prevLine = { table.unpack(Line:GetLine()) }
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
 
-local INTERMISSION_TIME = 15 -- seconds
+local INTERMISSION_TIME = 20 -- seconds
 local timer = INTERMISSION_TIME
 
 local function GetPlayersInLobby(): { Player }

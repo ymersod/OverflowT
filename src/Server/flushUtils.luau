@@ -1,0 +1,151 @@
+local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local tags = require(ReplicatedStorage.Shared.tags)
+local toiletModels: { Model } = ServerStorage:WaitForChild("ShopItems"):WaitForChild("ToiletModels"):GetChildren()
+local bubbleTypes: { Part } = ServerStorage:WaitForChild("ShopItems"):WaitForChild("BubbleTypes"):GetChildren()
+
+local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
+local particleBase: Part = CollectionService:GetTagged(tags.TOILET_PARTICLE_BASE)[1]
+
+local flushUtils = {}
+
+flushUtils.curBubbles = bubbleTypes[1]
+flushUtils.toiletLid = CollectionService:GetTagged(tags.TOILET_LID)[1] :: MeshPart
+flushUtils.toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1] :: MeshPart
+flushUtils.toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1] :: MeshPart
+
+local function CleanupPreviousParticleObjects(obj: Instance)
+	print("Cleaning up old particles and sounds...")
+
+	local remaining = 0
+	CollectionService:AddTag(obj, tags.CLEANUP_MARK)
+
+	local function markDone()
+		remaining -= 1
+		if remaining <= 0 then
+			print("Old particles and sounds cleaned up!")
+			obj:Destroy()
+		end
+	end
+
+	for _, child in ipairs(obj:GetChildren()) do
+		-- Handle particles
+		if child:IsA("ParticleEmitter") then
+			child.Enabled = false
+			remaining += 1
+			task.delay(child.Lifetime.Max, function()
+				markDone()
+			end)
+
+		-- Handle sounds
+		elseif child:IsA("Sound") then
+			if child.IsPlaying then
+				remaining += 1
+				local timeLeft = child.TimeLength - child.TimePosition
+				task.delay(timeLeft, function()
+					markDone()
+				end)
+			end
+		end
+	end
+
+	if remaining == 0 then
+		print("No particles/sounds active, destroying immediately")
+		obj:Destroy()
+	end
+end
+
+function flushUtils.SetupPlayerBubbleType(player: Player)
+	local localstats = player:FindFirstChild("localstats")
+	local equippedBubbles: IntValue? = localstats and localstats:FindFirstChild("EquippedParticles")
+	local selectedBubble = bubbleTypes[1]
+
+	if equippedBubbles then
+		local id = equippedBubbles.Value
+		for _, bubbleItem in ipairs(bubbleTypes) do
+			local itemId = bubbleItem:GetAttribute("Id")
+			if itemId and itemId == id then
+				selectedBubble = bubbleItem
+				break
+			end
+		end
+	else
+		warn("Player didnt have an equipped item, doing basic bubbles")
+	end
+
+	-- Cleanup
+	for _, child in ipairs(mainToilet:GetChildren()) do
+		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
+			task.spawn(function()
+				if not child:HasTag(tags.CLEANUP_MARK) then
+					CleanupPreviousParticleObjects(child)
+				end
+			end)
+		end
+	end
+
+	local clone = selectedBubble:Clone()
+	clone.Parent = mainToilet
+	clone.CFrame = particleBase.CFrame
+	clone.Size = particleBase.Size
+	print("New bubbles!: ", clone)
+	flushUtils.curBubbles = clone
+end
+
+local function extractDataFromToiletModel(
+	model: Instance,
+	mode: "Color" | "Material"
+): {
+	Lid: Enum.Material | Color3?,
+	Body: Enum.Material | Color3?,
+	Seat: Enum.Material | Color3?,
+}
+	local results = {}
+
+	for _, child in ipairs(model:GetChildren()) do
+		if child:IsA("MeshPart") then
+			if mode == "Color" then
+				results[child.Name] = child.Color
+			else -- mode == "Material"
+				results[child.Name] = child.Material
+			end
+		end
+	end
+
+	return results
+end
+
+function flushUtils.SetPlayerToilet(player: Player)
+	local localstats = player:FindFirstChild("localstats")
+	local equippedToilet: IntValue? = localstats and localstats:FindFirstChild("EquippedToilet")
+	local selectedToilet = toiletModels[1]
+	if equippedToilet then
+		local id = equippedToilet.Value
+		for _, toiletItem in ipairs(toiletModels) do
+			local itemId = toiletItem:GetAttribute("Id")
+			if itemId and itemId == id then
+				print("Found toilet!")
+				selectedToilet = toiletItem
+				break
+			end
+		end
+	end
+
+	-- TODO: This should accomadate cooler toilets down the line
+	local colors = extractDataFromToiletModel(selectedToilet, "Color")
+	local materials = extractDataFromToiletModel(selectedToilet, "Material")
+
+	print(colors)
+	print(materials)
+	flushUtils.toiletLid.Color = colors.Lid and colors.Lid or flushUtils.toiletLid.Color
+	flushUtils.toiletLid.Material = materials.Lid and materials.Lid or flushUtils.toiletLid.Material
+
+	flushUtils.toiletBody.Color = colors.Body and colors.Body or flushUtils.toiletBody.Color
+	flushUtils.toiletBody.Material = materials.Body and materials.Body or flushUtils.toiletBody.Material
+
+	flushUtils.toiletSeat.Color = colors.Seat and colors.Seat or flushUtils.toiletSeat.Color
+	flushUtils.toiletSeat.Material = materials.Seat and materials.Seat or flushUtils.toiletSeat.Material
+end
+
+return flushUtils

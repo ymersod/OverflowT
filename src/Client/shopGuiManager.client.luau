@@ -29,8 +29,13 @@ local shopItemPrefab = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild(
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 local shopFrame: Frame = ScreenGUI:WaitForChild("Shop")
-local scrollingFrame = shopFrame:FindFirstChildOfClass("ScrollingFrame")
+local scrollingFrameParticles = shopFrame:WaitForChild("ScrollingFrameParticles") :: ScrollingFrame
+local scrollingFrameModels = shopFrame:WaitForChild("ScrollingFrameModels") :: ScrollingFrame
 local closeButton = shopFrame:FindFirstChildOfClass("ImageButton")
+
+local topBar = shopFrame:WaitForChild("TopBar")
+local flushEffectsOpen: ImageButton = topBar:WaitForChild("FlushEffectsOpen")
+local modelsOpen: ImageButton = topBar:WaitForChild("ModelsOpen")
 
 local shop = CollectionService:GetTagged(tags.SHOP_PROXIMITY)[1]
 if not shop then
@@ -60,12 +65,27 @@ local function SetupOpenCloseConnections()
 	closeButton.MouseButton1Down:Connect(function()
 		shopFrame.Visible = false
 	end)
+
+	-- Open flush effects
+	flushEffectsOpen.MouseButton1Down:Connect(function()
+		print("open flush")
+		scrollingFrameParticles.Visible = true
+		scrollingFrameModels.Visible = false
+	end)
+
+	-- Open models
+	modelsOpen.MouseButton1Down:Connect(function()
+		print("open particles")
+		scrollingFrameParticles.Visible = false
+		scrollingFrameModels.Visible = true
+	end)
 end
 
 local function GetOwnedShopObjects()
 	ownedShopItems = getOwnedShopItems:InvokeServer()
 	if #ownedShopItems == 0 then
-		ownedShopItems = buyShopItems:InvokeServer(1)
+		ownedShopItems = buyShopItems:InvokeServer(1) -- Buy water particles
+		ownedShopItems = buyShopItems:InvokeServer(100) -- Buy white toilet
 	end
 end
 
@@ -77,7 +97,8 @@ local function SetupButton(
 	mode: "GroupClaim" | "Buy" | "Equip",
 	id: number,
 	price: TextLabel,
-	cost: number
+	cost: number,
+	equipMode: "Model" | "Particle"
 )
 	if buttonConnections[button] then
 		buttonConnections[button]:Disconnect()
@@ -93,7 +114,7 @@ local function SetupButton(
 		price.Visible = false
 		actionButtonText.Text = "Equip"
 		conn = button.MouseButton1Click:Connect(function()
-			equipShopItem:InvokeServer(id)
+			equipShopItem:InvokeServer(id, equipMode)
 		end)
 	elseif mode == "Buy" then
 		actionButtonText.Text = "Buy"
@@ -103,7 +124,7 @@ local function SetupButton(
 			ownedShopItems = buyShopItems:InvokeServer(id)
 
 			if table.find(ownedShopItems, id) then
-				SetupButton(button, actionButtonText, "Equip", id, price, cost)
+				SetupButton(button, actionButtonText, "Equip", id, price, cost, equipMode)
 			end
 		end)
 	end
@@ -120,17 +141,45 @@ updateGUI = function()
 		local imageLabel: ImageLabel = shopItemPrefabClone:FindFirstChildOfClass("ImageLabel")
 
 		if table.find(ownedShopItems, shopItem.Id) then
-			SetupButton(actionButton, actionButtonText, "Equip", shopItem.Id, price, shopItem.PriceMoney)
+			SetupButton(
+				actionButton,
+				actionButtonText,
+				"Equip",
+				shopItem.Id,
+				price,
+				shopItem.PriceMoney,
+				shopItem.ItemPlacement
+			)
 		elseif shopItem.ShopFunction == enums.ShopItemType.GroupJoin then
-			SetupButton(actionButton, actionButtonText, "GroupClaim", shopItem.Id, price, shopItem.PriceMoney)
+			SetupButton(
+				actionButton,
+				actionButtonText,
+				"GroupClaim",
+				shopItem.Id,
+				price,
+				shopItem.PriceMoney,
+				shopItem.ItemPlacement
+			)
 		else
-			SetupButton(actionButton, actionButtonText, "Buy", shopItem.Id, price, shopItem.PriceMoney)
+			SetupButton(
+				actionButton,
+				actionButtonText,
+				"Buy",
+				shopItem.Id,
+				price,
+				shopItem.PriceMoney,
+				shopItem.ItemPlacement
+			)
 		end
 
 		title.Text = shopItem.Name
 		imageLabel.Image = shopItem.ImageId
 
-		shopItemPrefabClone.Parent = scrollingFrame
+		if shopItem.ItemPlacement == "Model" then
+			shopItemPrefabClone.Parent = scrollingFrameModels
+		else -- Is "Particle"
+			shopItemPrefabClone.Parent = scrollingFrameParticles
+		end
 	end
 end
 

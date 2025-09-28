@@ -7,6 +7,7 @@ export type ShopItem = {
 	PriceMoney: number?,
 	PriceRobux: number?,
 	ImageId: string?,
+	ItemPlacement: "Particle" | "Model",
 }
 
 export type Action = {

@@ -5,7 +5,7 @@ local tags = require(ReplicatedStorage.Shared.tags)
 -- BubbleTypes
 local particles = ServerStorage:WaitForChild("ParticlesAndSounds"):WaitForChild("Particles"):GetChildren()
 local sounds = ServerStorage:WaitForChild("ParticlesAndSounds"):WaitForChild("Sounds"):GetChildren()
-local bubbleTypes: { Part } = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
+local bubbleTypes: { Part } = ServerStorage:WaitForChild("ShopItems"):WaitForChild("BubbleTypes"):GetChildren()
 
 local function SetParticleValues(particle: ParticleEmitter, color: Color3, parent: Instance)
 	local particleClone = particle:Clone()

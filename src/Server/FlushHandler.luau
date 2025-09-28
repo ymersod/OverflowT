@@ -7,6 +7,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
 
+local flushUtils = require(script.Parent.flushUtils)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
@@ -76,7 +77,7 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
 	end
 
 	flushHandler.totalTimeHeld += flushedTime
-	print("TotalTimeHeld: " .. flushHandler.totalTimeHeld)
+	-- print("TotalTimeHeld: " .. flushHandler.totalTimeHeld)
 
 	if flushHandler.totalTimeHeld >= flushHandler.curCap then
 		flushHandler.Overflow()
@@ -91,6 +92,16 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
 end
 
 function flushHandler.StartToilet()
+	local firstPlayer = LineArray:GetLine()[1]
+	local player = Players:GetPlayerByUserId(firstPlayer)
+
+	if player then
+		task.spawn(function()
+			flushUtils.SetupPlayerBubbleType(player)
+			flushUtils.SetPlayerToilet(player)
+		end)
+	end
+
 	flushHandler.gameOnGoing = true
 	flushHandler.curCap = math.random(hardCap - 2, hardCap + 2)
 	flushHandler.totalTimeHeld = 0

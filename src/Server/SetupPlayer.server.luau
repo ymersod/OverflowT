@@ -38,10 +38,15 @@ Players.PlayerAdded:Connect(function(player)
 	Money.Name = "Money"
 	Money.Parent = leaderStats
 
-	local EquippedShopItem = Instance.new("IntValue")
-	EquippedShopItem.Value = 1
-	EquippedShopItem.Name = "EquippedShopItem"
-	EquippedShopItem.Parent = localStats
+	local EquippedParticles = Instance.new("IntValue")
+	EquippedParticles.Value = 1
+	EquippedParticles.Name = "EquippedParticles"
+	EquippedParticles.Parent = localStats
+
+	local EquippedToilet = Instance.new("IntValue")
+	EquippedToilet.Value = 100
+	EquippedToilet.Name = "EquippedToilet"
+	EquippedToilet.Parent = localStats
 
 	for _, action in ipairs(actions:GetChildren()) do
 		local actionId = action:GetAttribute("ActionId")

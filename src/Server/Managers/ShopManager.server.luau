@@ -23,21 +23,32 @@ local equipShopItemEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ShopEvents")
 	:WaitForChild("EquipShopItem")
 
-local shopItems = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
+local shopItems = ServerStorage:WaitForChild("ShopItems"):GetDescendants()
 
 getShopItemsEvent.OnServerInvoke = function(_: Player)
 	local filteredShopItems = {}
 
 	for _, item in ipairs(shopItems) do
-		local shopItem: types.ShopItem = {
-			Id = item:GetAttribute("Id"),
-			Name = item:GetAttribute("Name"),
-			ShopFunction = item:GetAttribute("ShopItemType"),
-			PriceMoney = item:GetAttribute("PriceMoney"),
-			PriceRobux = item:GetAttribute("PriceRobux"),
-			ImageId = item:GetAttribute("ImageId"),
-		}
-		table.insert(filteredShopItems, shopItem)
+		local id = item:GetAttribute("Id")
+		local name = item:GetAttribute("Name")
+		local shopFunction = item:GetAttribute("ShopItemType")
+		local priceMoney = item:GetAttribute("PriceMoney")
+		local priceRobux = item:GetAttribute("PriceRobux")
+		local imageId = item:GetAttribute("ImageId")
+		local itemPlacement = item:GetAttribute("ItemPlacement")
+
+		if id and name and shopFunction and priceMoney and priceRobux and imageId and itemPlacement then
+			local shopItem: types.ShopItem = {
+				Id = id,
+				Name = name,
+				ShopFunction = shopFunction,
+				PriceMoney = priceMoney,
+				PriceRobux = priceRobux,
+				ImageId = imageId,
+				ItemPlacement = itemPlacement,
+			}
+			table.insert(filteredShopItems, shopItem)
+		end
 	end
 	table.sort(filteredShopItems, function(a, b)
 		local aId = a.Id or 0
@@ -92,9 +103,15 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 	return ShopObjects.GetPlayerOwnedShopObjects(tostring(player.UserId))
 end
 
-equipShopItemEvent.OnServerInvoke = function(player: Player, id: number)
+equipShopItemEvent.OnServerInvoke = function(player: Player, id: number, mode: "Model" | "Particle")
 	local localstats = player:FindFirstChild("localstats")
-	local equippedItem: IntValue? = localstats and localstats:FindFirstChild("EquippedShopItem")
+	local equippedItem: IntValue?
+	if mode == "Particle" then
+		equippedItem = localstats and localstats:FindFirstChild("EquippedParticles")
+	end
+	if mode == "Model" then
+		equippedItem = localstats and localstats:FindFirstChild("EquippedToilet")
+	end
 
 	if equippedItem and equippedItem:IsA("IntValue") then
 		equippedItem.Value = id --TODO: Should prob do a server check to make sure player owns the thing

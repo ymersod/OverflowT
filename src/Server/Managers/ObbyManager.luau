@@ -27,6 +27,7 @@ local respawnPos: Part = CollectionService:GetTagged(tags.RESPAWN_POS)[1]
 
 local obbyWorkSpaceFolder: Folder = CollectionService:GetTagged(tags.OBBY_FOLDER)[1]
 
+local START_OBBY_ID = runtimeObbyFolder:GetAttribute("StartObbyId")
 local OBBY_ACTIVE_TIME_CAP = 120
 local curTimeAlive = 0
 local lastOsCheck = os.clock()
@@ -174,7 +175,7 @@ local function Start()
 		obbySignText.Text = "Next obby spawning in: " .. math.floor(OBBY_ACTIVE_TIME_CAP - curTimeAlive)
 	end)
 end
-obbyManager.SpawnObby(2)
+obbyManager.SpawnObby(START_OBBY_ID)
 Start()
 
 return obbyManager

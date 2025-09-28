@@ -5,25 +5,18 @@ local FlushHandler = require(ServerScriptService.Server.FlushHandler)
 
 local GameEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("GameEvents")
 local StartFlushEvent = GameEvents:WaitForChild("StartFlush")
-local FinishFlushEvent = GameEvents:WaitForChild("FinishFlush")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
 
-local ServerStorage = game:GetService("ServerStorage")
 local LineArray = require(ServerScriptService.Server.LineArray)
+local flushUtils = require(ServerScriptService.Server.flushUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
-local toiletLid = CollectionService:GetTagged(tags.TOILET_LID)[1]
-local toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1]
-local toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1]
-local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
-local particleBase: Part = CollectionService:GetTagged(tags.TOILET_PARTICLE_BASE)[1]
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
-local bubbleTypes: { Part } = ServerStorage:WaitForChild("BubbleTypes"):GetChildren()
-
-local curBubbles = bubbleTypes[1]
+local curBubbles = flushUtils.curBubbles
 
 type Particle = {
 	Emitter: ParticleEmitter,
@@ -101,98 +94,21 @@ local function SetParticlesEnabled(enabled: boolean, tag: string, particleArr: {
 end
 
 local function turnOnRumbleAnimation()
-	Rumble.Vertical(toiletLid, getIntensity(toiletLidMaxAmp), toiletLidSpeed)
-	Rumble.Vertical(toiletBody, getIntensity(toiletBodyMaxAmp), toiletBodySpeed)
-	Rumble.Horizontal(toiletSeat, getIntensity(toiletSeatMaxAmp), toiletSeatSpeed)
+	Rumble.Vertical(flushUtils.toiletLid, getIntensity(toiletLidMaxAmp), toiletLidSpeed)
+	Rumble.Vertical(flushUtils.toiletBody, getIntensity(toiletBodyMaxAmp), toiletBodySpeed)
+	Rumble.Horizontal(flushUtils.toiletSeat, getIntensity(toiletSeatMaxAmp), toiletSeatSpeed)
 end
 
 local function updateRumbleAnimation()
-	Rumble.SetAngle(toiletLid, getIntensity(toiletLidMaxAmp))
-	Rumble.SetAngle(toiletBody, getIntensity(toiletBodyMaxAmp))
-	Rumble.SetAngle(toiletSeat, getIntensity(toiletSeatMaxAmp))
+	Rumble.SetAngle(flushUtils.toiletLid, getIntensity(toiletLidMaxAmp))
+	Rumble.SetAngle(flushUtils.toiletBody, getIntensity(toiletBodyMaxAmp))
+	Rumble.SetAngle(flushUtils.toiletSeat, getIntensity(toiletSeatMaxAmp))
 end
 
 local function turnOfRumbleAnimation()
-	Rumble.Stop(toiletLid)
-	Rumble.Stop(toiletSeat)
-	Rumble.Stop(toiletBody)
-end
-
-local function CleanupPreviousParticleObjects(obj: Instance)
-	print("Cleaning up old particles and sounds...")
-
-	local remaining = 0
-	CollectionService:AddTag(obj, tags.CLEANUP_MARK)
-
-	local function markDone()
-		remaining -= 1
-		if remaining <= 0 then
-			print("Old particles and sounds cleaned up!")
-			obj:Destroy()
-		end
-	end
-
-	for _, child in ipairs(obj:GetChildren()) do
-		-- Handle particles
-		if child:IsA("ParticleEmitter") then
-			child.Enabled = false
-			remaining += 1
-			task.delay(child.Lifetime.Max, function()
-				markDone()
-			end)
-
-		-- Handle sounds
-		elseif child:IsA("Sound") then
-			if child.IsPlaying then
-				remaining += 1
-				local timeLeft = child.TimeLength - child.TimePosition
-				task.delay(timeLeft, function()
-					markDone()
-				end)
-			end
-		end
-	end
-
-	if remaining == 0 then
-		print("No particles/sounds active, destroying immediately")
-		obj:Destroy()
-	end
-end
-local function SetupPlayerBubbleType(player: Player): Part
-	local localstats = player:FindFirstChild("localstats")
-	local equippedBubbles: IntValue? = localstats and localstats:FindFirstChild("EquippedShopItem")
-	local selectedBubble = bubbleTypes[1]
-
-	if equippedBubbles then
-		local id = equippedBubbles.Value
-		for _, bubbleItem in ipairs(bubbleTypes) do
-			local itemId = bubbleItem:GetAttribute("Id")
-			if itemId and itemId == id then
-				selectedBubble = bubbleItem
-				break
-			end
-		end
-	else
-		warn("Player didnt have an equipped item, doing basic bubbles")
-	end
-
-	-- Cleanup
-	for _, child in ipairs(mainToilet:GetChildren()) do
-		if child:HasTag(tags.TOILET_PARTICLE_PARENT) then
-			task.spawn(function()
-				if not child:HasTag(tags.CLEANUP_MARK) then
-					CleanupPreviousParticleObjects(child)
-				end
-			end)
-		end
-	end
-
-	local clone = selectedBubble:Clone()
-	clone.Parent = mainToilet
-	clone.CFrame = particleBase.CFrame
-	clone.Size = particleBase.Size
-	print("New bubbles!: ", clone)
-	return clone
+	Rumble.Stop(flushUtils.toiletLid)
+	Rumble.Stop(flushUtils.toiletSeat)
+	Rumble.Stop(flushUtils.toiletBody)
 end
 
 StartFlushEvent.OnServerEvent:Connect(function(player: Player)
@@ -200,7 +116,7 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	lastTimeIteration = os.clock()
 	flushStarted = true
 
-	curBubbles = SetupPlayerBubbleType(player)
+	curBubbles = flushUtils.curBubbles
 	updateParticleTables(curBubbles)
 
 	Sound.FillSounds(curBubbles)
@@ -224,13 +140,26 @@ local function stopFlushing()
 	Sound.Stop()
 end
 
+local lastHolderId = nil
 RunService.Heartbeat:Connect(function()
 	local line = LineArray:GetLine()
-	if #line > 0 and line[1] and currentHolder then
-		if currentHolder.UserId ~= line[1] then
+	local newHolderId = (line[1] or nil)
+
+	if currentHolder and newHolderId then
+		if currentHolder.UserId ~= newHolderId and lastHolderId ~= newHolderId then
+			local player = Players:GetPlayerByUserId(newHolderId)
+
+			if player then
+				task.spawn(function()
+					flushUtils.SetupPlayerBubbleType(player)
+					flushUtils.SetPlayerToilet(player)
+				end)
+			end
 			stopFlushing()
 		end
 	end
+
+	lastHolderId = newHolderId
 
 	if not flushStarted then
 		return
@@ -239,6 +168,7 @@ RunService.Heartbeat:Connect(function()
 	updateRumbleAnimation()
 	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
 	Sound.Update(getPercentageFull())
+
 	local currentTime = os.clock()
 	local clockedTime = currentTime - lastTimeIteration
 	lastTimeIteration = currentTime
