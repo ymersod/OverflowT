@@ -13,7 +13,7 @@ local UpdateStatsEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("StatsEvents")
 	:WaitForChild("UpdateStats")
 
-local SoundEffectHandler = require(script.Parent.SoundEffectHandler)
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
 
 -- UI Elements

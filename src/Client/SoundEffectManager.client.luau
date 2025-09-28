@@ -1,10 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
-local StarterPlayer = game:GetService("StarterPlayer")
 local Players = game:GetService("Players")
 
+local soundHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local tags = require(ReplicatedStorage.Shared.tags)
-local soundHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
 
 type SoundName = soundHandler.SoundName
 type eventType = "Click" | "Hover" | "Visible" | "Pressed"

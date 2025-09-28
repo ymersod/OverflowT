@@ -7,10 +7,10 @@ local StarterPlayer = game:GetService("StarterPlayer")
 
 local FREEZE_ACTION = "freezeMovement"
 
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local actionGuiState = require(script.Parent.actionGuiState)
 local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
-local soundHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
 local prevLinePosition = 0
@@ -79,7 +79,7 @@ local function placeInLine(lineNr)
 	end
 	print("MY NEW SPOT: " .. spot:GetAttribute("ArrayIndex") .. " and newline is:  " .. lineNr)
 	hrp.CFrame = CFrame.new(spot.Position + Vector3.new(0, 3, 0))
-	soundHandler.Play("Teleport")
+	SoundEffectHandler.Play("Teleport")
 	isInLine = true
 end
 

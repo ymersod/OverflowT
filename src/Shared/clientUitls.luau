@@ -7,7 +7,7 @@ local WarningContainer = ScreenGui:WaitForChild("WarningContainer")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
-local SoundEffectHandler = require(StarterPlayer.StarterPlayerScripts.Client.SoundEffectHandler)
+local SoundEffectHandler = require(script.Parent.SoundEffectHandler)
 local moneyAnimationEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("StatsEvents")

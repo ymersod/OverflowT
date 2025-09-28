@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local LineArray = require(script.Parent.LineArray)
 local afkWarning = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
@@ -17,6 +18,11 @@ local function checkAfks()
 		task.wait(1)
 		local line = LineArray.Line
 		if not line or #line <= 1 then
+			if warningCalled then
+				afkWarning:FireClient(warnedPlayer, false)
+				warningCalled = false
+				warnedPlayer = nil
+			end
 			timer = os.clock()
 			continue
 		end
@@ -33,14 +39,16 @@ local function checkAfks()
 				end
 			end
 			if diff >= AFK_CAP then
+				SoundEffectHandler.Play("AfkKick")
 				LineArray:Enqueue(LineArray.OperationType.Remove, line[1])
 			end
 		else
 			timer = os.clock()
 			curFirstInLine = line[1]
-
 			if warningCalled then
 				afkWarning:FireClient(warnedPlayer, false)
+				warningCalled = false
+				warnedPlayer = nil
 			end
 		end
 	end

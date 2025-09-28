@@ -1,5 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SoundEffectHandler = require(script.Parent.SoundEffectHandler)
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUitls = require(ReplicatedStorage.Shared.clientUitls)
 local Player = game:GetService("Players").LocalPlayer
 

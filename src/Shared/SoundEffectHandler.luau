@@ -19,6 +19,7 @@ export type SoundName =
 	| "WinObby"
 	| "CountingMoney"
 	| "PopUp"
+	| "AfkKick"
 
 local trackList: { [SoundName]: number } = {
 	UniversalButtonHover = 6042053626,
@@ -37,6 +38,7 @@ local trackList: { [SoundName]: number } = {
 	WinObby = 80766655803396,
 	CountingMoney = 8545868378,
 	PopUp = 562579670,
+	AfkKick = 4525880816,
 }
 
 local sounds: { [SoundName]: Sound } = {}
