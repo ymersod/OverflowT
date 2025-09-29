@@ -10,6 +10,10 @@ local mainParts = CollectionService:GetTagged(tags.GOLDEN_PART)
 local brokenParts = CollectionService:GetTagged(tags.BROKEN_PART)
 local brokenParticles = CollectionService:GetTagged(tags.BROKEN_PARTICLE)
 
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
+local WoodCrackSound = SoundEffectHandler.GetSound("WoodCrackLooped")
+WoodCrackSound.Looped = true
+
 local frozenToiletParts = CollectionService:GetTagged(tags.FROZEN_TOILET_PARTS)
 local frozenParticles = CollectionService:GetTagged(tags.FROZEN_PARTICLE)
 
@@ -83,9 +87,12 @@ function ToiletSwitcher.SwitchToFrozen(switchToFrozen)
 	end
 
 	if switchToFrozen then
+		SoundEffectHandler.Play("FreezeIce")
+		WoodCrackSound:Play()
 		enableFrozen()
 		setPartsTransparency(mainParts, 1)
 	else
+		WoodCrackSound:Stop()
 		disableFrozen()
 		setPartsTransparency(mainParts, 0)
 	end
