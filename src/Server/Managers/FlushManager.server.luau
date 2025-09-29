@@ -7,6 +7,7 @@ local GameEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events
 local StartFlushEvent = GameEvents:WaitForChild("StartFlush")
 local ResetFlushEvent = GameEvents:WaitForChild("ResetToilet")
 local OverflowToiletEvent = GameEvents:WaitForChild("OverflowToilet")
+local FreezeToiletEvent = GameEvents:WaitForChild("FreezeToilet")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
@@ -19,6 +20,10 @@ local tags = require(ReplicatedStorage.Shared.tags)
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
 local curBubbles = flushUtils.curBubbles
+local freezeTimer = nil
+local isFreezed = Instance.new("BoolValue")
+isFreezed.Name = "IsFreezed"
+isFreezed.Value = false
 
 type Particle = {
 	Emitter: ParticleEmitter,
@@ -121,15 +126,7 @@ OverflowToiletEvent.OnServerEvent:Connect(function()
 	FlushHandler.Overflow()
 end)
 
-StartFlushEvent.OnServerEvent:Connect(function(player: Player)
-	currentHolder = player
-	lastTimeIteration = os.clock()
-	flushStarted = true
-
-	curBubbles = flushUtils.curBubbles
-	updateParticleTables(curBubbles)
-
-	Sound.FillSounds(curBubbles)
+local function startToiletAnimation()
 	turnOnRumbleAnimation()
 	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
 
@@ -140,15 +137,56 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	end)
 
 	Sound.Update(getPercentageFull())
-end)
+end
 
-local function stopFlushing()
-	flushStarted = false
-
+local function stopToiletAnimation()
 	turnOfRumbleAnimation()
 	SetParticlesEnabled(false, tags.HOLD_PARTICLES, waterParticles)
 	Sound.Stop()
 end
+
+local function stopFlushing()
+	flushStarted = false
+	stopToiletAnimation()
+end
+
+StartFlushEvent.OnServerEvent:Connect(function(player: Player)
+	currentHolder = player
+	lastTimeIteration = os.clock()
+	flushStarted = true
+
+	curBubbles = flushUtils.curBubbles
+	updateParticleTables(curBubbles)
+
+	Sound.FillSounds(curBubbles)
+	if isFreezed.Value then
+		return
+	end
+
+	startToiletAnimation()
+end)
+
+isFreezed:GetPropertyChangedSignal("Value"):Connect(function()
+	if isFreezed.Value and flushStarted then
+		stopToiletAnimation()
+	elseif not isFreezed.Value and flushStarted then
+		startToiletAnimation()
+	end
+end)
+
+FreezeToiletEvent.OnServerEvent:Connect(function()
+	if freezeTimer then
+		task.cancel(freezeTimer)
+		freezeTimer = nil
+	end
+
+	isFreezed.Value = true
+
+	freezeTimer = task.delay(10, function()
+		isFreezed.Value = false
+		freezeTimer = nil
+	end)
+end)
 
 local lastHolderId = nil
 RunService.Heartbeat:Connect(function()
@@ -171,7 +209,10 @@ RunService.Heartbeat:Connect(function()
 
 	lastHolderId = newHolderId
 
-	if not flushStarted then
+	local currentTime = os.clock()
+
+	if not flushStarted or isFreezed.Value then
+		lastTimeIteration = currentTime
 		return
 	end
 
@@ -179,7 +220,6 @@ RunService.Heartbeat:Connect(function()
 	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
 	Sound.Update(getPercentageFull())
 
-	local currentTime = os.clock()
 	local clockedTime = currentTime - lastTimeIteration
 	lastTimeIteration = currentTime
 	FlushHandler.AddFlushedTime(clockedTime, currentHolder)
