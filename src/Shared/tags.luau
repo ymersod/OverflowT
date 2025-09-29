@@ -37,6 +37,8 @@ local tags = {
 	BREAKING_SOUND = "BreakingSound",
 	LEADERBOARD = "Leaderboard",
 	TOP_PLAYERS = "TopPlayers",
+	FROZEN_TOILET_PARTS = "FrozenToiletParts",
+	FROZEN_PARTICLE = "FrozenParticle",
 }
 
 return tags
