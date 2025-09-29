@@ -114,4 +114,8 @@ function flushHandler.StartToilet()
 	ToiletSwitcher.SwitchToilet(flushHandler.gameOnGoing)
 end
 
+function flushHandler.SetToFrozen(isFreezed)
+	ToiletSwitcher.SwitchToFrozen(isFreezed)
+end
+
 return flushHandler

@@ -166,11 +166,13 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 end)
 
 isFreezed:GetPropertyChangedSignal("Value"):Connect(function()
-	if isFreezed.Value and FlushHandler.flushStarted then
+	local newVal = isFreezed.Value
+	if newVal and FlushHandler.flushStarted then
 		stopToiletAnimation()
-	elseif not isFreezed.Value and FlushHandler.flushStarted then
+	elseif not newVal and FlushHandler.flushStarted then
 		startToiletAnimation()
 	end
+	FlushHandler.SetToFrozen(newVal)
 end)
 
 FreezeToiletEvent.OnServerEvent:Connect(function()

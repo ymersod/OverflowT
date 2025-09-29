@@ -10,10 +10,17 @@ local mainParts = CollectionService:GetTagged(tags.GOLDEN_PART)
 local brokenParts = CollectionService:GetTagged(tags.BROKEN_PART)
 local brokenParticles = CollectionService:GetTagged(tags.BROKEN_PARTICLE)
 
+local frozenToiletParts = CollectionService:GetTagged(tags.FROZEN_TOILET_PARTS)
+local frozenParticles = CollectionService:GetTagged(tags.FROZEN_PARTICLE)
+
 local standardPosition = mainToilet.PrimaryPart and mainToilet.PrimaryPart.Position
 	or mainToilet:GetModelCFrame().Position
 
 local ToiletSwitcher = {}
+
+local standardToilet = Instance.new("BoolValue")
+standardToilet.Name = "StandardToilet"
+standardToilet.Value = true
 
 local function enableBrokenToiletParticles(enabled: boolean)
 	for _, descendant in ipairs(brokenParticles) do
@@ -32,6 +39,7 @@ local function setPartsTransparency(parts, transparency)
 end
 
 function ToiletSwitcher.SwitchToilet(toStandard: boolean)
+	standardToilet.Value = toStandard
 	if toStandard then
 		setPartsTransparency(mainParts, 0) -- show main
 		setPartsTransparency(brokenParts, 1) -- hide broken
@@ -49,5 +57,44 @@ function ToiletSwitcher.SwitchToilet(toStandard: boolean)
 		explosion.Parent = Workspace
 	end
 end
+
+local function enableFrozen()
+	for _, part in ipairs(frozenToiletParts) do
+		part.Transparency = 0
+	end
+	for _, emitter in ipairs(frozenParticles) do
+		emitter.Enabled = true
+	end
+end
+
+local function disableFrozen()
+	for _, part in ipairs(frozenToiletParts) do
+		part.Transparency = 1
+	end
+	for _, emitter in ipairs(frozenParticles) do
+		emitter.Enabled = false
+	end
+end
+
+function ToiletSwitcher.SwitchToFrozen(switchToFrozen)
+	if not standardToilet.Value then
+		disableFrozen()
+		return
+	end
+
+	if switchToFrozen then
+		enableFrozen()
+		setPartsTransparency(mainParts, 1)
+	else
+		disableFrozen()
+		setPartsTransparency(mainParts, 0)
+	end
+end
+
+standardToilet:GetPropertyChangedSignal("Value"):Connect(function()
+	if not standardToilet.Value then
+		ToiletSwitcher.SwitchToFrozen(false)
+	end
+end)
 
 return ToiletSwitcher
