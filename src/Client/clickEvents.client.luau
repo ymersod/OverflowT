@@ -11,6 +11,7 @@ local cutAllEvent = lineEvents:WaitForChild("CutAll")
 local skipAheadEvent = lineEvents:WaitForChild("SkipAhead")
 local startFlushEvent = gameEvents:WaitForChild("StartFlush")
 local resetFlushEvent = gameEvents:WaitForChild("ResetToilet")
+local overflowToiletEvent = gameEvents:WaitForChild("OverflowToilet")
 
 local actionEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ActionsEvents")
 local tryUseActions = actionEvents:WaitForChild("TryUseAction")
@@ -30,6 +31,8 @@ local cutButton = contextActionMenu1:WaitForChild("Cut"):FindFirstChildOfClass("
 local cutAllButton = contextActionMenu1:WaitForChild("CutAll"):FindFirstChildOfClass("TextButton")
 local skipFlushButton = contextActionMenu1:WaitForChild("SkipFill"):FindFirstChildOfClass("TextButton")
 local resetToiletButton = contextActionMenu1:WaitForChild("ResetToilet"):FindFirstChildOfClass("TextButton")
+
+local overflowButton = contextActionMenu2:WaitForChild("Overflow"):FindFirstChildOfClass("TextButton")
 
 local DEBOUNCE_TIME = 0.5
 local debounces = {}
@@ -101,8 +104,22 @@ local function useAction(buttonRef: TextButton)
 end
 
 resetToiletButton.MouseButton1Click:Connect(function()
-	if debounceCheck(resetFlushEvent) and useAction(resetToiletButton) then
-		resetFlushEvent:FireServer()
+	if debounceCheck(resetToiletButton) then
+		if useAction(resetToiletButton) then
+			resetFlushEvent:FireServer()
+		else
+			warn("Not enough charges!!")
+		end
+	end
+end)
+
+overflowButton.MouseButton1Click:Connect(function()
+	if debounceCheck(overflowButton) then
+		if useAction(overflowButton) then
+			overflowToiletEvent:FireServer()
+		else
+			warn("Not enough charges!!")
+		end
 	end
 end)
 

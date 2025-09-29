@@ -6,6 +6,7 @@ local FlushHandler = require(ServerScriptService.Server.FlushHandler)
 local GameEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("GameEvents")
 local StartFlushEvent = GameEvents:WaitForChild("StartFlush")
 local ResetFlushEvent = GameEvents:WaitForChild("ResetToilet")
+local OverflowToiletEvent = GameEvents:WaitForChild("OverflowToilet")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
@@ -114,6 +115,10 @@ end
 
 ResetFlushEvent.OnServerEvent:Connect(function()
 	FlushHandler.ResetTimeHeld()
+end)
+
+OverflowToiletEvent.OnServerEvent:Connect(function()
+	FlushHandler.Overflow()
 end)
 
 StartFlushEvent.OnServerEvent:Connect(function(player: Player)
