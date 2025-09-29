@@ -1,12 +1,15 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
+local Globals = require(script.Parent.Globals)
 local tags = require(ReplicatedStorage.Shared.tags)
 local toiletModels: { Model } = ServerStorage:WaitForChild("ShopItems"):WaitForChild("ToiletModels"):GetChildren()
 local bubbleTypes: { Part } = ServerStorage:WaitForChild("ShopItems"):WaitForChild("BubbleTypes"):GetChildren()
 
 local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
 local particleBase: Part = CollectionService:GetTagged(tags.TOILET_PARTICLE_BASE)[1]
+local particleBaseCframe = particleBase.CFrame
 
 local flushUtils = {}
 
@@ -93,6 +96,67 @@ function flushUtils.SetupPlayerBubbleType(player: Player)
 	flushUtils.curBubbles = clone
 end
 
+local curSpecialEffects = {}
+local runningEffects = {}
+local function SetSpecialEffects(selectedToilet: Model)
+	if curSpecialEffects and #curSpecialEffects > 0 then
+		for _, effect in ipairs(curSpecialEffects) do
+			effect:Destroy()
+		end
+	end
+
+	for _, effect in ipairs(selectedToilet:GetDescendants()) do
+		if effect:IsA("ParticleEmitter") then
+			local particleEmitterClone = effect:Clone()
+			particleEmitterClone.Parent = flushUtils.toiletBody
+			table.insert(curSpecialEffects, particleEmitterClone)
+		elseif effect:IsA("Script") then
+			local scriptClone = effect:Clone()
+			scriptClone.Parent = mainToilet
+			scriptClone.Enabled = true
+			table.insert(curSpecialEffects, scriptClone)
+		elseif effect:IsA("Model") then
+			local modelClone = effect:Clone()
+			modelClone.Parent = mainToilet
+			task.spawn(function()
+				runningEffects[modelClone] = true
+				local hum = modelClone:FindFirstChildOfClass("Humanoid")
+				local animation = modelClone:FindFirstChildOfClass("Animation")
+				local animator = hum and hum:FindFirstChildOfClass("Animator")
+
+				if hum and animation and animator then
+					local track = animator:LoadAnimation(animation)
+					track.Looped = true
+					local sound = SoundEffectHandler.GetSound("Skibidi1")
+					sound.Looped = true
+					while runningEffects[modelClone] do
+						if not modelClone then
+							print("model destroyed before we check hehe")
+							break
+						end
+						if Globals.flushStarted then
+							if not sound.IsPlaying then
+								sound:Play()
+							end
+							if not track.IsPlaying then
+								track:Play()
+							end
+						else
+							track:Stop()
+							sound:Stop()
+						end
+						task.wait()
+					end
+				else
+					warn("Didnt find animations")
+				end
+			end)
+			-- modelClone:PivotTo(particleBaseCframe * CFrame.Angles(0, math.rad(180), 0))
+			table.insert(curSpecialEffects, modelClone)
+		end
+	end
+end
+
 local function extractDataFromToiletModel(
 	model: Instance,
 	mode: "Color" | "Material"
@@ -135,6 +199,7 @@ function flushUtils.SetPlayerToilet(player: Player)
 	-- TODO: This should accomadate cooler toilets down the line
 	local colors = extractDataFromToiletModel(selectedToilet, "Color")
 	local materials = extractDataFromToiletModel(selectedToilet, "Material")
+	SetSpecialEffects(selectedToilet)
 
 	print(colors)
 	print(materials)

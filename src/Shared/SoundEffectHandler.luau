@@ -23,6 +23,8 @@ export type SoundName =
 	| "PlaytimeCashin"
 	| "FreezeIce"
 	| "WoodCrackLooped"
+	| "Skibidi1"
+	| "Skibidi2"
 
 local trackList: { [SoundName]: number } = {
 	UniversalButtonHover = 6042053626,
@@ -45,6 +47,8 @@ local trackList: { [SoundName]: number } = {
 	PlaytimeCashin = 3120909354,
 	FreezeIce = 15749927835,
 	WoodCrackLooped = 9120799745,
+	Skibidi1 = 17498673644,
+	Skibidi2 = 17535500859,
 }
 
 local sounds: { [SoundName]: Sound } = {}

@@ -12,6 +12,7 @@ local FreezeToiletEvent = GameEvents:WaitForChild("FreezeToilet")
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local Globals = require(ServerScriptService.Server.Globals)
 
 local LineArray = require(ServerScriptService.Server.LineArray)
 local flushUtils = require(ServerScriptService.Server.flushUtils)
@@ -145,14 +146,14 @@ local function stopToiletAnimation()
 end
 
 local function stopFlushing()
-	FlushHandler.flushStarted = false
+	Globals.flushStarted = false
 	stopToiletAnimation()
 end
 
 StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	currentHolder = player
 	lastTimeIteration = os.clock()
-	FlushHandler.flushStarted = true
+	Globals.flushStarted = true
 
 	curBubbles = flushUtils.curBubbles
 	updateParticleTables(curBubbles)
@@ -167,9 +168,9 @@ end)
 
 isFreezed:GetPropertyChangedSignal("Value"):Connect(function()
 	local newVal = isFreezed.Value
-	if newVal and FlushHandler.flushStarted then
+	if newVal and Globals.flushStarted then
 		stopToiletAnimation()
-	elseif not newVal and FlushHandler.flushStarted then
+	elseif not newVal and Globals.flushStarted then
 		startToiletAnimation()
 	end
 	FlushHandler.SetToFrozen(newVal)
@@ -212,7 +213,7 @@ RunService.Heartbeat:Connect(function()
 
 	local currentTime = os.clock()
 
-	if not FlushHandler.flushStarted or isFreezed.Value then
+	if not Globals.flushStarted or isFreezed.Value then
 		lastTimeIteration = currentTime
 		return
 	end
