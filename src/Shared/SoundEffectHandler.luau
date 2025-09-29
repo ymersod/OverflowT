@@ -56,7 +56,6 @@ for name, id in pairs(trackList) do
 end
 
 function SoundEffects.Play(name: SoundName)
-	print("Trying to play")
 	local sound = sounds[name]
 	if sound then
 		sound.TimePosition = 0

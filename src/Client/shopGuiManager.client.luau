@@ -29,6 +29,7 @@ local shopItemPrefab = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild(
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 local shopFrame: Frame = ScreenGUI:WaitForChild("Shop")
+local topText = shopFrame:FindFirstChildOfClass("TextLabel")
 local scrollingFrameParticles = shopFrame:WaitForChild("ScrollingFrameParticles") :: ScrollingFrame
 local scrollingFrameModels = shopFrame:WaitForChild("ScrollingFrameModels") :: ScrollingFrame
 local closeButton = shopFrame:FindFirstChildOfClass("ImageButton")
@@ -68,14 +69,14 @@ local function SetupOpenCloseConnections()
 
 	-- Open flush effects
 	flushEffectsOpen.MouseButton1Down:Connect(function()
-		print("open flush")
+		topText = "Flush effects!"
 		scrollingFrameParticles.Visible = true
 		scrollingFrameModels.Visible = false
 	end)
 
 	-- Open models
 	modelsOpen.MouseButton1Down:Connect(function()
-		print("open particles")
+		topText = "Toilet variants!"
 		scrollingFrameParticles.Visible = false
 		scrollingFrameModels.Visible = true
 	end)
