@@ -8,10 +8,15 @@ local RespawnToObbyEvent = clientEvents:WaitForChild("RespawnToObby")
 local WinObbyEvent = clientEvents:WaitForChild("ObbyWin")
 local PlayTimeRewardEvent = clientEvents:WaitForChild("PlaytimeReward")
 local afkWarningEvent = clientEvents:WaitForChild("AfkWarning")
+local updatePlaytimeRewards = clientEvents:WaitForChild("UpdatePlaytimeRewards")
 local UpdateStatsEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("StatsEvents")
 	:WaitForChild("UpdateStats")
+local GiveRewardsEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("GameEvents")
+	:WaitForChild("GiveReward")
 
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
@@ -34,6 +39,11 @@ local GameEndFrames = ScreenGUI:WaitForChild("GameEndFrames")
 local LoseFrame: Frame = GameEndFrames:WaitForChild("LoseFrame")
 local WinFrame = GameEndFrames:WaitForChild("WinFrame") :: Frame
 local MoneyText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("MoneyLabel")
+
+local PlayTimeRewardsFrame = ScreenGUI:WaitForChild("PlaytimeRewards")
+local timer: TextLabel = PlayTimeRewardsFrame:WaitForChild("Timer")
+local parentFrame = PlayTimeRewardsFrame:WaitForChild("Frame")
+local clipFrame: Frame = parentFrame:WaitForChild("Clip")
 
 local ObbyWinFrame: Frame = ScreenGUI:WaitForChild("ObbyWinFrame")
 local baseObbyWinFrameSize = ObbyWinFrame.Size
@@ -142,7 +152,7 @@ WinObbyEvent.OnClientEvent:Connect(function(money: number)
 end)
 
 -- Playtime reward event
-PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string)
+PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: number)
 	local playTimeRewardsFrameClone = playTimeRewardsFrame:Clone() :: Frame
 	local recievedText: TextLabel = playTimeRewardsFrameClone:WaitForChild("RecievedText")
 	local whyText: TextLabel = playTimeRewardsFrameClone:WaitForChild("WhyText")
@@ -191,7 +201,15 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string)
 	end
 	local hex = colorToHex(color)
 
-	recievedText.Text = "You got 1x [" .. '<font color="' .. hex .. '">' .. escapeRichText(text) .. "</font>" .. "]"
+	recievedText.Text = "You got "
+		.. amount
+		.. "x ["
+		.. '<font color="'
+		.. hex
+		.. '">'
+		.. escapeRichText(text)
+		.. "</font>"
+		.. "]"
 	whyText.Text = whyTextArr[math.random(1, #whyTextArr)]
 	fitTextToLabel(recievedText)
 	fitTextToLabel(whyText)
@@ -206,6 +224,42 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string)
 	task.delay(3, function()
 		fadeout()
 	end)
+end)
+
+local SCALE_SIZE = 1.2
+local DUR = 0.6
+updatePlaytimeRewards.OnClientEvent:Connect(function(totalTime: number, cap: number, rewardToEnable: number?)
+	local minutes = math.floor(totalTime / 60)
+	local seconds = totalTime % 60
+	timer.Text = string.format("%02d:%02d", minutes, seconds)
+
+	if cap >= totalTime then
+		clipFrame.Size =
+			UDim2.new(clipFrame.Size.X.Scale, clipFrame.Size.X.Scale, totalTime / cap, clipFrame.Size.Y.Offset)
+	end
+
+	if rewardToEnable then
+		local rewardButton: ImageButton? = parentFrame:WaitForChild(rewardToEnable)
+		local checkMark = rewardButton and rewardButton:FindFirstChildOfClass("ImageLabel")
+
+		if rewardButton and checkMark then
+			local ogSize = rewardButton.Size
+			rewardButton.Interactable = true
+			local tween = clientUtils.PulseContinuously(rewardButton, SCALE_SIZE, DUR)
+			rewardButton.MouseButton1Down:Once(function()
+				if tween then
+					tween:Cancel()
+					rewardButton.Size = ogSize
+				end
+				rewardButton.Interactable = false
+				checkMark.Visible = true
+				SoundEffectHandler.Play("PlaytimeCashin")
+				GiveRewardsEvent:FireServer(rewardToEnable)
+			end)
+		else
+			warn("Didnt find the reward")
+		end
+	end
 end)
 
 -- afk warning

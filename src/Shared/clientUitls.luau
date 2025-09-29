@@ -229,4 +229,26 @@ function ClientUtils.PopFrameElastic(
 	end
 end
 
+function ClientUtils.PulseContinuously(object: GuiObject, scaleUp: number, duration: number): Tween?
+	if not object then
+		return nil
+	end
+
+	local info = TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+
+	local targetSize = UDim2.new(
+		object.Size.X.Scale * scaleUp,
+		object.Size.X.Offset * scaleUp,
+		object.Size.Y.Scale * scaleUp,
+		object.Size.Y.Offset * scaleUp
+	)
+
+	local tween = TweenService:Create(object, info, {
+		Size = targetSize,
+	})
+
+	tween:Play()
+	return tween
+end
+
 return ClientUtils
