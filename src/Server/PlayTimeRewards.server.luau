@@ -10,16 +10,43 @@ local PlayTimeRewardEvent = clientEvents:WaitForChild("PlaytimeReward")
 local UpdatePlayTimeRewards = clientEvents:WaitForChild("UpdatePlaytimeRewards")
 
 -- SETTINGS
-local CUT_CD = 60 -- 60
-local CUT_ALL_CD = 120 -- 120
-local SKIP_CD = 300 -- 300
-local RESET_TOILET = 600 -- 600
+local TASK_WAIT = 10 -- how often we check
+
+local CUT_TARGET_AVG = 60 -- 60
+local CUT_CHANCE = TASK_WAIT / CUT_TARGET_AVG
+
+local CUT_ALL_TAGET_AVG = 300 -- 300
+local CUT_ALL_CHANCE = TASK_WAIT / CUT_ALL_TAGET_AVG
+
+local SKIP_TARGET_AVG = 300
+local SKIP_CD_CHANCE = TASK_WAIT / SKIP_TARGET_AVG
+
+local RESET_TOILET_TARGET_AVG = 3600
+local RESET_TOILET_CHANCE = TASK_WAIT / RESET_TOILET_TARGET_AVG
+
+local FREEZE_TOILET_TARGET_AVG = 7200
+local FREEZE_TOILET_CHANCE = TASK_WAIT / FREEZE_TOILET_TARGET_AVG
+
+local JAM_FLUSH_TARGET_AVG = 21600
+local JAM_FLUSH_CHANCE = TASK_WAIT / JAM_FLUSH_TARGET_AVG
+
+local OVERFLOW_TARGET_AVG = 43200
+local OVERFLOW_CHANCE = TASK_WAIT / OVERFLOW_TARGET_AVG
+
+local settingsOdds = {
+	{ CUT_CHANCE, 1 },
+	{ CUT_ALL_CHANCE, 2 },
+	{ SKIP_CD_CHANCE, 4 },
+	{ RESET_TOILET_CHANCE, 3 },
+	{ FREEZE_TOILET_CHANCE, 7 },
+	{ JAM_FLUSH_CHANCE, 5 },
+	{ OVERFLOW_CHANCE, 6 },
+}
 
 local activePlayers = {}
 
-local function randomiseCd(cd: number)
-	local newCd = math.random(cd - cd / 10, cd + cd / 10)
-	return newCd
+local function randomiseChance(chance: number)
+	return math.random() < chance -- returns true if "won"
 end
 
 local function giveReward(player, abilityId: string, amount: number?)
@@ -27,19 +54,13 @@ local function giveReward(player, abilityId: string, amount: number?)
 	PlayTimeRewardEvent:FireClient(player, abilityId, amount or 1)
 end
 
-local function setupRewardSystem(cd: number, player, abilityId: number)
-	local newCd = randomiseCd(cd)
-	local curCd = os.clock()
+local function setupRewardSystem(chance: number, player, abilityId: number)
 	task.spawn(function()
 		while activePlayers[player.UserId] do
-			local diff = os.clock() - curCd
-			if diff >= newCd then
+			task.wait(math.random(TASK_WAIT - 1, TASK_WAIT + 1))
+			if randomiseChance(chance) then
 				giveReward(player, tostring(abilityId))
-				newCd = randomiseCd(cd)
-				curCd = os.clock()
 			end
-
-			task.wait(1)
 		end
 	end)
 end
@@ -79,10 +100,10 @@ end
 
 Players.PlayerAdded:Connect(function(player)
 	activePlayers[player.UserId] = true
-	setupRewardSystem(CUT_CD, player, 1)
-	setupRewardSystem(CUT_ALL_CD, player, 2)
-	setupRewardSystem(SKIP_CD, player, 4)
-	setupRewardSystem(RESET_TOILET, player, 3)
+
+	for _, n in ipairs(settingsOdds) do
+		setupRewardSystem(n[1], player, n[2])
+	end
 
 	setupPlayTimeRewardsPlayer(player)
 end)
