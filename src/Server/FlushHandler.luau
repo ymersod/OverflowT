@@ -17,6 +17,7 @@ local flushHandler = {
 	curCap = 0,
 	totalTimeHeld = 0,
 	gameOnGoing = false,
+	flushStarted = false,
 }
 
 type PlayerHeld = {

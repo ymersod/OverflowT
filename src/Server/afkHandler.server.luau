@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FlushHandler = require(script.Parent.FlushHandler)
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local LineArray = require(script.Parent.LineArray)
 local afkWarning = ReplicatedStorage:WaitForChild("Shared")
@@ -27,7 +28,8 @@ local function checkAfks()
 			continue
 		end
 		local player = Players:GetPlayerByUserId(line[1])
-		if curFirstInLine == line[1] then
+
+		if curFirstInLine == line[1] and not FlushHandler.flushStarted then
 			local diff = math.ceil(os.clock() - timer)
 			print("How long have i been afk ", diff)
 

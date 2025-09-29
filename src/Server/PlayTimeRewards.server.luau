@@ -65,9 +65,9 @@ local function setupRewardSystem(chance: number, player, abilityId: number)
 	end)
 end
 
-local CHECK_POINT1 = 5
-local CHECK_POINT2 = 10
-local CHECK_POINT3 = 15
+local CHECK_POINT1 = 300
+local CHECK_POINT2 = 600
+local CHECK_POINT3 = 900
 
 local function setupPlayTimeRewardsPlayer(player)
 	local cp1Reached, cp2Reached, cp3Reached

@@ -61,7 +61,6 @@ local toiletSeatMaxAmp = 30
 local toiletSeatSpeed = 0.2
 
 local lastTimeIteration = 0
-local flushStarted = false
 local currentHolder = nil
 
 local function getPercentageFull(): number
@@ -146,14 +145,14 @@ local function stopToiletAnimation()
 end
 
 local function stopFlushing()
-	flushStarted = false
+	FlushHandler.flushStarted = false
 	stopToiletAnimation()
 end
 
 StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 	currentHolder = player
 	lastTimeIteration = os.clock()
-	flushStarted = true
+	FlushHandler.flushStarted = true
 
 	curBubbles = flushUtils.curBubbles
 	updateParticleTables(curBubbles)
@@ -167,9 +166,9 @@ StartFlushEvent.OnServerEvent:Connect(function(player: Player)
 end)
 
 isFreezed:GetPropertyChangedSignal("Value"):Connect(function()
-	if isFreezed.Value and flushStarted then
+	if isFreezed.Value and FlushHandler.flushStarted then
 		stopToiletAnimation()
-	elseif not isFreezed.Value and flushStarted then
+	elseif not isFreezed.Value and FlushHandler.flushStarted then
 		startToiletAnimation()
 	end
 end)
@@ -211,7 +210,7 @@ RunService.Heartbeat:Connect(function()
 
 	local currentTime = os.clock()
 
-	if not flushStarted or isFreezed.Value then
+	if not FlushHandler.flushStarted or isFreezed.Value then
 		lastTimeIteration = currentTime
 		return
 	end

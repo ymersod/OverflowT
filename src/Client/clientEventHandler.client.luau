@@ -239,17 +239,18 @@ updatePlaytimeRewards.OnClientEvent:Connect(function(totalTime: number, cap: num
 	end
 
 	if rewardToEnable then
-		local rewardButton: ImageButton? = parentFrame:WaitForChild(rewardToEnable)
-		local checkMark = rewardButton and rewardButton:FindFirstChildOfClass("ImageLabel")
+		local rewardButton = parentFrame:WaitForChild(rewardToEnable) :: ImageButton?
+		local checkMark: ImageLabel = rewardButton and rewardButton:WaitForChild("Checkmark")
+		local img: ImageLabel = rewardButton and rewardButton:WaitForChild("Img")
 
-		if rewardButton and checkMark then
-			local ogSize = rewardButton.Size
+		if rewardButton and checkMark and img then
+			local ogSize = img.Size
 			rewardButton.Interactable = true
-			local tween = clientUtils.PulseContinuously(rewardButton, SCALE_SIZE, DUR)
+			local tween = clientUtils.PulseContinuously(img, SCALE_SIZE, DUR)
 			rewardButton.MouseButton1Down:Once(function()
 				if tween then
 					tween:Cancel()
-					rewardButton.Size = ogSize
+					img.Size = ogSize
 				end
 				rewardButton.Interactable = false
 				checkMark.Visible = true
