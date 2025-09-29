@@ -91,6 +91,10 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
 	end
 end
 
+function flushHandler.ResetTimeHeld()
+	flushHandler.totalTimeHeld = 0
+end
+
 function flushHandler.StartToilet()
 	local firstPlayer = LineArray:GetLine()[1]
 	local player = Players:GetPlayerByUserId(firstPlayer)

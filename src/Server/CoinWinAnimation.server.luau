@@ -1,5 +1,4 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 
 local coinTemplate = ReplicatedStorage:WaitForChild("Coin")
 local spawnEvent = ReplicatedStorage:WaitForChild("Shared")
