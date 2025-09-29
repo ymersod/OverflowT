@@ -10,6 +10,7 @@ local nextEvent = lineEvents:WaitForChild("Next")
 local cutAllEvent = lineEvents:WaitForChild("CutAll")
 local skipAheadEvent = lineEvents:WaitForChild("SkipAhead")
 local startFlushEvent = gameEvents:WaitForChild("StartFlush")
+local resetFlushEvent = gameEvents:WaitForChild("ResetToilet")
 
 local actionEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ActionsEvents")
 local tryUseActions = actionEvents:WaitForChild("TryUseAction")
@@ -28,6 +29,7 @@ local moreLessButton = actionMenu:WaitForChild("MoreLess"):FindFirstChildOfClass
 local cutButton = contextActionMenu1:WaitForChild("Cut"):FindFirstChildOfClass("TextButton")
 local cutAllButton = contextActionMenu1:WaitForChild("CutAll"):FindFirstChildOfClass("TextButton")
 local skipFlushButton = contextActionMenu1:WaitForChild("SkipFill"):FindFirstChildOfClass("TextButton")
+local resetToiletButton = contextActionMenu1:WaitForChild("ResetToilet"):FindFirstChildOfClass("TextButton")
 
 local DEBOUNCE_TIME = 0.5
 local debounces = {}
@@ -97,6 +99,12 @@ local function useAction(buttonRef: TextButton)
 	local canUse = tryUseActions:InvokeServer(tostring(actionId))
 	return canUse
 end
+
+resetToiletButton.MouseButton1Click:Connect(function()
+	if debounceCheck(resetFlushEvent) and useAction(resetToiletButton) then
+		resetFlushEvent:FireServer()
+	end
+end)
 
 -- Cut button
 cutButton.MouseButton1Down:Connect(function()
