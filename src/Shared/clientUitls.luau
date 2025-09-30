@@ -170,7 +170,8 @@ function ClientUtils.CountUpNumberLabel(
 	doPulse: boolean?,
 	pulseScale: number?,
 	pulseDownDuration: number?,
-	pulseUpDuration: number?
+	pulseUpDuration: number?,
+	callBack: (() -> ())?
 )
 	task.spawn(function()
 		local difference = endValue - startValue
@@ -205,6 +206,10 @@ function ClientUtils.CountUpNumberLabel(
 		end
 
 		label.Text = text .. endValue -- ensure exact final value
+
+		if callBack then
+			callBack()
+		end
 	end)
 end
 

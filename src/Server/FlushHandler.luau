@@ -7,6 +7,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
 
+local Globals = require(script.Parent.Globals)
 local flushUtils = require(script.Parent.flushUtils)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
@@ -38,23 +39,35 @@ end
 local function RewardWinners()
 	local playerIds = LineArray:GetLine()
 
-	local losingPlayer = playerIds[1]
-	_ = losingPlayer and EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(losingPlayer), false)
+	local startRewardIndex
+	if playerIds and #playerIds == 1 then
+		startRewardIndex = 1
+	else
+		startRewardIndex = 2
+		local losingPlayer = playerIds[1]
+		_ = losingPlayer and EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(losingPlayer), false)
+	end
 
 	--Skipping first since he was the one who made it Overflow
-	for i = 2, #playerIds do
+	for i = startRewardIndex, #playerIds do
 		local playerId = playerIds[i]
 		local coinsEarned = calcCoins(playerId)
+		local winsEarned = 1
+		if Globals.group[playerId].DoubleRewards then
+			coinsEarned = coinsEarned * 2
+			winsEarned = winsEarned * 2
+		end
 
-		local soundLength = EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(playerId), true, coinsEarned)
+		local soundLength =
+			EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(playerId), true, coinsEarned, winsEarned)
 
 		task.delay(soundLength, function()
 			serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)
-			serverUtils.modifyPlayerLeaderStats(playerId, "Wins", 1)
+			serverUtils.modifyPlayerLeaderStats(playerId, "Wins", winsEarned)
 			task.spawn(function()
 				Stats.UpdatePlayerStats(playerId, function(currentStats)
 					currentStats.Coins += coinsEarned
-					currentStats.Wins += 1
+					currentStats.Wins += winsEarned
 					return currentStats
 				end)
 			end)

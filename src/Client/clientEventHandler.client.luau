@@ -38,6 +38,7 @@ local gradient = rainbowText:FindFirstChildOfClass("UIGradient")
 local GameEndFrames = ScreenGUI:WaitForChild("GameEndFrames")
 local LoseFrame: Frame = GameEndFrames:WaitForChild("LoseFrame")
 local WinFrame = GameEndFrames:WaitForChild("WinFrame") :: Frame
+local winText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("WinLabel")
 local MoneyText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("MoneyLabel")
 
 local PlayTimeRewardsFrame = ScreenGUI:WaitForChild("PlaytimeRewards")
@@ -78,11 +79,14 @@ TopBarUpdate.OnClientEvent:Connect(function(text: string, mode: "Ongoing" | "Int
 end)
 
 -- End game screens
-EndGameScreen.OnClientInvoke = function(didWin: boolean, money: number?): number
+EndGameScreen.OnClientInvoke = function(didWin: boolean, money: number?, wins: number?): number
 	local soundLength, frame: Frame
 	if didWin then
 		if money then
 			MoneyText.Text = "+$" .. money
+		end
+		if wins then
+			winText.Text = "+" .. wins .. " Wins"
 		end
 		SoundEffectHandler.Play("WinRound")
 		WinFrame.Visible = true
@@ -141,7 +145,6 @@ WinObbyEvent.OnClientEvent:Connect(function(money: number)
 		clientUtils.TypewriterLabel(earnedText, "You Earned:", TYPE_WRITER_EARNED, function()
 			clientUtils.TypewriterLabel(moneyText, "+$" .. tostring(money), TYPE_WRITER_MONEY, function()
 				SoundEffectHandler.Stop("TypeWriter")
-				SoundEffectHandler.Play("Kaching")
 				task.delay(2, function()
 					UpdateStatsEvent:FireServer(money)
 					fadeFunc()

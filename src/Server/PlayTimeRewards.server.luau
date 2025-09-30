@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Globals = require(script.Parent.Globals)
 local serverUtils = require(script.Parent.serverUtils)
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
 local giveRewardEvent = ReplicatedStorage:WaitForChild("Shared")
@@ -113,10 +114,16 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 
 giveRewardEvent.OnServerEvent:Connect(function(player, rewardNr)
+	local cp1 = 100
+	local cp2 = 300
+	if Globals.group[tostring(player.UserId)].DoubleRewards then
+		cp1 = cp1 * 2
+		cp2 = cp2 * 2
+	end
 	if rewardNr == 1 then
-		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", 100)
+		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", cp1)
 	elseif rewardNr == 2 then
-		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", 300)
+		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", cp2)
 	elseif rewardNr == 3 then
 		task.spawn(function()
 			giveReward(player, "1", 5)

@@ -13,11 +13,15 @@ local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 local leaderStatsFrame = ScreenGUI:WaitForChild("LeaderStats")
 local winsText = leaderStatsFrame:WaitForChild("Wins"):FindFirstChildOfClass("TextLabel")
 local moneyText = leaderStatsFrame:WaitForChild("Money"):FindFirstChildOfClass("TextLabel")
+local moneyToAdd = leaderStatsFrame:WaitForChild("MoneyToAdd") :: Frame
+local moneyToAddText = moneyToAdd:FindFirstChildOfClass("TextLabel")
 
 local COUNTING_MONEY_DUR = SoundEffectHandler.GetSound("CountingMoney").TimeLength
 local PULSE_SIZE = 1.4
 local PULSE_DUR = 0.1
 
+local ELASTIC_DUR = 0.4
+local FADEOUT_TIME = 3
 function Observe()
 	if money then
 		moneyText.Text = "$ " .. money.Value
@@ -25,6 +29,7 @@ function Observe()
 			SoundEffectHandler.Play("CountingMoney")
 			local oldValString = moneyText.Text
 			local oldVal = tonumber(oldValString:match("%d+"))
+			moneyToAddText.Text = "+ $" .. money.Value - oldVal
 			clientUitls.CountUpNumberLabel(
 				moneyText,
 				"$ ",
@@ -34,7 +39,13 @@ function Observe()
 				true,
 				PULSE_SIZE,
 				PULSE_DUR,
-				PULSE_DUR
+				PULSE_DUR,
+				function()
+					local fadeOut =
+						clientUitls.PopFrameElastic(moneyToAdd, moneyToAdd.Size, ELASTIC_DUR, FADEOUT_TIME, false)
+					SoundEffectHandler.Play("Kaching")
+					fadeOut()
+				end
 			)
 		end)
 	else
