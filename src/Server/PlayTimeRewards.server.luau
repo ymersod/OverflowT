@@ -123,7 +123,7 @@ giveRewardEvent.OnServerEvent:Connect(function(player, rewardNr)
 			task.wait(0.4)
 			giveReward(player, "2", 2)
 			task.wait(0.4)
-			giveReward(player, "4", 1)
+			giveReward(player, "4", 2)
 		end)
 	end
 end)

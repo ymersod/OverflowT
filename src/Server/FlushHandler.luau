@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
@@ -95,16 +96,6 @@ function flushHandler.ResetTimeHeld()
 end
 
 function flushHandler.StartToilet()
-	local firstPlayer = LineArray:GetLine()[1]
-	local player = Players:GetPlayerByUserId(firstPlayer)
-
-	if player then
-		task.spawn(function()
-			flushUtils.SetupPlayerBubbleType(player)
-			flushUtils.SetPlayerToilet(player)
-		end)
-	end
-
 	flushHandler.gameOnGoing = true
 	flushHandler.curCap = math.random(hardCap - 2, hardCap + 2)
 	flushHandler.totalTimeHeld = 0
@@ -115,5 +106,39 @@ end
 function flushHandler.SetToFrozen(isFreezed)
 	ToiletSwitcher.SwitchToFrozen(isFreezed)
 end
+
+local curPlayer
+local function ObserveLine()
+	task.spawn(function()
+		RunService.Heartbeat:Connect(function()
+			if not flushHandler.gameOnGoing then
+				curPlayer = nil
+				return
+			end
+
+			local line = LineArray:GetLine()
+			if not line or #line <= 1 then
+				return
+			end
+
+			local firstPlayer = line[1]
+			-- print("First: ", firstPlayer)
+			if curPlayer ~= firstPlayer then
+				local player = Players:GetPlayerByUserId(firstPlayer)
+
+				if player then
+					task.spawn(function()
+						-- print("Spawning!")
+						flushUtils.SetupPlayerBubbleType(player)
+						flushUtils.SetPlayerToilet(player)
+					end)
+				end
+			end
+
+			curPlayer = firstPlayer
+		end)
+	end)
+end
+ObserveLine()
 
 return flushHandler

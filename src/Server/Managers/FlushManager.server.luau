@@ -197,14 +197,6 @@ RunService.Heartbeat:Connect(function()
 
 	if currentHolder and newHolderId then
 		if currentHolder.UserId ~= newHolderId and lastHolderId ~= newHolderId then
-			local player = Players:GetPlayerByUserId(newHolderId)
-
-			if player then
-				task.spawn(function()
-					flushUtils.SetupPlayerBubbleType(player)
-					flushUtils.SetPlayerToilet(player)
-				end)
-			end
 			stopFlushing()
 		end
 	end
