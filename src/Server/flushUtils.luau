@@ -253,7 +253,7 @@ function flushUtils.CleanToilet()
 end
 
 local JAM_ELASTIC_DUR = 0.7
-local PULSE_DUR = 1
+local PULSE_DUR = 0.6
 local tween, ogSize, sound
 function flushUtils.JamToilet(toJam: boolean)
 	if toJam then
