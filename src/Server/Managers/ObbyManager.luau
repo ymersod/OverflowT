@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Globals = require(ServerScriptService.Server.Globals)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
+local RewardsHandler = require(ServerScriptService.Server.RewardsHandler)
 local serverUtils = require(ServerScriptService.Server.serverUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 local uiConstants = require(ReplicatedStorage.Shared.uiConstants)
@@ -66,12 +67,9 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win", winPrize: n
 		TelePortPlayer(player)
 		if mode == "Win" then
 			local winningPrize = winPrize and winPrize or 10
-			if
-				winningPrize > 0
-				and Globals.group[tostring(player.UserId)]
-				and Globals.group[tostring(player.UserId)].DoubleRewards
-			then
-				winningPrize = winningPrize * 2
+			if winningPrize > 0 then
+				local mult = RewardsHandler.GetRewardMult(tostring(player.UserId))
+				winningPrize = winningPrize * mult
 			end
 			clientWinEvent:FireClient(player, winningPrize)
 		end

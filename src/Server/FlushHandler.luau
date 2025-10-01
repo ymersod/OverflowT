@@ -8,6 +8,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("EndGameScreen")
 
 local Globals = require(script.Parent.Globals)
+local RewardsHandler = require(script.Parent.RewardsHandler)
 local flushUtils = require(script.Parent.flushUtils)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
@@ -53,10 +54,9 @@ local function RewardWinners()
 		local playerId = playerIds[i]
 		local coinsEarned = calcCoins(playerId)
 		local winsEarned = 1
-		if Globals.group[playerId] and Globals.group[playerId].DoubleRewards then
-			coinsEarned = coinsEarned * 2
-			winsEarned = winsEarned * 2
-		end
+		local mult = RewardsHandler.GetRewardMult(playerId)
+		coinsEarned = coinsEarned * mult
+		winsEarned = winsEarned * mult
 
 		local soundLength =
 			EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(playerId), true, coinsEarned, winsEarned)

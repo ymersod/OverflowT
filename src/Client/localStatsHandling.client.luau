@@ -64,7 +64,7 @@ function Observe()
 			local oldVal = tonumber(oldValString) :: number
 			clientUitls.CountUpNumberLabel(
 				winsText,
-				"",
+				"👑 ",
 				oldVal,
 				newVal,
 				COUNTING_MONEY_DUR,
