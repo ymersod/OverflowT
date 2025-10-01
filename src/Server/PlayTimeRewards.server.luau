@@ -116,7 +116,7 @@ end)
 giveRewardEvent.OnServerEvent:Connect(function(player, rewardNr)
 	local cp1 = 100
 	local cp2 = 300
-	if Globals.group[tostring(player.UserId)].DoubleRewards then
+	if Globals.group[tostring(player.UserId)] and Globals.group[tostring(player.UserId)].DoubleRewards then
 		cp1 = cp1 * 2
 		cp2 = cp2 * 2
 	end

@@ -20,7 +20,9 @@ local frozenParticles = CollectionService:GetTagged(tags.FROZEN_PARTICLE)
 local standardPosition = mainToilet.PrimaryPart and mainToilet.PrimaryPart.Position
 	or mainToilet:GetModelCFrame().Position
 
-local ToiletSwitcher = {}
+local ToiletSwitcher = {
+	ActiveToilet = mainParts,
+}
 
 local standardToilet = Instance.new("BoolValue")
 standardToilet.Name = "StandardToilet"
@@ -48,6 +50,7 @@ function ToiletSwitcher.SwitchToilet(toStandard: boolean)
 		setPartsTransparency(mainParts, 0) -- show main
 		setPartsTransparency(brokenParts, 1) -- hide broken
 		enableBrokenToiletParticles(false)
+		ToiletSwitcher.ActiveToilet = mainParts
 	else
 		setPartsTransparency(mainParts, 1) -- hide main
 		setPartsTransparency(brokenParts, 0) -- show broken
@@ -59,6 +62,7 @@ function ToiletSwitcher.SwitchToilet(toStandard: boolean)
 		explosion.BlastPressure = 0
 		explosion.DestroyJointRadiusPercent = 0
 		explosion.Parent = Workspace
+		ToiletSwitcher.ActiveToilet = brokenParts
 	end
 end
 
@@ -91,10 +95,12 @@ function ToiletSwitcher.SwitchToFrozen(switchToFrozen)
 		WoodCrackSound:Play()
 		enableFrozen()
 		setPartsTransparency(mainParts, 1)
+		ToiletSwitcher.ActiveToilet = frozenToiletParts
 	else
 		WoodCrackSound:Stop()
 		disableFrozen()
 		setPartsTransparency(mainParts, 0)
+		ToiletSwitcher.ActiveToilet = mainParts
 	end
 end
 

@@ -25,6 +25,8 @@ export type SoundName =
 	| "WoodCrackLooped"
 	| "Skibidi1"
 	| "Skibidi2"
+	| "Clean"
+	| "Explosion"
 
 local trackList: { [SoundName]: number } = {
 	UniversalButtonHover = 6042053626,
@@ -49,6 +51,8 @@ local trackList: { [SoundName]: number } = {
 	WoodCrackLooped = 9120799745,
 	Skibidi1 = 17498673644,
 	Skibidi2 = 17535500859,
+	Clean = 120256899978139,
+	Explosion = 18694762392,
 }
 
 local sounds: { [SoundName]: Sound } = {}

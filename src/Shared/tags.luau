@@ -39,6 +39,7 @@ local tags = {
 	TOP_PLAYERS = "TopPlayers",
 	FROZEN_TOILET_PARTS = "FrozenToiletParts",
 	FROZEN_PARTICLE = "FrozenParticle",
+	UNIVERSAL_PARTICLES = "UniversalParticles",
 }
 
 return tags

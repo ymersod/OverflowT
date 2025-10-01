@@ -53,7 +53,7 @@ local function RewardWinners()
 		local playerId = playerIds[i]
 		local coinsEarned = calcCoins(playerId)
 		local winsEarned = 1
-		if Globals.group[playerId].DoubleRewards then
+		if Globals.group[playerId] and Globals.group[playerId].DoubleRewards then
 			coinsEarned = coinsEarned * 2
 			winsEarned = winsEarned * 2
 		end

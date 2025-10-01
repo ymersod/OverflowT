@@ -29,7 +29,12 @@ function Observe()
 			SoundEffectHandler.Play("CountingMoney")
 			local oldValString = moneyText.Text
 			local oldVal = tonumber(oldValString:match("%d+"))
-			moneyToAddText.Text = "+ $" .. money.Value - oldVal
+			local diff = money.Value - oldVal
+			if diff < 0 then
+				moneyToAddText.Text = "- $" .. math.abs(diff)
+			else
+				moneyToAddText.Text = "+ $" .. diff
+			end
 			clientUitls.CountUpNumberLabel(
 				moneyText,
 				"$ ",

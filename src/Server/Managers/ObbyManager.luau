@@ -66,7 +66,11 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win", winPrize: n
 		TelePortPlayer(player)
 		if mode == "Win" then
 			local winningPrize = winPrize and winPrize or 10
-			if winningPrize > 0 and Globals.group[tostring(player.UserId)].DoubleRewards then
+			if
+				winningPrize > 0
+				and Globals.group[tostring(player.UserId)]
+				and Globals.group[tostring(player.UserId)].DoubleRewards
+			then
 				winningPrize = winningPrize * 2
 			end
 			clientWinEvent:FireClient(player, winningPrize)

@@ -1,6 +1,9 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local TweenService = game:GetService("TweenService")
+local ToiletSwitcher = require(ServerScriptService.Server.Toilet.ToiletSwitcher)
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local Globals = require(script.Parent.Globals)
 local tags = require(ReplicatedStorage.Shared.tags)
@@ -9,7 +12,9 @@ local bubbleTypes: { Part } = ServerStorage:WaitForChild("ShopItems"):WaitForChi
 
 local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
 local particleBase: Part = CollectionService:GetTagged(tags.TOILET_PARTICLE_BASE)[1]
-local particleBaseCframe = particleBase.CFrame
+
+local universalParticle = CollectionService:GetTagged(tags.UNIVERSAL_PARTICLES)[1]
+local universalEmitter = universalParticle:FindFirstChildOfClass("ParticleEmitter")
 
 local flushUtils = {}
 
@@ -213,4 +218,33 @@ function flushUtils.SetPlayerToilet(player: Player)
 	flushUtils.toiletSeat.Material = materials.Seat and materials.Seat or flushUtils.toiletSeat.Material
 end
 
+local CLEAN_DUR = 1
+function flushUtils.CleanToilet()
+	local activeParts = ToiletSwitcher.ActiveToilet
+
+	SoundEffectHandler.Play("Clean")
+	task.spawn(function()
+		universalEmitter.Enabled = true
+		task.wait(CLEAN_DUR)
+		universalEmitter.Enabled = false
+	end)
+
+	for _, part in pairs(activeParts) do
+		task.spawn(function()
+			if part:IsA("BasePart") then
+				local originalColor = part.Color
+
+				part.Color = Color3.new(1, 1, 1)
+
+				local flashBackTween = TweenService:Create(
+					part,
+					TweenInfo.new(CLEAN_DUR, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+					{ Color = originalColor }
+				)
+
+				flashBackTween:Play()
+			end
+		end)
+	end
+end
 return flushUtils

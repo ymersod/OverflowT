@@ -10,8 +10,8 @@ local OverflowToiletEvent = GameEvents:WaitForChild("OverflowToilet")
 local FreezeToiletEvent = GameEvents:WaitForChild("FreezeToilet")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
-local CollectionService = game:GetService("CollectionService")
-local Players = game:GetService("Players")
+local ServerStorage = game:GetService("ServerStorage")
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local Globals = require(ServerScriptService.Server.Globals)
 
 local LineArray = require(ServerScriptService.Server.LineArray)
@@ -19,6 +19,8 @@ local flushUtils = require(ServerScriptService.Server.flushUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
+
+local overflowExplosion: Explosion = ServerStorage:WaitForChild("OverflowExplosion")
 
 local curBubbles = flushUtils.curBubbles
 local freezeTimer = nil
@@ -91,10 +93,10 @@ local function getIntensity(maxAmp, standardPercent: number?): number
 	return standard + ((maxAmp - standard) * curvedCap)
 end
 
-local function SetParticlesEnabled(enabled: boolean, tag: string, particleArr: { Particle })
+local function SetParticlesEnabled(enabled: boolean, tag: string, particleArr: { Particle }, manualRate: number?)
 	for _, descendant in ipairs(particleArr) do
 		if descendant.Emitter:IsA("ParticleEmitter") and descendant.Emitter:HasTag(tag) then
-			descendant.Emitter.Rate = getIntensity(descendant.Rate)
+			descendant.Emitter.Rate = manualRate and manualRate or getIntensity(descendant.Rate)
 			descendant.Emitter.Enabled = enabled
 		end
 	end
@@ -120,21 +122,44 @@ end
 
 ResetFlushEvent.OnServerEvent:Connect(function()
 	FlushHandler.ResetTimeHeld()
+	flushUtils.CleanToilet()
 end)
 
+local function playOnClickExplosionSplash(explDur: number, volume: number, manualRate: number?, callback: () -> ()?)
+	SetParticlesEnabled(true, tags.CLICK_PARTICLES, explParticles, manualRate)
+	Sound.PlayClickExpl(volume)
+	task.delay(explDur, function()
+		SetParticlesEnabled(false, tags.CLICK_PARTICLES, explParticles)
+		if callback then
+			callback()
+		end
+	end)
+end
+
+local OVERFLOW_DUR = 0.7
 OverflowToiletEvent.OnServerEvent:Connect(function()
-	FlushHandler.Overflow()
+	curBubbles = flushUtils.curBubbles
+	updateParticleTables(curBubbles)
+	Sound.FillSounds(curBubbles)
+
+	overflowExplosion:Clone()
+	overflowExplosion.Parent = flushUtils.toiletBody -- Doesnt really matter what parent is, position is already set
+	SoundEffectHandler.Play("Explosion")
+	task.delay(OVERFLOW_DUR * 2, function()
+		overflowExplosion:Destroy()
+	end)
+
+	playOnClickExplosionSplash(OVERFLOW_DUR, 2, 100, function()
+		task.delay(OVERFLOW_DUR, function()
+			FlushHandler.Overflow()
+		end)
+	end)
 end)
 
 local function startToiletAnimation()
 	turnOnRumbleAnimation()
 	SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
-
-	SetParticlesEnabled(true, tags.CLICK_PARTICLES, explParticles)
-	Sound.PlayClickExpl(getPercentageFull() + 1)
-	task.delay(CLICK_EXPL_LENGTH, function()
-		SetParticlesEnabled(false, tags.CLICK_PARTICLES, explParticles)
-	end)
+	playOnClickExplosionSplash(CLICK_EXPL_LENGTH, getPercentageFull() + 1)
 
 	Sound.Update(getPercentageFull())
 end
