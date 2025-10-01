@@ -30,7 +30,8 @@ local function spawnCoins(player)
 	coin.AssemblyLinearVelocity = direction * 20 + Vector3.new(0, 30, 0)
 
 	-- Counter gravity (fall slower)
-	local attachment = Instance.new("Attachment", coin)
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = coin
 	local force = Instance.new("VectorForce")
 	force.Force = Vector3.new(0, workspace.Gravity * coin:GetMass() * 0.7, 0)
 	force.Attachment0 = attachment
@@ -38,7 +39,8 @@ local function spawnCoins(player)
 	force.Parent = coin
 
 	-- Spin
-	local angularAttachment = Instance.new("Attachment", coin)
+	local angularAttachment = Instance.new("Attachment")
+	angularAttachment.Parent = coin
 	local angular = Instance.new("AngularVelocity")
 	angular.Attachment0 = angularAttachment
 	angular.RelativeTo = Enum.ActuatorRelativeTo.Attachment0

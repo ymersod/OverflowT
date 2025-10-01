@@ -7,7 +7,6 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
 
-local Globals = require(script.Parent.Globals)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local flushUtils = require(script.Parent.flushUtils)
 local serverUtils = require(script.Parent.serverUtils)

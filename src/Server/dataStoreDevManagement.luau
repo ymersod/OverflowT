@@ -5,7 +5,7 @@ local Stats = DataStoreService:GetDataStore("PlayerStats")
 local Actions = DataStoreService:GetDataStore("Actions")
 local OrderedStatsStore = DataStoreService:GetOrderedDataStore("PlayerStatsStore")
 
-dataStoreManagementFunctions = {}
+local dataStoreManagementFunctions = {}
 
 local statPrefix = "Stats_"
 local shopPrefix = "ShopObjects_"

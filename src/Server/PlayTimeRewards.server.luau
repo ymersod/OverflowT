@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Globals = require(script.Parent.Globals)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local serverUtils = require(script.Parent.serverUtils)
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
@@ -67,7 +66,7 @@ local function setupRewardSystem(chance: number, player, abilityId: number)
 	end)
 end
 
-local CHECK_POINT1 = 300
+local CHECK_POINT1 = 5
 local CHECK_POINT2 = 600
 local CHECK_POINT3 = 900
 

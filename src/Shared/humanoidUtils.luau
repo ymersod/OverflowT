@@ -19,7 +19,7 @@ function humanoidUtils.MoveTo(humanoid, targetPoint, andThen)
 
 	humanoid:MoveTo(targetPoint)
 
-	local taskThread = task.spawn(function()
+	task.spawn(function()
 		while not targetReached and not canceled do
 			if not (humanoid and humanoid.Parent) then
 				break
