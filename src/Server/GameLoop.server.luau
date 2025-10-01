@@ -49,7 +49,7 @@ task.spawn(function()
 		timer = INTERMISSION_TIME
 		if #Line:GetLine() == 0 then
 			while timer > 0 do
-				print("Next round in " .. math.floor(timer))
+				-- print("Next round in " .. math.floor(timer))
 				task.wait(1)
 				timer -= 1
 			end

@@ -13,6 +13,7 @@ local startFlushEvent = gameEvents:WaitForChild("StartFlush")
 local resetFlushEvent = gameEvents:WaitForChild("ResetToilet")
 local overflowToiletEvent = gameEvents:WaitForChild("OverflowToilet")
 local freezeToiletEvent = gameEvents:WaitForChild("FreezeToilet")
+local jamFlushEvent = gameEvents:WaitForChild("Jamflush")
 
 local actionEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ActionsEvents")
 local tryUseActions = actionEvents:WaitForChild("TryUseAction")
@@ -35,6 +36,7 @@ local resetToiletButton = contextActionMenu1:WaitForChild("ResetToilet"):FindFir
 
 local overflowButton = contextActionMenu2:WaitForChild("Overflow"):FindFirstChildOfClass("TextButton")
 local freezeToiletButton = contextActionMenu2:WaitForChild("FreezeWater"):FindFirstChildOfClass("TextButton")
+local jamFlushButton = contextActionMenu2:WaitForChild("JamFlush"):FindFirstChildOfClass("TextButton")
 
 local DEBOUNCE_TIME = 0.5
 local debounces = {}
@@ -60,7 +62,7 @@ flushButton.MouseButton1Down:Connect(function()
 		local leaveConn, upConn
 
 		local function flushFinishWrapper()
-			nextEvent:FireServer()
+			nextEvent:FireServer("Flush")
 
 			local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
 			linePosition.Changed:Once(function(newVal)
@@ -105,7 +107,8 @@ local function useAction(buttonRef: TextButton)
 	return canUse
 end
 
-resetToiletButton.MouseButton1Click:Connect(function()
+-- Reset toilet
+resetToiletButton.MouseButton1Down:Connect(function()
 	if debounceCheck(resetToiletButton) then
 		if useAction(resetToiletButton) then
 			resetFlushEvent:FireServer()
@@ -115,7 +118,8 @@ resetToiletButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-overflowButton.MouseButton1Click:Connect(function()
+-- Overflow
+overflowButton.MouseButton1Down:Connect(function()
 	if debounceCheck(overflowButton) then
 		if useAction(overflowButton) then
 			overflowToiletEvent:FireServer()
@@ -125,10 +129,22 @@ overflowButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-freezeToiletButton.MouseButton1Click:Connect(function()
+-- Freeze
+freezeToiletButton.MouseButton1Down:Connect(function()
 	if debounceCheck(freezeToiletButton) then
 		if useAction(freezeToiletButton) then
 			freezeToiletEvent:FireServer()
+		else
+			warn("Not enough charges!!")
+		end
+	end
+end)
+
+-- Jam flush
+jamFlushButton.MouseButton1Down:Connect(function()
+	if debounceCheck(jamFlushButton) then
+		if useAction(jamFlushButton) then
+			jamFlushEvent:FireServer()
 		else
 			warn("Not enough charges!!")
 		end
@@ -161,7 +177,7 @@ end)
 skipFlushButton.MouseButton1Down:Connect(function()
 	if not flushStarted and debounceCheck(skipFlushButton) then
 		if useAction(skipFlushButton) then
-			nextEvent:FireServer()
+			nextEvent:FireServer("SkipAhead")
 		else
 			warn("Not enough charges!!")
 		end

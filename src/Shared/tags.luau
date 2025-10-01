@@ -40,6 +40,9 @@ local tags = {
 	FROZEN_TOILET_PARTS = "FrozenToiletParts",
 	FROZEN_PARTICLE = "FrozenParticle",
 	UNIVERSAL_PARTICLES = "UniversalParticles",
+	IS_FREEZED = "IsFreezed",
+	IS_JAMMED = "IsJammed",
+	JAMMED_TEXT = "JammedText",
 }
 
 return tags

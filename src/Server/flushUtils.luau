@@ -5,6 +5,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local TweenService = game:GetService("TweenService")
 local ToiletSwitcher = require(ServerScriptService.Server.Toilet.ToiletSwitcher)
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
+local clientUitls = require(ReplicatedStorage.Shared.clientUitls)
 local Globals = require(script.Parent.Globals)
 local tags = require(ReplicatedStorage.Shared.tags)
 local toiletModels: { Model } = ServerStorage:WaitForChild("ShopItems"):WaitForChild("ToiletModels"):GetChildren()
@@ -22,6 +23,9 @@ flushUtils.curBubbles = bubbleTypes[1]
 flushUtils.toiletLid = CollectionService:GetTagged(tags.TOILET_LID)[1] :: MeshPart
 flushUtils.toiletSeat = CollectionService:GetTagged(tags.TOILET_SEAT)[1] :: MeshPart
 flushUtils.toiletBody = CollectionService:GetTagged(tags.TOILET_BODY)[1] :: MeshPart
+
+local jammedText: TextLabel = CollectionService:GetTagged(tags.JAMMED_TEXT)[1]
+local jammedFrame = jammedText.Parent :: Frame
 
 local function CleanupPreviousParticleObjects(obj: Instance)
 	print("Cleaning up old particles and sounds...")
@@ -245,6 +249,35 @@ function flushUtils.CleanToilet()
 				flashBackTween:Play()
 			end
 		end)
+	end
+end
+
+local JAM_ELASTIC_DUR = 0.7
+local PULSE_DUR = 1
+local tween, ogSize, sound
+function flushUtils.JamToilet(toJam: boolean)
+	if toJam then
+		sound = SoundEffectHandler.GetSound("Rattling")
+		sound.Looped = true
+		sound.Volume = 1.5
+		sound:Play()
+		ogSize = jammedFrame.Size
+		clientUitls.PopFrameElastic(jammedFrame, jammedFrame.Size, JAM_ELASTIC_DUR, 0)
+		task.delay(JAM_ELASTIC_DUR, function()
+			ogSize = jammedFrame.Size
+			tween = clientUitls.PulseContinuously2(jammedFrame, UDim2.new(1, 0, 1, 0), PULSE_DUR)
+		end)
+	else
+		jammedFrame.Visible = false
+		if tween then
+			tween:Cancel()
+		end
+		if ogSize then
+			jammedFrame.Size = ogSize
+		end
+		if sound and sound.IsPlaying then
+			sound:Stop()
+		end
 	end
 end
 return flushUtils

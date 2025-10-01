@@ -1,13 +1,7 @@
 local TweenService = game:GetService("TweenService")
 local uiConstants = require(script.Parent.uiConstants)
-local Player = game:GetService("Players").LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-local ScreenGui = PlayerGui:WaitForChild("ScreenGui")
-local WarningContainer = ScreenGui:WaitForChild("WarningContainer")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterPlayer = game:GetService("StarterPlayer")
-local SoundEffectHandler = require(script.Parent.SoundEffectHandler)
 local moneyAnimationEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("StatsEvents")
@@ -15,7 +9,7 @@ local moneyAnimationEvent = ReplicatedStorage:WaitForChild("Shared")
 
 local ClientUtils = {}
 
-local function fadeOut(frame: Frame, fadeOutTime: number, Destroy: boolean?, callback: (() -> ())?)
+function ClientUtils.fadeOut(frame: Frame, fadeOutTime: number, Destroy: boolean?, callback: (() -> ())?)
 	local fadeInfo = TweenInfo.new(fadeOutTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 	local bgTween = TweenService:Create(frame, fadeInfo, { BackgroundTransparency = 1 })
@@ -46,40 +40,6 @@ local function fadeOut(frame: Frame, fadeOutTime: number, Destroy: boolean?, cal
 	if callback then
 		callback()
 	end
-end
-function ClientUtils.showWarning(message)
-	if not WarningContainer then
-		warn("Warning container not found")
-		return
-	end
-
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, 0, 1, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-	frame.BackgroundTransparency = 0.1
-	frame.ZIndex = 0
-	frame.Parent = WarningContainer
-
-	-- round corners
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0.2, 0)
-	corner.Parent = frame
-
-	-- text label
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0.9, 0, 0.9, 0) -- padding inside the frame
-	label.AnchorPoint = Vector2.new(0.5, 0.5)
-	label.Position = UDim2.new(0.5, 0, 0.5, 0)
-	label.BackgroundTransparency = 1
-	label.Text = message or "⚠️ Game Cancelled!"
-	label.TextScaled = true
-	label.Font = Enum.Font.SourceSansBold
-	label.TextColor3 = Color3.fromRGB(255, 255, 255)
-	label.TextWrapped = true
-	label.Parent = frame
-	SoundEffectHandler.Play("PopUp")
-
-	fadeOut(frame, 3, true)
 end
 
 function ClientUtils.RainbowIfyText(gradient: UIGradient)
@@ -116,7 +76,7 @@ function ClientUtils.PopFrame(
 	tween:Play()
 
 	return function()
-		fadeOut(frame, fadeOutTime, false, callback)
+		ClientUtils.fadeOut(frame, fadeOutTime, false, callback)
 	end
 end
 
@@ -230,7 +190,7 @@ function ClientUtils.PopFrameElastic(
 	tween:Play()
 
 	return function()
-		fadeOut(frame, fadeOutTime, destroy, callback)
+		ClientUtils.fadeOut(frame, fadeOutTime, destroy, callback)
 	end
 end
 
@@ -248,6 +208,22 @@ function ClientUtils.PulseContinuously(object: GuiObject, scaleUp: number, durat
 		object.Size.Y.Offset * scaleUp
 	)
 
+	local tween = TweenService:Create(object, info, {
+		Size = targetSize,
+	})
+
+	tween:Play()
+	return tween
+end
+
+function ClientUtils.PulseContinuously2(object: GuiObject, newSize: UDim2, duration: number): Tween?
+	if not object then
+		return nil
+	end
+
+	local info = TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+
+	local targetSize = newSize
 	local tween = TweenService:Create(object, info, {
 		Size = targetSize,
 	})

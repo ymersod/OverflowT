@@ -1,3 +1,5 @@
+local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -8,6 +10,7 @@ local StartFlushEvent = GameEvents:WaitForChild("StartFlush")
 local ResetFlushEvent = GameEvents:WaitForChild("ResetToilet")
 local OverflowToiletEvent = GameEvents:WaitForChild("OverflowToilet")
 local FreezeToiletEvent = GameEvents:WaitForChild("FreezeToilet")
+local JamFlushEvent = GameEvents:WaitForChild("Jamflush")
 
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local ServerStorage = game:GetService("ServerStorage")
@@ -23,10 +26,11 @@ local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 local overflowExplosion: Explosion = ServerStorage:WaitForChild("OverflowExplosion")
 
 local curBubbles = flushUtils.curBubbles
+
+local isFreezed: BoolValue = CollectionService:GetTagged(tags.IS_FREEZED)[1]
+local isJammed: BoolValue = CollectionService:GetTagged(tags.IS_JAMMED)[1]
 local freezeTimer = nil
-local isFreezed = Instance.new("BoolValue")
-isFreezed.Name = "IsFreezed"
-isFreezed.Value = false
+local jamTimer = nil
 
 type Particle = {
 	Emitter: ParticleEmitter,
@@ -36,6 +40,10 @@ local waterParticles: { Particle } = {}
 local explParticles: { Particle } = {}
 
 local CLICK_EXPL_LENGTH = 0.2
+
+-- SETTINGS
+local TIME_FROZEN = 10
+local TIME_JAMMED = 5
 
 local function updateParticleTables(particleParent)
 	table.clear(waterParticles)
@@ -93,6 +101,12 @@ local function getIntensity(maxAmp, standardPercent: number?): number
 	return standard + ((maxAmp - standard) * curvedCap)
 end
 
+local function SetupForFlush()
+	curBubbles = flushUtils.curBubbles
+	updateParticleTables(curBubbles)
+	Sound.FillSounds(curBubbles)
+end
+
 local function SetParticlesEnabled(enabled: boolean, tag: string, particleArr: { Particle }, manualRate: number?)
 	for _, descendant in ipairs(particleArr) do
 		if descendant.Emitter:IsA("ParticleEmitter") and descendant.Emitter:HasTag(tag) then
@@ -138,15 +152,13 @@ end
 
 local OVERFLOW_DUR = 0.7
 OverflowToiletEvent.OnServerEvent:Connect(function()
-	curBubbles = flushUtils.curBubbles
-	updateParticleTables(curBubbles)
-	Sound.FillSounds(curBubbles)
+	SetupForFlush()
 
-	overflowExplosion:Clone()
-	overflowExplosion.Parent = flushUtils.toiletBody -- Doesnt really matter what parent is, position is already set
+	local overflowExplosionClone = overflowExplosion:Clone()
+	overflowExplosionClone.Parent = flushUtils.toiletBody -- Doesnt really matter what parent is, position is already set
 	SoundEffectHandler.Play("Explosion")
 	task.delay(OVERFLOW_DUR * 2, function()
-		overflowExplosion:Destroy()
+		overflowExplosionClone:Destroy()
 	end)
 
 	playOnClickExplosionSplash(OVERFLOW_DUR, 2, 100, function()
@@ -171,24 +183,28 @@ local function stopToiletAnimation()
 end
 
 local function stopFlushing()
-	Globals.flushStarted = false
-	stopToiletAnimation()
+	if not isJammed.Value then
+		Globals.flushStarted = false
+		stopToiletAnimation()
+	end
 end
 
-StartFlushEvent.OnServerEvent:Connect(function(player: Player)
-	currentHolder = player
+local function startFlush(playerCall)
+	currentHolder = playerCall
 	lastTimeIteration = os.clock()
 	Globals.flushStarted = true
 
-	curBubbles = flushUtils.curBubbles
-	updateParticleTables(curBubbles)
-
-	Sound.FillSounds(curBubbles)
+	SetupForFlush()
 	if isFreezed.Value then
 		return
 	end
 
 	startToiletAnimation()
+end
+StartFlushEvent.OnServerEvent:Connect(function(playerCall: Player)
+	if not isJammed.Value then
+		startFlush(playerCall)
+	end
 end)
 
 isFreezed:GetPropertyChangedSignal("Value"):Connect(function()
@@ -209,9 +225,59 @@ FreezeToiletEvent.OnServerEvent:Connect(function()
 
 	isFreezed.Value = true
 
-	freezeTimer = task.delay(10, function()
+	freezeTimer = task.delay(TIME_FROZEN, function()
 		isFreezed.Value = false
 		freezeTimer = nil
+	end)
+end)
+
+isJammed:GetPropertyChangedSignal("Value"):Connect(function()
+	local newVal = isJammed.Value
+	if newVal then
+		Globals.flushStarted = true
+		flushUtils.JamToilet(true)
+	elseif not newVal then
+		Globals.flushStarted = false
+		flushUtils.JamToilet(false)
+	end
+end)
+
+local checkTaskConnection
+JamFlushEvent.OnServerEvent:Connect(function()
+	if jamTimer then
+		task.cancel(jamTimer)
+		jamTimer = nil
+	end
+
+	isJammed.Value = true
+	jamTimer = task.delay(TIME_JAMMED, function()
+		isJammed.Value = false
+		jamTimer = nil
+
+		if checkTaskConnection then
+			checkTaskConnection:Disconnect()
+			checkTaskConnection = nil
+			stopToiletAnimation()
+		end
+	end)
+
+	if checkTaskConnection then
+		checkTaskConnection:Disconnect()
+	end
+
+	local prevJammedPlayer
+	checkTaskConnection = RunService.Heartbeat:Connect(function()
+		local line = LineArray:GetLine()
+		local newHolderId = (line[1] or nil)
+		local curJammedPlayer = newHolderId
+
+		if newHolderId and curJammedPlayer ~= prevJammedPlayer then
+			print("Setting new player!")
+			local player = Players:GetPlayerByUserId(newHolderId)
+			startFlush(player)
+		end
+
+		prevJammedPlayer = curJammedPlayer
 	end)
 end)
 

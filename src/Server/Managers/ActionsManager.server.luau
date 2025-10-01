@@ -8,7 +8,6 @@ local AddChargeToAction = ActionEvents:WaitForChild("AddChargeToAction")
 
 TryUseAction.OnServerInvoke = function(player, id: string)
 	local canUse = serverUtils.useAction(tostring(player.UserId), id)
-
 	return canUse
 end
 

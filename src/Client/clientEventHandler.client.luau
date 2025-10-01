@@ -1,4 +1,5 @@
 local Player = game:GetService("Players").LocalPlayer
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
 local TopBarUpdate = clientEvents:WaitForChild("TopBarUpdate")
@@ -26,6 +27,8 @@ local actionsRefs = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Ac
 
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
+
+local WarningContainer = ScreenGUI:WaitForChild("WarningContainer")
 
 local afkWarning = ScreenGUI:WaitForChild("KickedFrame") :: Frame
 local timeLabel: TextLabel = afkWarning:WaitForChild("TextParent"):WaitForChild("Time")
@@ -108,7 +111,38 @@ end
 
 -- Game cancelled event
 GameCancelledEvent.OnClientEvent:Connect(function(msg: string)
-	clientUtils.showWarning(msg)
+	if not WarningContainer then
+		warn("Warning container not found")
+		return
+	end
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	frame.BackgroundTransparency = 0.1
+	frame.ZIndex = 0
+	frame.Parent = WarningContainer
+
+	-- round corners
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.2, 0)
+	corner.Parent = frame
+
+	-- text label
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.9, 0, 0.9, 0) -- padding inside the frame
+	label.AnchorPoint = Vector2.new(0.5, 0.5)
+	label.Position = UDim2.new(0.5, 0, 0.5, 0)
+	label.BackgroundTransparency = 1
+	label.Text = msg or "⚠️ Game Cancelled!"
+	label.TextScaled = true
+	label.Font = Enum.Font.SourceSansBold
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextWrapped = true
+	label.Parent = frame
+	SoundEffectHandler.Play("PopUp")
+
+	clientUtils.fadeOut(frame, 3, true)
 end)
 
 -- Teleport player event
