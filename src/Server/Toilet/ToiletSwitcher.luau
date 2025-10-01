@@ -4,7 +4,6 @@ local Workspace = game:GetService("Workspace")
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local mainToilet = CollectionService:GetTagged(tags.GOLDEN_TOILET)[1]
-local destroyedToilet = CollectionService:GetTagged(tags.BROKEN_TOILET)[1]
 
 local mainParts = CollectionService:GetTagged(tags.GOLDEN_PART)
 local brokenParts = CollectionService:GetTagged(tags.BROKEN_PART)

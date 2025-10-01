@@ -15,7 +15,7 @@ local leaderboardPhotos: { ImageLabel } = leaderboardSpots:WaitForChild("Photos"
 local leaderboardScores: { TextLabel } = leaderboardSpots:WaitForChild("Score"):GetChildren()
 local topPlayers = CollectionService:GetTagged(tags.TOP_PLAYERS)[1]
 
-local LEADERBOARD_UPDATE = 10
+local LEADERBOARD_UPDATE = 60
 local curTime = 0
 
 local function SetTopModel(userId: string, wins: number, i: number)

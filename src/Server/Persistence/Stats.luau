@@ -1,5 +1,4 @@
 local DataStoreService = game:GetService("DataStoreService")
-local Players = game:GetService("Players")
 local Stats = DataStoreService:GetDataStore("PlayerStats")
 local OrderedStatsStore = DataStoreService:GetOrderedDataStore("PlayerStatsStore")
 
