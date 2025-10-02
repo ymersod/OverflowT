@@ -4,9 +4,8 @@ local Player = game:GetService("Players").LocalPlayer
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
 local parent = ScreenGUI:WaitForChild("LikeAndJoin")
-local likeAndJoinFrame: Frame = parent:WaitForChild("Like")
-local PremiumFrame: Frame = parent:WaitForChild("Premium")
-
+local likeAndJoinFrame = parent:WaitForChild("Like") :: Frame
+local PremiumFrame = parent:WaitForChild("Premium") :: Frame
 local CD = 30
 task.spawn(function()
 	while true do

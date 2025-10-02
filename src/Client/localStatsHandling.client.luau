@@ -58,7 +58,7 @@ function Observe()
 	end
 
 	if wins then
-		winsText.Text = wins.Value
+		winsText.Text = "👑 " .. wins.Value
 		wins.Changed:Connect(function(newVal)
 			local oldValString = winsText.Text
 			local oldVal = tonumber(oldValString) :: number

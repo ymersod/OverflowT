@@ -13,13 +13,13 @@ local UpdatePlayTimeRewards = clientEvents:WaitForChild("UpdatePlaytimeRewards")
 -- SETTINGS
 local TASK_WAIT = 10 -- how often we check
 
-local CUT_TARGET_AVG = 60 -- 60
+local CUT_TARGET_AVG = 120 -- 60
 local CUT_CHANCE = TASK_WAIT / CUT_TARGET_AVG
 
 local CUT_ALL_TAGET_AVG = 300 -- 300
 local CUT_ALL_CHANCE = TASK_WAIT / CUT_ALL_TAGET_AVG
 
-local SKIP_TARGET_AVG = 300
+local SKIP_TARGET_AVG = 600
 local SKIP_CD_CHANCE = TASK_WAIT / SKIP_TARGET_AVG
 
 local RESET_TOILET_TARGET_AVG = 3600
@@ -50,23 +50,23 @@ local function randomiseChance(chance: number)
 	return math.random() < chance -- returns true if "won"
 end
 
-local function giveReward(player, abilityId: string, amount: number?)
+local function giveReward(player, abilityId: string, type: "Random" | "Playtime", amount: number?)
 	serverUtils.addToAction(tostring(player.UserId), abilityId, amount or 1)
-	PlayTimeRewardEvent:FireClient(player, abilityId, amount or 1)
+	PlayTimeRewardEvent:FireClient(player, abilityId, amount or 1, type)
 end
 
 local function setupRewardSystem(chance: number, player, abilityId: number)
 	task.spawn(function()
 		while activePlayers[player.UserId] do
-			task.wait(math.random(TASK_WAIT - 1, TASK_WAIT + 1))
+			task.wait(math.random(TASK_WAIT - 2, TASK_WAIT + 2))
 			if randomiseChance(chance) then
-				giveReward(player, tostring(abilityId))
+				giveReward(player, tostring(abilityId), "Random")
 			end
 		end
 	end)
 end
 
-local CHECK_POINT1 = 5
+local CHECK_POINT1 = 300
 local CHECK_POINT2 = 600
 local CHECK_POINT3 = 900
 
@@ -127,11 +127,13 @@ giveRewardEvent.OnServerEvent:Connect(function(player, rewardNr)
 		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", cp2)
 	elseif rewardNr == 3 then
 		task.spawn(function()
-			giveReward(player, "1", 5)
+			giveReward(player, "1", "Playtime", 3)
 			task.wait(0.4)
-			giveReward(player, "2", 2)
+			giveReward(player, "2", "Playtime", 2)
 			task.wait(0.4)
-			giveReward(player, "4", 2)
+			giveReward(player, "4", "Playtime", 1)
+			task.wait(0.4)
+			giveReward(player, "7", "Playtime", 1)
 		end)
 	end
 end)

@@ -69,14 +69,14 @@ local function SetupOpenCloseConnections()
 
 	-- Open flush effects
 	flushEffectsOpen.MouseButton1Down:Connect(function()
-		topText = "Flush effects!"
+		topText.Text = "Flush effects!"
 		scrollingFrameParticles.Visible = true
 		scrollingFrameModels.Visible = false
 	end)
 
 	-- Open models
 	modelsOpen.MouseButton1Down:Connect(function()
-		topText = "Toilet variants!"
+		topText.Text = "Toilet variants!"
 		scrollingFrameParticles.Visible = false
 		scrollingFrameModels.Visible = true
 	end)

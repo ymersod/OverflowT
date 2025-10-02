@@ -65,15 +65,14 @@ local TYPE_WRITER_MONEY = 0.175
 local playTimeRewardsFrame = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("PlayTimeRewards")
 local ELASTIC_DUR = 0.4
 local FADEOUT_TIME = 4
-local whyTextArr = {
-	"Here’s a little something for you!",
-	"Appreciate you playing!",
-	"You deserve this!",
-	"Enjoy your reward!",
-	"Thanks for spending time with us!",
-	"A little gift for you!",
-	"Here you go!",
-	"Keep enjoying yourself!",
+local randomGiftArr = {
+	"You recieved a gift from the devs!",
+	"A gift for being a great player!",
+	"Thank you for playing!",
+	"The devs gave you a gift!",
+}
+local playTimeRewardsArr = {
+	"A gift for playing 15 minutes",
 }
 
 -- Top bar GUI
@@ -189,7 +188,7 @@ WinObbyEvent.OnClientEvent:Connect(function(money: number)
 end)
 
 -- Playtime reward event
-PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: number)
+PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: number, type: "Random" | "Playtime")
 	local playTimeRewardsFrameClone = playTimeRewardsFrame:Clone() :: Frame
 	local recievedText: TextLabel = playTimeRewardsFrameClone:WaitForChild("RecievedText")
 	local whyText: TextLabel = playTimeRewardsFrameClone:WaitForChild("WhyText")
@@ -247,7 +246,11 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: num
 		.. escapeRichText(text)
 		.. "</font>"
 		.. "]"
-	whyText.Text = whyTextArr[math.random(1, #whyTextArr)]
+	if type == "Random" then
+		whyText.Text = randomGiftArr[math.random(1, #randomGiftArr)]
+	else -- type == "Playtime"
+		whyText.Text = playTimeRewardsArr[math.random(1, #playTimeRewardsArr)]
+	end
 	fitTextToLabel(recievedText)
 	fitTextToLabel(whyText)
 	local fadeout = clientUtils.PopFrameElastic(
