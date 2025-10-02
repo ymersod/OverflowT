@@ -61,7 +61,7 @@ function Observe()
 		winsText.Text = "👑 " .. wins.Value
 		wins.Changed:Connect(function(newVal)
 			local oldValString = winsText.Text
-			local oldVal = tonumber(oldValString) :: number
+			local oldVal = tonumber(oldValString:match("%d+"))
 			clientUitls.CountUpNumberLabel(
 				winsText,
 				"👑 ",
