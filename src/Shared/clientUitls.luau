@@ -170,7 +170,6 @@ function ClientUtils.CountUpNumberLabel(
 		-- count the number
 		for i = 1, steps do --Mod 10 call server event, money animation
 			if i % 6 == 0 then
-				print("got here")
 				moneyAnimationEvent:FireServer()
 			end
 			current = current + stepAmount

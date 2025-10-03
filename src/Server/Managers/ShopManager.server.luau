@@ -1,8 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local enums = require(ReplicatedStorage.Shared.enums)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
+local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local serverUtils = require(ServerScriptService.Server.serverUtils)
 local types = require(ReplicatedStorage.Shared.types)
 
@@ -81,6 +83,9 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 	if itemPrice and money then
 		if money.Value >= itemPrice then
 			serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", -itemPrice)
+			task.defer(function()
+				funnelEvents.OnboardPlayersPlayer({ player }, enums.Analytics.Onboarding.BoughtFirstItem.Name)
+			end)
 
 			task.spawn(function()
 				Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)

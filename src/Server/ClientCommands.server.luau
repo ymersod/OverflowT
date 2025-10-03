@@ -89,6 +89,10 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local response = dataStoreDevManagement.removePlayerFromOrderedStatsStore(command.args[1])
 					print(response)
 				end
+				if #command.args == 1 or #command.args == 2 and command.args[2] == "playerflags" then
+					local response = dataStoreDevManagement.removePlayerFromPlayerFlagsStore(command.args[1])
+					print(response)
+				end
 			end
 		end
 		-- USED TO INSTANTLY ADD MONEY TO YOURSELF

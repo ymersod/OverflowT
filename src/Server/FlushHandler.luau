@@ -11,6 +11,7 @@ local enums = require(ReplicatedStorage.Shared.enums)
 local Globals = require(script.Parent.Globals)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local flushUtils = require(script.Parent.flushUtils)
+local funnelEvents = require(script.Parent.funnelEvents)
 local ragdollUtils = require(script.Parent.ragdollUtils)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
@@ -41,6 +42,9 @@ end
 
 local function RewardWinners()
 	local playerIds = LineArray:GetLine()
+	task.defer(function()
+		funnelEvents.OnboardPlayersUserId(playerIds, enums.Analytics.Onboarding.CompletedFirstGame.Name)
+	end)
 
 	local startRewardIndex
 	if playerIds and #playerIds == 1 then

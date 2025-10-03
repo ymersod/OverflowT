@@ -13,7 +13,9 @@ local GameCancelledEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("GameCancelled")
 
+local enums = require(ReplicatedStorage.Shared.enums)
 local FlushHandler = require(script.Parent.FlushHandler)
+local funnelEvents = require(script.Parent.funnelEvents)
 local serverUtils = require(script.Parent.serverUtils)
 local Line = require(ServerScriptService.Server.LineArray)
 local prevLine = { table.unpack(Line:GetLine()) }
@@ -56,6 +58,9 @@ task.spawn(function()
 
 			local players = GetPlayersInLobby()
 			if #players >= 2 then
+				task.defer(function()
+					funnelEvents.OnboardPlayersPlayer(players, enums.Analytics.Onboarding.StartedFirstGame.Name)
+				end)
 				serverUtils.handlePlayerSpots(true, #players)
 				Line:Fill(players)
 				FlushHandler.StartToilet()

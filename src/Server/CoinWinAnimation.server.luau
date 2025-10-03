@@ -55,6 +55,5 @@ end
 
 -- Listen for the client event
 spawnEvent.OnServerEvent:Connect(function(player)
-	print("called")
 	spawnCoins(player)
 end)
