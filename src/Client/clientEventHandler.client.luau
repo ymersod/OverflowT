@@ -18,9 +18,14 @@ local GiveRewardsEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("GameEvents")
 	:WaitForChild("GiveReward")
+local ragDollClientEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("RagdollClient")
 
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
+local enums = require(ReplicatedStorage.Shared.enums)
 
 -- UI Elements
 local actionsRefs = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Actions")
@@ -41,6 +46,8 @@ local gradient = rainbowText:FindFirstChildOfClass("UIGradient")
 local GameEndFrames = ScreenGUI:WaitForChild("GameEndFrames")
 local LoseFrame: Frame = GameEndFrames:WaitForChild("LoseFrame")
 local WinFrame = GameEndFrames:WaitForChild("WinFrame") :: Frame
+local afkFrame: Frame = GameEndFrames:WaitForChild("AfkFrame")
+local trolledFrame: Frame = GameEndFrames:WaitForChild("TrolledFrame")
 local winText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("WinLabel")
 local MoneyText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("MoneyLabel")
 
@@ -81,9 +88,9 @@ TopBarUpdate.OnClientEvent:Connect(function(text: string, mode: "Ongoing" | "Int
 end)
 
 -- End game screens
-EndGameScreen.OnClientInvoke = function(didWin: boolean, money: number?, wins: number?): number
+EndGameScreen.OnClientInvoke = function(endType: string, money: number?, wins: number?): number
 	local soundLength, frame: Frame
-	if didWin then
+	if endType == enums.EndGameScreen.Win then
 		if money then
 			MoneyText.Text = "+$" .. money
 		end
@@ -94,11 +101,24 @@ EndGameScreen.OnClientInvoke = function(didWin: boolean, money: number?, wins: n
 		WinFrame.Visible = true
 		frame = WinFrame
 		soundLength = SoundEffectHandler.GetSound("WinRound").TimeLength
-	else
+	elseif endType == enums.EndGameScreen.Lose then
 		SoundEffectHandler.Play("LoseRound")
 		LoseFrame.Visible = true
 		frame = LoseFrame
 		soundLength = SoundEffectHandler.GetSound("LoseRound").TimeLength
+	elseif endType == enums.EndGameScreen.Afk then
+		SoundEffectHandler.Play("LoseRound")
+		afkFrame.Visible = true
+		frame = afkFrame
+		soundLength = SoundEffectHandler.GetSound("LoseRound").TimeLength
+	elseif endType == enums.EndGameScreen.Trolled then
+		SoundEffectHandler.Play("LoseRound")
+		trolledFrame.Visible = true
+		frame = trolledFrame
+		soundLength = SoundEffectHandler.GetSound("LoseRound").TimeLength
+	else
+		warn("No endtype found, frame cant be set")
+		return 0
 	end
 
 	task.delay(soundLength, function()
@@ -309,6 +329,26 @@ afkWarningEvent.OnClientEvent:Connect(function(setWarning: boolean, timeUntilKic
 		timeLabel.Text = tostring(timeUntilKick)
 	end
 	afkWarning.Visible = setWarning
+end)
+
+-- ragdoll client
+ragDollClientEvent.OnClientEvent:Connect(function(toRagdoll: boolean)
+	local player = game.Players.LocalPlayer
+	local char = player and player.Character
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+
+	if toRagdoll then
+		humanoid.AutoRotate = false
+		humanoid.PlatformStand = true
+	else
+		if humanoid:GetState() == Enum.HumanoidStateType.Dead then
+			return
+		end
+		humanoid.PlatformStand = false
+		humanoid.AutoRotate = true
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+		humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+	end
 end)
 
 task.spawn(function()

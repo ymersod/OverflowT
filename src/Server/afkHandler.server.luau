@@ -2,11 +2,18 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Globals = require(script.Parent.Globals)
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
+local enums = require(ReplicatedStorage.Shared.enums)
 local LineArray = require(script.Parent.LineArray)
+local ragdollUtils = require(script.Parent.ragdollUtils)
+local serverUtils = require(script.Parent.serverUtils)
 local afkWarning = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("AfkWarning")
+local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("EndGameScreen")
 
 local curFirstInLine
 local warningCalled, warnedPlayer
@@ -42,7 +49,10 @@ local function checkAfks()
 			end
 			if diff >= AFK_CAP then
 				SoundEffectHandler.Play("AfkKick")
+				EndGameScreenEvent:InvokeClient(player, enums.EndGameScreen.Afk)
 				LineArray:Enqueue(LineArray.OperationType.Remove, line[1])
+				serverUtils.playExplosionOnPlayer(player, 3)
+				ragdollUtils.ragdoll(player, Globals.BlowBackDir, 3)
 			end
 		else
 			timer = os.clock()

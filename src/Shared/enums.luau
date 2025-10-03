@@ -9,4 +9,11 @@ enums.ShopItemType = {
 	StartsWith = "StartsWith",
 }
 
+enums.EndGameScreen = {
+	Win = "Win",
+	Lose = "Lose",
+	Afk = "Afk",
+	Trolled = "Trolled",
+}
+
 return enums

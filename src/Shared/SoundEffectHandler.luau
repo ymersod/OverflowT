@@ -28,6 +28,7 @@ export type SoundName =
 	| "Clean"
 	| "Explosion"
 	| "Rattling"
+	| "Oof"
 
 local trackList: { [SoundName]: number } = {
 	UniversalButtonHover = 6042053626,
@@ -55,6 +56,7 @@ local trackList: { [SoundName]: number } = {
 	Clean = 120256899978139,
 	Explosion = 18694762392,
 	Rattling = 112389053486257,
+	Oof = 79348298352567,
 }
 
 local sounds: { [SoundName]: Sound } = {}

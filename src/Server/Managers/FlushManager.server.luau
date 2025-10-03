@@ -23,7 +23,7 @@ local tags = require(ReplicatedStorage.Shared.tags)
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
-local overflowExplosion: Explosion = ServerStorage:WaitForChild("OverflowExplosion")
+local overflowExplosion: Explosion = ServerStorage:WaitForChild("ExplosionPrefab")
 
 local curBubbles = flushUtils.curBubbles
 

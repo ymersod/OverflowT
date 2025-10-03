@@ -1,8 +1,10 @@
 local ServerScriptService = game:GetService("ServerScriptService")
+local Globals = require(script.Parent.Globals)
 local ObbyManager = require(ServerScriptService.Server.Managers.ObbyManager)
 local Actions = require(ServerScriptService.Server.Persistence.Actions)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local dataStoreDevManagement = require(script.Parent.dataStoreDevManagement)
+local ragdollUtils = require(script.Parent.ragdollUtils)
 local serverUtils = require(script.Parent.serverUtils)
 
 local function subSet(array: { any }, iStart: number, iEnd: number?)
@@ -155,6 +157,10 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 		end
 		if command.command == "/resetactions" then
 			Actions.ResetActions(tostring(player.UserId))
+		end
+		if command.command == "/ragdoll" then
+			serverUtils.playExplosionOnPlayer(player, 3)
+			ragdollUtils.ragdoll(player, Globals.BlowBackDir, 3)
 		end
 	end)
 end)

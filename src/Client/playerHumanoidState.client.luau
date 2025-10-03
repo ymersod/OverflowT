@@ -13,6 +13,7 @@ local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
+local ragdolledValue: IntValue = Player:WaitForChild("States"):WaitForChild("Ragdolled")
 local prevLinePosition = 0
 
 -- World objects
@@ -129,9 +130,9 @@ local function moveInLine(lineNr)
 	end)
 end
 
-linePosition:GetPropertyChangedSignal("Value"):Connect(function()
-	local newValue = linePosition.Value
+local pendingValue = nil
 
+function processLineChange(newValue)
 	if newValue > 0 and prevLinePosition == 0 and not isInLine then
 		placeInLine(newValue)
 		actionGuiState.updateGUI(newValue)
@@ -140,8 +141,23 @@ linePosition:GetPropertyChangedSignal("Value"):Connect(function()
 		actionGuiState.updateGUI(newValue)
 	elseif isInLine and newValue ~= 0 and newValue ~= prevLinePosition then
 		moveInLine(newValue)
-		-- Doing actionState update after moving, this is to ensure people cant spam
 	end
 
 	prevLinePosition = newValue
+end
+
+linePosition:GetPropertyChangedSignal("Value"):Connect(function()
+	local newValue = linePosition.Value
+	if ragdolledValue.Value then
+		pendingValue = newValue
+		return
+	end
+	processLineChange(newValue)
+end)
+
+ragdolledValue.Changed:Connect(function(isRagdolled)
+	if not isRagdolled and pendingValue ~= nil then
+		processLineChange(pendingValue)
+		pendingValue = nil
+	end
 end)

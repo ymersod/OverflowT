@@ -2,12 +2,14 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
 local tags = require(ReplicatedStorage.Shared.tags)
 local Actions = require(ServerScriptService.Server.Persistence.Actions)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 
 local serverUtils = {}
 
+local explosionPrefab: Explosion = ServerStorage:WaitForChild("ExplosionPrefab")
 local playerSpots = CollectionService:GetTagged(tags.SPOT_TAG)
 
 function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stats.PlayerStats)
@@ -112,6 +114,21 @@ function serverUtils.handlePlayerSpots(toEnable: boolean, lineAmount: number?)
 				end
 			end
 		end
+	end
+end
+
+function serverUtils.playExplosionOnPlayer(player: Player, delay: number)
+	local char = player and player.Character
+	local root: Part? = char and char:FindFirstChild("HumanoidRootPart")
+
+	if char and root then
+		local explosionClone = explosionPrefab:Clone()
+		explosionClone.Position = root.CFrame.Position
+		explosionClone.Parent = char
+
+		task.delay(delay, function()
+			explosionClone:Destroy()
+		end)
 	end
 end
 

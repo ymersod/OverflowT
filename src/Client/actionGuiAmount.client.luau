@@ -24,11 +24,10 @@ function setup()
 	if localstatsactions then
 		for _, action in ipairs(localstatsactions:GetChildren()) do
 			if action:IsA("IntValue") then
-				print(action.Value)
-				UpdateAction(action.Name, action.Value)
 				action.Changed:Connect(function(val)
 					UpdateAction(action.Name, val)
 				end)
+				UpdateAction(action.Name, action.Value)
 			end
 		end
 	else

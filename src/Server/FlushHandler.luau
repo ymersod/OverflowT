@@ -7,8 +7,11 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
 
+local enums = require(ReplicatedStorage.Shared.enums)
+local Globals = require(script.Parent.Globals)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local flushUtils = require(script.Parent.flushUtils)
+local ragdollUtils = require(script.Parent.ragdollUtils)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local LineArray = require(ServerScriptService.Server.LineArray)
@@ -44,8 +47,12 @@ local function RewardWinners()
 		startRewardIndex = 1
 	else
 		startRewardIndex = 2
-		local losingPlayer = playerIds[1]
-		_ = losingPlayer and EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(losingPlayer), false)
+		local losingPlayerId = playerIds[1]
+		local losingPlayer = losingPlayerId and Players:GetPlayerByUserId(losingPlayerId)
+		if losingPlayer then
+			ragdollUtils.ragdoll(losingPlayer, Globals.BlowBackDir, 3)
+			EndGameScreenEvent:InvokeClient(losingPlayer, enums.EndGameScreen.Lose)
+		end
 	end
 
 	--Skipping first since he was the one who made it Overflow
@@ -57,8 +64,12 @@ local function RewardWinners()
 		coinsEarned = coinsEarned * mult
 		winsEarned = winsEarned * mult
 
-		local soundLength =
-			EndGameScreenEvent:InvokeClient(Players:GetPlayerByUserId(playerId), true, coinsEarned, winsEarned)
+		local soundLength = EndGameScreenEvent:InvokeClient(
+			Players:GetPlayerByUserId(playerId),
+			enums.EndGameScreen.Win,
+			coinsEarned,
+			winsEarned
+		)
 
 		task.delay(soundLength, function()
 			serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)

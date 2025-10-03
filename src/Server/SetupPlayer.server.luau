@@ -48,6 +48,11 @@ Players.PlayerAdded:Connect(function(player)
 	EquippedToilet.Name = "EquippedToilet"
 	EquippedToilet.Parent = localStats
 
+	local ragdolled = Instance.new("BoolValue")
+	ragdolled.Value = false
+	ragdolled.Name = "Ragdolled"
+	ragdolled.Parent = states
+
 	for _, action in ipairs(actions:GetChildren()) do
 		local actionId = action:GetAttribute("ActionId")
 
