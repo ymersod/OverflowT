@@ -312,6 +312,13 @@ updatePlaytimeRewards.OnClientEvent:Connect(function(totalTime: number, cap: num
 					tween:Cancel()
 					img.Size = ogSize
 				end
+				clientUtils.PulseFrame(
+					img,
+					clientUtils.standardPulse.scale,
+					clientUtils.standardPulse.durUp,
+					clientUtils.standardPulse.waitDur,
+					clientUtils.standardPulse.durDown
+				)
 				rewardButton.Interactable = false
 				checkMark.Visible = true
 				SoundEffectHandler.Play("PlaytimeCashin")

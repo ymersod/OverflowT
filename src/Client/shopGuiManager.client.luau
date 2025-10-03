@@ -5,6 +5,7 @@ local tags = require(ReplicatedStorage.Shared.tags)
 local enums = require(ReplicatedStorage.Shared.enums)
 local types = require(ReplicatedStorage.Shared.types)
 local RunService = game:GetService("RunService")
+local clientUitls = require(ReplicatedStorage.Shared.clientUitls)
 
 local getShopItemsEvents = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
@@ -92,6 +93,16 @@ end
 
 local buttonConnections = {} -- [button] = connection
 
+local function DoPulse(parent)
+	clientUitls.PulseFrame(
+		parent,
+		clientUitls.standardPulse.scale,
+		clientUitls.standardPulse.durUp,
+		clientUitls.standardPulse.waitDur,
+		clientUitls.standardPulse.durDown
+	)
+end
+
 local function SetupButton(
 	button: ImageButton,
 	actionButtonText: TextLabel,
@@ -109,12 +120,14 @@ local function SetupButton(
 	if mode == "GroupClaim" then
 		actionButtonText.Text = "Claim!"
 		conn = button.MouseButton1Click:Connect(function()
+			DoPulse(button)
 			print("GroupClaim clicked")
 		end)
 	elseif mode == "Equip" then
 		price.Visible = false
 		actionButtonText.Text = "Equip"
 		conn = button.MouseButton1Click:Connect(function()
+			DoPulse(button)
 			equipShopItem:InvokeServer(id, equipMode)
 		end)
 	elseif mode == "Buy" then
@@ -122,8 +135,8 @@ local function SetupButton(
 		price.Text = "$" .. cost
 		price.Visible = true
 		conn = button.MouseButton1Click:Connect(function()
+			DoPulse(button)
 			ownedShopItems = buyShopItems:InvokeServer(id)
-
 			if table.find(ownedShopItems, id) then
 				SetupButton(button, actionButtonText, "Equip", id, price, cost, equipMode)
 			end

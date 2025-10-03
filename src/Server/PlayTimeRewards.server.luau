@@ -66,7 +66,7 @@ local function setupRewardSystem(chance: number, player, abilityId: number)
 	end)
 end
 
-local CHECK_POINT1 = 300
+local CHECK_POINT1 = 5
 local CHECK_POINT2 = 600
 local CHECK_POINT3 = 900
 

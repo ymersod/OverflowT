@@ -7,7 +7,14 @@ local moneyAnimationEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("StatsEvents")
 	:WaitForChild("MoneyAnimation")
 
-local ClientUtils = {}
+local ClientUtils = {
+	standardPulse = {
+		scale = 1.1,
+		durUp = 0.15,
+		waitDur = 0,
+		durDown = 0.15,
+	},
+}
 
 function ClientUtils.fadeOut(frame: Frame, fadeOutTime: number, Destroy: boolean?, callback: (() -> ())?)
 	local fadeInfo = TweenInfo.new(fadeOutTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -96,7 +103,13 @@ function ClientUtils.TypewriterLabel(label: TextLabel, text: string, speed: numb
 	end)
 end
 
-function ClientUtils.PulseFrame(frame: Frame, pulseScale: number, pulseUp: number, pulseWait: number, pulseDown: number)
+function ClientUtils.PulseFrame(
+	frame: GuiObject,
+	pulseScale: number,
+	pulseUp: number,
+	pulseWait: number,
+	pulseDown: number
+)
 	local originalSize = frame.Size
 
 	local upTweenInfo = TweenInfo.new(pulseUp, Enum.EasingStyle.Linear)

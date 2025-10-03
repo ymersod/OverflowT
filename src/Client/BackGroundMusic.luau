@@ -4,6 +4,10 @@ local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
 
+local backGroundMusic = {
+	musicEnabled = true,
+}
+
 local waitingTracks = {
 	132290528373653, --Miaw-music-waiting
 	9045766074, --Squidgame-game-waiting
@@ -24,6 +28,7 @@ local roundTracks = {
 }
 
 local currentSound: Sound?
+local linePosition: IntValue = player:WaitForChild("States"):WaitForChild("LinePosition")
 
 local function stopCurrent()
 	if currentSound then
@@ -47,7 +52,14 @@ local function playRandom(trackList)
 end
 
 RunService.Heartbeat:Connect(function()
-	local linePosition: IntValue = player:WaitForChild("States"):WaitForChild("LinePosition")
+	linePosition = player:WaitForChild("States"):WaitForChild("LinePosition")
+
+	if backGroundMusic.musicEnabled and currentSound then
+		currentSound.Volume = 0.05
+	elseif currentSound then
+		currentSound.Volume = 0
+	end
+
 	if linePosition.Value > 0 then
 		if not currentSound or not table.find(roundTracks, tonumber(string.match(currentSound.SoundId, "%d+"))) then
 			playRandom(roundTracks)
@@ -58,3 +70,5 @@ RunService.Heartbeat:Connect(function()
 		end
 	end
 end)
+
+return backGroundMusic
