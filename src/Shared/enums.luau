@@ -26,4 +26,6 @@ enums.Analytics = {
 	},
 }
 
+enums.Actions = {}
+
 return enums

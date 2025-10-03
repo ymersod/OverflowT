@@ -16,44 +16,41 @@ function LineManager:Fill(players)
 	end
 end
 
-function LineManager:Enqueue(op, userId)
-	local index = self:GetIndex(userId)
-	if not index then
-		return
+function LineManager:Next(): boolean
+	if #self.Line > 0 then
+		local first = table.remove(self.Line, 1)
+		table.insert(self.Line, first)
+		return true
 	end
-	table.insert(self.Queue, { op = op, userId = userId })
+	return false
 end
 
-function LineManager:ProcessNext()
-	local req = table.remove(self.Queue, 1)
-	if not req then
-		return
+function LineManager:SkipAhead(userId): boolean
+	local index = self:GetIndex(userId)
+	if index and index > 1 and index <= #self.Line then
+		self.Line[index], self.Line[index - 1] = self.Line[index - 1], self.Line[index]
+		return true
 	end
-	local op = req.op
-	local index = self:GetIndex(req.userId)
-	if not index then
-		return
-	end
+	return false
+end
 
-	if op == self.OperationType.Next then
-		if #self.Line > 0 then
-			local first = table.remove(self.Line, 1)
-			table.insert(self.Line, first)
-		end
-	elseif op == self.OperationType.SkipAhead then
-		if index > 1 and index <= #self.Line then
-			self.Line[index], self.Line[index - 1] = self.Line[index - 1], self.Line[index]
-		end
-	elseif op == self.OperationType.CutAll then
-		if index > 1 and index <= #self.Line then
-			local mover = table.remove(self.Line, index)
-			table.insert(self.Line, 1, mover)
-		end
-	elseif op == self.OperationType.Remove then
-		if #self.Line > 0 then
-			table.remove(self.Line, index)
-		end
+function LineManager:CutAll(userId): boolean
+	local index = self:GetIndex(userId)
+	if index and index > 1 and index <= #self.Line then
+		local mover = table.remove(self.Line, index)
+		table.insert(self.Line, 1, mover)
+		return true
 	end
+	return false
+end
+
+function LineManager:Remove(userId): boolean
+	local index = self:GetIndex(userId)
+	if index then
+		table.remove(self.Line, index)
+		return true
+	end
+	return false
 end
 
 function LineManager:GetLine()

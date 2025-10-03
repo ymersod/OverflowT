@@ -72,6 +72,34 @@ function serverUtils.useAction(playerId: string, actionId: string)
 	return false
 end
 
+function serverUtils.getActionIfUsable(playerId: string, actionId: string): IntValue?
+	local player = Players:GetPlayerByUserId(playerId)
+	local localstats = player and player:FindFirstChild("localstats")
+	local localstatsactions = localstats and localstats:FindFirstChild("localstatsactions")
+	if not localstatsactions then
+		return nil
+	end
+	for _, action in ipairs(localstatsactions:GetChildren()) do
+		if action:IsA("IntValue") and action.Name == actionId then
+			if action.Value > 0 then
+				return action
+			else
+				return nil
+			end
+		end
+	end
+	return nil
+end
+
+function serverUtils.updateActionDB(playerId: string, action: IntValue)
+	local val = action.Value
+	if val >= 1 then
+		action.Value -= 1
+		Actions.UpdateCache(playerId, action.Name, -1)
+		return true
+	end
+end
+
 function serverUtils.addToAction(playerId: string, actionId: string, val: number?)
 	local player = Players:GetPlayerByUserId(playerId)
 	local localstats = player and player:FindFirstChild("localstats")

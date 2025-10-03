@@ -54,7 +54,6 @@ local function debounceCheck(button)
 end
 
 -- Flush button
-local flushStarted = false
 flushButton.MouseButton1Down:Connect(function()
 	if debounceCheck(flushButton) then
 		flushStarted = true
@@ -62,7 +61,7 @@ flushButton.MouseButton1Down:Connect(function()
 		local leaveConn, upConn
 
 		local function flushFinishWrapper()
-			nextEvent:FireServer("Flush")
+			nextEvent:FireServer("Flush", nil)
 
 			local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
 			linePosition.Changed:Once(function(newVal)
@@ -77,8 +76,6 @@ flushButton.MouseButton1Down:Connect(function()
 				upConn:Disconnect()
 				upConn = nil
 			end
-
-			flushStarted = false
 		end
 		leaveConn = flushButton.MouseLeave:Connect(flushFinishWrapper)
 		upConn = flushButton.MouseButton1Up:Connect(flushFinishWrapper)
@@ -105,6 +102,12 @@ local function useAction(buttonRef: TextButton)
 	local actionId = parentFrame and parentFrame:GetAttribute("ActionId")
 	local canUse = tryUseActions:InvokeServer(tostring(actionId))
 	return canUse
+end
+
+local function getActionId(buttonRef: TextButton)
+	local parentFrame = buttonRef.Parent
+	local actionId = parentFrame and parentFrame:GetAttribute("ActionId")
+	return tostring(actionId)
 end
 
 -- Reset toilet
@@ -153,33 +156,15 @@ end)
 
 -- Cut button
 cutButton.MouseButton1Down:Connect(function()
-	if not flushStarted and debounceCheck(cutButton) then
-		if useAction(cutButton) then
-			skipAheadEvent:FireServer()
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	skipAheadEvent:FireServer(getActionId(cutButton))
 end)
 
 -- Cut all button
 cutAllButton.MouseButton1Down:Connect(function()
-	if not flushStarted and debounceCheck(cutAllButton) then
-		if useAction(cutAllButton) then
-			cutAllEvent:FireServer()
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	cutAllEvent:FireServer(getActionId(cutAllButton))
 end)
 
 -- Skip flush button
 skipFlushButton.MouseButton1Down:Connect(function()
-	if not flushStarted and debounceCheck(skipFlushButton) then
-		if useAction(skipFlushButton) then
-			nextEvent:FireServer("SkipAhead")
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	nextEvent:FireServer("SkipAhead", getActionId(skipFlushButton))
 end)
