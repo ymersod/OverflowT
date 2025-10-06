@@ -60,6 +60,11 @@ task.spawn(function()
 			if #players >= 2 then
 				task.defer(function()
 					funnelEvents.OnboardPlayersPlayer(players, enums.Analytics.Onboarding.StartedFirstGame.Name)
+					funnelEvents.LogStepPlayers(
+						players,
+						enums.Analytics.Game.StartedGame.Name,
+						enums.Analytics.Game.SessionName
+					)
 				end)
 				serverUtils.handlePlayerSpots(true, #players)
 				Line:Fill(players)

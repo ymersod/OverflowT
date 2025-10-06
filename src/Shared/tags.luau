@@ -33,6 +33,7 @@ local tags = {
 	FALL_RESET_BLOCK = "FallResetBlock",
 	RESPAWN_POS = "RespawnPos",
 	TROPHY_COL = "TrophyCol",
+	OBBY_START = "ObbyStart",
 	OBBY_STATE_TEXT = "ObbyStateText",
 	BREAKING_SOUND = "BreakingSound",
 	LEADERBOARD = "Leaderboard",

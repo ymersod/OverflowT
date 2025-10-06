@@ -22,6 +22,10 @@ local ragDollClientEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("RagdollClient")
+local playTimeFunnelEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("Funnel")
+	:WaitForChild("PlayTimeRewards")
 
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
@@ -323,6 +327,7 @@ updatePlaytimeRewards.OnClientEvent:Connect(function(totalTime: number, cap: num
 				checkMark.Visible = true
 				SoundEffectHandler.Play("PlaytimeCashin")
 				GiveRewardsEvent:FireServer(rewardToEnable)
+				playTimeFunnelEvent:FireServer(rewardToEnable)
 			end)
 		else
 			warn("Didnt find the reward")

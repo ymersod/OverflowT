@@ -1,6 +1,8 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local enums = require(ReplicatedStorage.Shared.enums)
 local RewardsHandler = require(script.Parent.RewardsHandler)
+local funnelEvents = require(script.Parent.funnelEvents)
 local serverUtils = require(script.Parent.serverUtils)
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
 local giveRewardEvent = ReplicatedStorage:WaitForChild("Shared")
@@ -66,7 +68,7 @@ local function setupRewardSystem(chance: number, player, abilityId: number)
 	end)
 end
 
-local CHECK_POINT1 = 5
+local CHECK_POINT1 = 300
 local CHECK_POINT2 = 600
 local CHECK_POINT3 = 900
 
@@ -80,16 +82,20 @@ local function setupPlayTimeRewardsPlayer(player)
 			curTime = os.clock()
 
 			local updateReward = nil
+			local sessionName = enums.Analytics.PlaytimeRewards.SessionName
 			if totalTime >= CHECK_POINT1 and not cp1Reached then
 				updateReward = 1
+				funnelEvents.LogStepPlayers({ player }, enums.Analytics.PlaytimeRewards.Reached5Min.Name, sessionName)
 				cp1Reached = true
 			end
 			if totalTime >= CHECK_POINT2 and not cp2Reached then
 				updateReward = 2
+				funnelEvents.LogStepPlayers({ player }, enums.Analytics.PlaytimeRewards.Reached10Min.Name, sessionName)
 				cp2Reached = true
 			end
 			if totalTime >= CHECK_POINT3 and not cp3Reached then
 				updateReward = 3
+				funnelEvents.LogStepPlayers({ player }, enums.Analytics.PlaytimeRewards.Reached15Min.Name, sessionName)
 				cp3Reached = true
 			end
 

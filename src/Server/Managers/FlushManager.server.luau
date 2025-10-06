@@ -15,10 +15,12 @@ local JamFlushEvent = GameEvents:WaitForChild("Jamflush")
 local Rumble = require(game.ServerScriptService.Server.Toilet.RumbleAnimation)
 local ServerStorage = game:GetService("ServerStorage")
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
+local enums = require(ReplicatedStorage.Shared.enums)
 local Globals = require(ServerScriptService.Server.Globals)
 
 local LineArray = require(ServerScriptService.Server.LineArray)
 local flushUtils = require(ServerScriptService.Server.flushUtils)
+local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
@@ -203,6 +205,13 @@ local function startFlush(playerCall)
 end
 StartFlushEvent.OnServerEvent:Connect(function(playerCall: Player)
 	if not isJammed.Value then
+		funnelEvents.LogStepPlayers(
+			{ playerCall },
+			enums.Analytics.Game.FlushedToilet.Name,
+			enums.Analytics.Game.SessionName,
+			false,
+			true
+		)
 		startFlush(playerCall)
 	end
 end)

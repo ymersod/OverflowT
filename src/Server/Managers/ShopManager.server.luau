@@ -81,10 +81,24 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 	local money: IntValue? = localstats and localstats:FindFirstChild("Money")
 
 	if itemPrice and money then
+		funnelEvents.LogStepPlayers(
+			{ player },
+			enums.Analytics.Shop.TryBuy.Name,
+			enums.Analytics.Shop.SessionName,
+			false,
+			true
+		)
 		if money.Value >= itemPrice then
 			serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", -itemPrice)
 			task.defer(function()
 				funnelEvents.OnboardPlayersPlayer({ player }, enums.Analytics.Onboarding.BoughtFirstItem.Name)
+				funnelEvents.LogStepPlayers(
+					{ player },
+					enums.Analytics.Shop.BuyItem.Name,
+					enums.Analytics.Shop.SessionName,
+					false,
+					true
+				)
 			end)
 
 			task.spawn(function()
@@ -109,6 +123,14 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 end
 
 equipShopItemEvent.OnServerInvoke = function(player: Player, id: number, mode: "Model" | "Particle")
+	funnelEvents.LogStepPlayers(
+		{ player },
+		enums.Analytics.Shop.EquipItem.Name,
+		enums.Analytics.Shop.SessionName,
+		false,
+		true
+	)
+
 	local localstats = player:FindFirstChild("localstats")
 	local equippedItem: IntValue?
 	if mode == "Particle" then

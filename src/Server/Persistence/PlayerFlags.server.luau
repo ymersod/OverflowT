@@ -19,7 +19,7 @@ Players.PlayerAdded:Connect(function(player)
 		return
 	end
 
-	funnelEvents.playerFlagsCache[tostring(player.UserId)] = hasOnboarded or false -- hasOnboarded or false
+	funnelEvents.playerFlagsCache[tostring(player.UserId)] = { onboarded = hasOnboarded or false, stepsCompleted = {} }
 	print(funnelEvents.playerFlagsCache)
 	task.defer(function()
 		funnelEvents.OnboardPlayersPlayer({ player }, enums.Analytics.Onboarding.Joined.Name)

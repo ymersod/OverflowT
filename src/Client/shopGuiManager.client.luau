@@ -23,6 +23,8 @@ local equipShopItem = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ShopEvents")
 	:WaitForChild("EquipShopItem")
+local shopFunnel =
+	ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("Funnel"):WaitForChild("Shop")
 
 -- UI Elements
 local shopItemPrefab = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("ShopItem")
@@ -51,6 +53,15 @@ local DISTANCE_THRESHOLD = 20
 
 local updateGUI
 
+local function ShopVisibility(toEnable: boolean)
+	shopFrame.Visible = toEnable
+	if toEnable then
+		shopFunnel:FireServer(enums.Analytics.Shop.Opened.Name)
+	else
+		shopFunnel:FireServer(enums.Analytics.Shop.Closed.Name)
+	end
+end
+
 local function SetupOpenCloseConnections()
 	-- Open Connection
 
@@ -60,12 +71,12 @@ local function SetupOpenCloseConnections()
 	end
 
 	shop.Triggered:Connect(function()
-		shopFrame.Visible = true
+		ShopVisibility(true)
 	end)
 
 	-- Close Connection
 	closeButton.MouseButton1Down:Connect(function()
-		shopFrame.Visible = false
+		ShopVisibility(false)
 	end)
 
 	-- Open flush effects
@@ -73,6 +84,7 @@ local function SetupOpenCloseConnections()
 		topText.Text = "Flush effects!"
 		scrollingFrameParticles.Visible = true
 		scrollingFrameModels.Visible = false
+		shopFunnel:FireServer(enums.Analytics.Shop.SwitchOverview.Name)
 	end)
 
 	-- Open models
@@ -80,6 +92,7 @@ local function SetupOpenCloseConnections()
 		topText.Text = "Toilet variants!"
 		scrollingFrameParticles.Visible = false
 		scrollingFrameModels.Visible = true
+		shopFunnel:FireServer(enums.Analytics.Shop.SwitchOverview.Name)
 	end)
 end
 
@@ -222,7 +235,7 @@ RunService.Heartbeat:Connect(function()
 			if shopPos then
 				local distance = (hrp.Position - shopPos).Magnitude
 				if distance > DISTANCE_THRESHOLD then
-					shopFrame.Visible = false
+					ShopVisibility(false)
 				end
 			end
 		end

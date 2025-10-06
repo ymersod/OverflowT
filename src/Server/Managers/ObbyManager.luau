@@ -3,8 +3,10 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local enums = require(ReplicatedStorage.Shared.enums)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local RewardsHandler = require(ServerScriptService.Server.RewardsHandler)
+local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local serverUtils = require(ServerScriptService.Server.serverUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 local uiConstants = require(ReplicatedStorage.Shared.uiConstants)
@@ -35,6 +37,13 @@ local lastOsCheck = os.clock()
 
 local obbyManager = {}
 
+local function GetSession(difficulity)
+	return difficulity == "EASY" and enums.Analytics.EasyObby.SessionName
+		or difficulity == "MEDIUM" and enums.Analytics.MediumObby.SessionName
+		or difficulity == "HARD" and enums.Analytics.HardObby.SessionName
+		or difficulity == "OP" and enums.Analytics.OpObby.SessionName
+end
+
 local function CheckForPlayer(hit): Player?
 	if hit and hit.Parent and hit.Parent:IsA("Model") then
 		local player = Players:GetPlayerFromCharacter(hit.Parent)
@@ -49,10 +58,22 @@ local function TelePortPlayer(player: Player)
 	clientRespawnEvent:FireClient(player, respawnPos.Position)
 end
 
-local function SetupConnection(part: BasePart, mode: "Kill" | "Win", winPrize: number?)
+local activeConnections = {}
+local function CleanupConnections()
+	for _, conn in ipairs(activeConnections) do
+		if conn then
+			conn:Disconnect()
+		end
+	end
+
+	activeConnections = {}
+end
+
+local function SetupConnection(part: BasePart, mode: "Kill" | "Win", session: string, winPrize: number?)
 	local playerDebounce = {}
 
-	part.Touched:Connect(function(hit)
+	local conn
+	conn = part.Touched:Connect(function(hit)
 		local player = CheckForPlayer(hit)
 		if not player then
 			return
@@ -64,6 +85,9 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win", winPrize: n
 		playerDebounce[player] = true
 
 		TelePortPlayer(player)
+		if mode == "Kill" then
+			funnelEvents.LogStepPlayers({ player }, enums.Analytics[session].Died.Name, session, false, true)
+		end
 		if mode == "Win" then
 			local winningPrize = winPrize and winPrize or 10
 			if winningPrize > 0 then
@@ -71,13 +95,17 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win", winPrize: n
 				winningPrize = winningPrize * mult
 			end
 			clientWinEvent:FireClient(player, winningPrize)
+			funnelEvents.LogStepPlayers({ player }, enums.Analytics[session].Completed.Name, session, true)
 		end
 
 		task.delay(0.5, function()
 			playerDebounce[player] = nil
 		end)
 	end)
+
+	table.insert(activeConnections, conn)
 end
+
 local rainbowLoopRunning = false
 function obbyManager.SpawnObby(obbyId: number)
 	local obby
@@ -90,6 +118,7 @@ function obbyManager.SpawnObby(obbyId: number)
 	end
 
 	if obby then
+		CleanupConnections()
 		local difficulity: "EASY" | "MEDIUM" | "HARD" | "OP"? = obby:GetAttribute("ObbyDifficulity")
 		local winPrize: number? = obby:GetAttribute("WinPrize")
 		local color: Color3? = difficulity and uiConstants.difficultyColors[difficulity]
@@ -97,11 +126,23 @@ function obbyManager.SpawnObby(obbyId: number)
 		local obbyClone = obby:Clone() :: Instance
 		obbyClone.Parent = obbyWorkSpaceFolder
 
+		SetupConnection(resetFallBlock, "Kill", GetSession(difficulity))
 		for _, desc in ipairs(obbyClone:GetDescendants()) do
 			if desc:IsA("BasePart") and desc:HasTag(tags.RESET_BLOCK) and difficulity then
-				SetupConnection(desc, "Kill")
+				SetupConnection(desc, "Kill", GetSession(difficulity))
 			elseif desc:IsA("BasePart") and desc:HasTag(tags.TROPHY_COL) and difficulity then
-				SetupConnection(desc, "Win", winPrize)
+				SetupConnection(desc, "Win", GetSession(difficulity), winPrize)
+			elseif desc:IsA("BasePart") and desc:HasTag(tags.OBBY_START) and difficulity then
+				desc.Touched:Connect(function(hit)
+					local player = CheckForPlayer(hit)
+					if not player then
+						return
+					end
+					local session = GetSession(difficulity)
+					if player and session then
+						funnelEvents.LogStepPlayers({ player }, enums.Analytics[session].Started.Name, session)
+					end
+				end)
 			end
 		end
 
@@ -160,8 +201,6 @@ UpdateStatsEvent.OnServerEvent:Connect(function(player, toAdd: number)
 end)
 
 local function Start()
-	SetupConnection(resetFallBlock, "Kill")
-
 	RunService.Heartbeat:Connect(function()
 		curTimeAlive += os.clock() - lastOsCheck
 		lastOsCheck = os.clock()

@@ -44,6 +44,12 @@ local function RewardWinners()
 	local playerIds = LineArray:GetLine()
 	task.defer(function()
 		funnelEvents.OnboardPlayersUserId(playerIds, enums.Analytics.Onboarding.CompletedFirstGame.Name)
+		funnelEvents.LogStepPlayerIds(
+			playerIds,
+			enums.Analytics.Game.FinishedGame.Name,
+			enums.Analytics.Game.SessionName,
+			true
+		)
 	end)
 
 	local startRewardIndex
