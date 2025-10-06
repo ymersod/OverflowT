@@ -106,13 +106,20 @@ function flushUtils.SetupPlayerBubbleType(player: Player)
 end
 
 local curSpecialEffects = {}
-local runningEffects = {}
+local runningEffects: { [Model]: boolean } = {}
 local function SetSpecialEffects(selectedToilet: Model)
 	if curSpecialEffects and #curSpecialEffects > 0 then
 		for _, effect in ipairs(curSpecialEffects) do
 			effect:Destroy()
 		end
 	end
+	for model, _ in pairs(runningEffects) do
+		runningEffects[model] = false
+		if model then
+			model:Destroy()
+		end
+	end
+	curSpecialEffects = {}
 
 	for _, effect in ipairs(selectedToilet:GetDescendants()) do
 		if effect:IsA("ParticleEmitter") then
@@ -138,11 +145,8 @@ local function SetSpecialEffects(selectedToilet: Model)
 					track.Looped = true
 					local sound = SoundEffectHandler.GetSound("Skibidi1")
 					sound.Looped = true
-					while runningEffects[modelClone] do
-						if not modelClone then
-							print("model destroyed before we check hehe")
-							break
-						end
+
+					while runningEffects[modelClone] and modelClone.Parent do
 						if Globals.flushStarted then
 							if not sound.IsPlaying then
 								sound:Play()
@@ -156,8 +160,14 @@ local function SetSpecialEffects(selectedToilet: Model)
 						end
 						task.wait()
 					end
+
+					-- cleanup when loop exits
+					track:Stop()
+					sound:Stop()
+					runningEffects[modelClone] = nil
 				else
 					warn("Didnt find animations")
+					runningEffects[modelClone] = nil
 				end
 			end)
 			-- modelClone:PivotTo(particleBaseCframe * CFrame.Angles(0, math.rad(180), 0))
