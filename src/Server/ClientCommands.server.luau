@@ -104,6 +104,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
 						currentStats.Coins += tonumber(command.args[1])
 						currentStats.Wins += 0
+						currentStats.WinStreak += 0
 						return currentStats
 					end)
 					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
@@ -119,6 +120,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
 						currentStats.Coins += 0
 						currentStats.Wins += tonumber(command.args[1])
+						currentStats.WinStreak += 0
 						return currentStats
 					end)
 					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
@@ -127,9 +129,23 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local newStats = Stats.UpdatePlayerStats(command.args[2], function(currentStats)
 						currentStats.Coins += 0
 						currentStats.Wins += tonumber(command.args[1])
+						currentStats.WinStreak += 0
 						return currentStats
 					end)
 					serverUtils.updatePlayerLeaderStats(command.args[2], newStats)
+				end
+			end
+		end
+		if command.command == "/addwinstreak" then
+			if #command.args >= 0 then
+				if #command.args == 1 then
+					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+						currentStats.Coins += 0
+						currentStats.Wins += 0
+						currentStats.WinStreak += tonumber(command.args[1]) >= 0 and tonumber(command.args[1]) or -currentStats.WinStreak
+						return currentStats
+					end)
+					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
 				end
 			end
 		end

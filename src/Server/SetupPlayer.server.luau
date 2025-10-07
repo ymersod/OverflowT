@@ -33,6 +33,11 @@ Players.PlayerAdded:Connect(function(player)
 	Wins.Name = "Wins"
 	Wins.Parent = leaderStats
 
+	local WinStreak = Instance.new("IntValue")
+	WinStreak.Value = 0
+	WinStreak.Name = "WinStreak"
+	WinStreak.Parent = leaderStats
+
 	local Money = Instance.new("IntValue")
 	Money.Value = 0
 	Money.Name = "Money"

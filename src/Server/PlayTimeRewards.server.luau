@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Stats = game:GetService("Stats")
 local enums = require(ReplicatedStorage.Shared.enums)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local funnelEvents = require(script.Parent.funnelEvents)
@@ -129,8 +130,24 @@ giveRewardEvent.OnServerEvent:Connect(function(player, rewardNr)
 
 	if rewardNr == 1 then
 		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", cp1)
+		task.spawn(function()
+			Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+				currentStats.Coins += cp1
+				currentStats.Wins += 0
+				currentStats.WinStreak += 0
+				return currentStats
+			end)
+		end)
 	elseif rewardNr == 2 then
 		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", cp2)
+		task.spawn(function()
+			Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+				currentStats.Coins += cp2
+				currentStats.Wins += 0
+				currentStats.WinStreak += 0
+				return currentStats
+			end)
+		end)
 	elseif rewardNr == 3 then
 		task.spawn(function()
 			giveReward(player, "1", "Playtime", 3)

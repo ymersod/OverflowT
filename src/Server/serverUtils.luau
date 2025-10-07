@@ -19,6 +19,7 @@ function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stat
 
 	local money: IntValue? = leaderStats:FindFirstChild("Money")
 	local wins: IntValue? = leaderStats:FindFirstChild("Wins")
+	local winStreak: IntValue? = leaderStats:FindFirstChild("WinStreak")
 
 	if money and money:IsA("IntValue") then
 		money.Value = playerStats.Coins
@@ -26,9 +27,12 @@ function serverUtils.updatePlayerLeaderStats(playerId: string, playerStats: Stat
 	if wins and wins:IsA("IntValue") then
 		wins.Value = playerStats.Wins
 	end
+	if winStreak and winStreak:IsA("IntValue") then
+		winStreak.Value = playerStats.WinStreak
+	end
 end
 
-function serverUtils.modifyPlayerLeaderStats(playerId: string, mode: "Wins" | "Money", amount: number)
+function serverUtils.modifyPlayerLeaderStats(playerId: string, mode: "Wins" | "Money" | "WinStreak", amount: number)
 	local player = Players:GetPlayerByUserId(playerId)
 	local leaderStats = player:FindFirstChild("leaderstats")
 
@@ -42,6 +46,16 @@ function serverUtils.modifyPlayerLeaderStats(playerId: string, mode: "Wins" | "M
 		local wins: IntValue? = leaderStats:FindFirstChild("Wins")
 		if wins then
 			wins.Value += amount
+		end
+	end
+	if mode == "WinStreak" then
+		local winStreak: IntValue? = leaderStats:FindFirstChild("WinStreak")
+		if winStreak then
+			if amount >= 0 then
+				winStreak.Value += amount
+			else
+				winStreak.Value = 0
+			end
 		end
 	end
 end

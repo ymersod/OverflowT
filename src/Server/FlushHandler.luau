@@ -62,6 +62,16 @@ local function RewardWinners()
 		if losingPlayer then
 			ragdollUtils.ragdoll(losingPlayer, Globals.BlowBackDir, 3)
 			EndGameScreenEvent:InvokeClient(losingPlayer, enums.EndGameScreen.Lose)
+
+			serverUtils.modifyPlayerLeaderStats(losingPlayer, "WinStreak", -1)
+			task.spawn(function()
+				Stats.UpdatePlayerStats(losingPlayer, function(currentStats)
+					currentStats.Coins += 0
+					currentStats.Wins += 0
+					currentStats.WinStreak += -currentStats.WinStreak
+					return currentStats
+				end)
+			end)
 		end
 	end
 
@@ -84,10 +94,12 @@ local function RewardWinners()
 		task.delay(soundLength, function()
 			serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)
 			serverUtils.modifyPlayerLeaderStats(playerId, "Wins", winsEarned)
+			serverUtils.modifyPlayerLeaderStats(playerId, "WinStreak", 1)
 			task.spawn(function()
 				Stats.UpdatePlayerStats(playerId, function(currentStats)
 					currentStats.Coins += coinsEarned
 					currentStats.Wins += winsEarned
+					currentStats.WinStreak += 1
 					return currentStats
 				end)
 			end)

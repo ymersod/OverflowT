@@ -105,6 +105,7 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 				Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
 					currentStats.Coins -= itemPrice
 					currentStats.Wins += 0
+					currentStats.WinStreak += 0
 					return currentStats
 				end)
 			end)

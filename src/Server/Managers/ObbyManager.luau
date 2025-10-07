@@ -195,6 +195,7 @@ UpdateStatsEvent.OnServerEvent:Connect(function(player, toAdd: number)
 		Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
 			currentStats.Coins += toAdd
 			currentStats.Wins += 0
+			currentStats.WinStreak += 0
 			return currentStats
 		end)
 	end)

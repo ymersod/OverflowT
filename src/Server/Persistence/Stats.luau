@@ -7,6 +7,7 @@ local statPrefix = "Stats_"
 export type PlayerStats = {
 	Coins: number,
 	Wins: number,
+	WinStreak: number,
 }
 
 local statsHandler = {}
@@ -15,12 +16,13 @@ local function DefaultStats(): PlayerStats
 	return {
 		Coins = 0,
 		Wins = 0,
+		WinStreak = 0,
 	}
 end
 
 function statsHandler.GetPlayerStats(playerId: string): PlayerStats?
 	local key = statPrefix .. playerId
-	local success, data = pcall(function()
+	local success, data: PlayerStats? = pcall(function()
 		return Stats:GetAsync(key)
 	end)
 
@@ -31,6 +33,30 @@ function statsHandler.GetPlayerStats(playerId: string): PlayerStats?
 
 	if not data then
 		return DefaultStats()
+	end
+
+	local missing = false
+	if data.Coins == nil then
+		data.Coins = 0
+		missing = true
+	end
+	if data.Wins == nil then
+		data.Wins = 0
+		missing = true
+	end
+	if data.WinStreak == nil then
+		data.WinStreak = 0
+		missing = true
+	end
+
+	if missing then
+		local newStats = statsHandler.UpdatePlayerStats(playerId, function(currentStats)
+			currentStats.Coins = data.Coins
+			currentStats.Wins = data.Wins
+			currentStats.WinStreak = data.WinStreak
+			return currentStats
+		end)
+		return newStats or data
 	end
 
 	return data
@@ -46,7 +72,10 @@ function statsHandler.UpdatePlayerStats(playerId: string, updater: (PlayerStats)
 			return updater(currentData)
 		end)
 	end)
-	statsHandler.UpdateOrderedPlayerStatsStore(playerId, result)
+	task.defer(function()
+		statsHandler.UpdateOrderedPlayerStatsStore(playerId, result)
+	end)
+
 	if success and result then
 		return result
 	else
