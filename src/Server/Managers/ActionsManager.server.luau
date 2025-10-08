@@ -1,5 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
+local ServerEnums = require(ServerScriptService.Server.ServerEnums)
 local enums = require(ReplicatedStorage.Shared.enums)
 local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local serverUtils = require(ServerScriptService.Server.serverUtils)
@@ -10,6 +12,10 @@ local AddChargeToAction = ActionEvents:WaitForChild("AddChargeToAction")
 
 TryUseAction.OnServerInvoke = function(player, id: string)
 	local canUse = serverUtils.useAction(tostring(player.UserId), id)
+
+	if not canUse then
+		MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, id)
+	end
 
 	task.defer(function()
 		funnelEvents.LogStepPlayers(

@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local actionGuiState = require(script.Parent.actionGuiState)
 
 local events = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events")

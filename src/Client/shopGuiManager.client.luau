@@ -7,24 +7,22 @@ local types = require(ReplicatedStorage.Shared.types)
 local RunService = game:GetService("RunService")
 local clientUitls = require(ReplicatedStorage.Shared.clientUitls)
 
-local getShopItemsEvents = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ShopEvents")
-	:WaitForChild("GetShopItems")
-local getOwnedShopItems = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ShopEvents")
-	:WaitForChild("GetOwnedShopItems")
-local buyShopItems = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ShopEvents")
-	:WaitForChild("BuyShopItem")
-local equipShopItem = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ShopEvents")
-	:WaitForChild("EquipShopItem")
+local shopEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ShopEvents")
+local getShopItemsEvents = shopEvents:WaitForChild("GetShopItems")
+local getOwnedShopItems = shopEvents:WaitForChild("GetOwnedShopItems")
+local buyShopItems = shopEvents:WaitForChild("BuyShopItem")
+local equipShopItem = shopEvents:WaitForChild("EquipShopItem")
 local shopFunnel =
 	ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("Funnel"):WaitForChild("Shop")
+
+local promptRobuxPurchaseEvents = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("MonetizationEvents")
+	:WaitForChild("PromptBuy")
+local processPurchaseEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("MonetizationEvents")
+	:WaitForChild("ProcessPurchase")
 
 -- UI Elements
 local shopItemPrefab = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("ShopItem")
@@ -117,60 +115,115 @@ local function DoPulse(parent)
 end
 
 local function SetupButton(
-	button: ImageButton,
-	actionButtonText: TextLabel,
-	mode: "GroupClaim" | "Buy" | "Equip",
+	equipButton: ImageButton,
+	buyButton: ImageButton,
+	buyRobuxButton: ImageButton,
+	mode: "GroupClaim" | "Buy" | "Equip" | "BuyRobux",
 	id: number,
 	price: TextLabel,
 	cost: number,
-	equipMode: "Model" | "Particle"
+	equipMode: "Model" | "Particle",
+	robuxCost: number?,
+	buttonText: TextLabel?
 )
-	if buttonConnections[button] then
-		buttonConnections[button]:Disconnect()
-		buttonConnections[button] = nil
-	end
 	local conn
 	if mode == "GroupClaim" then
-		actionButtonText.Text = "Claim!"
-		conn = button.MouseButton1Click:Connect(function()
-			DoPulse(button)
-			print("GroupClaim clicked")
-		end)
+		-- actionButtonText.Text = "Claim!"
+		-- conn = button.MouseButton1Click:Connect(function()
+		-- 	DoPulse(button)
+		-- 	print("GroupClaim clicked")
+		-- end)
+		warn("Group huh")
 	elseif mode == "Equip" then
 		price.Visible = false
-		actionButtonText.Text = "Equip"
-		conn = button.MouseButton1Click:Connect(function()
-			DoPulse(button)
+		equipButton.Visible = true
+
+		buyButton.Visible = false
+		if buttonConnections[buyButton] then
+			buttonConnections[buyButton]:Disconnect()
+			buttonConnections[buyButton] = nil
+		end
+		buyRobuxButton.Visible = false
+		if buttonConnections[buyRobuxButton] then
+			buttonConnections[buyRobuxButton]:Disconnect()
+			buttonConnections[buyRobuxButton] = nil
+		end
+
+		conn = equipButton.MouseButton1Click:Connect(function()
+			DoPulse(equipButton)
 			equipShopItem:InvokeServer(id, equipMode)
 		end)
+		buttonConnections[equipButton] = conn
 	elseif mode == "Buy" then
-		actionButtonText.Text = "Buy"
 		price.Text = "$" .. cost
 		price.Visible = true
-		conn = button.MouseButton1Click:Connect(function()
-			DoPulse(button)
-			ownedShopItems = buyShopItems:InvokeServer(id)
+		buyButton.Visible = true
+
+		equipButton.Visible = false
+		if buttonConnections[equipButton] then
+			buttonConnections[equipButton]:Disconnect()
+			buttonConnections[equipButton] = nil
+		end
+
+		conn = buyButton.MouseButton1Click:Connect(function()
+			DoPulse(buyButton)
+			ownedShopItems = buyShopItems:InvokeServer(id, equipMode)
 			if table.find(ownedShopItems, id) then
-				SetupButton(button, actionButtonText, "Equip", id, price, cost, equipMode)
+				SetupButton(equipButton, buyButton, buyRobuxButton, "Equip", id, price, cost, equipMode)
 			end
 		end)
+		buttonConnections[buyButton] = conn
+	elseif mode == "BuyRobux" then
+		equipButton.Visible = false
+		buyRobuxButton.Visible = true
+		if robuxCost and buttonText then
+			buttonText.Text = `\u{E002}{robuxCost}`
+		end
+
+		if buttonConnections[equipButton] then
+			buttonConnections[equipButton]:Disconnect()
+			buttonConnections[equipButton] = nil
+		end
+
+		conn = buyRobuxButton.MouseButton1Click:Connect(function()
+			DoPulse(buyRobuxButton)
+			promptRobuxPurchaseEvents:FireServer(equipMode, tostring(id)) -- Purchase is handles in an event sent from server
+		end)
 	end
-	buttonConnections[button] = conn
 end
 
+local cache: {
+	[number]: {
+		equipButtonRef: ImageButton,
+		buyButtonRef: ImageButton,
+		buyRobuxButtonRef: ImageButton,
+		priceRef: TextLabel,
+	},
+} =
+	{}
 updateGUI = function()
 	for _, shopItem in ipairs(filteredShopItems) do
 		local shopItemPrefabClone = shopItemPrefab:Clone()
 		local price: TextLabel = shopItemPrefabClone:FindFirstChild("Price")
 		local title: TextLabel = shopItemPrefabClone:FindFirstChild("Title")
-		local actionButton: ImageButton = shopItemPrefabClone:FindFirstChildOfClass("ImageButton")
-		local actionButtonText = actionButton:FindFirstChildOfClass("TextLabel")
+		local equipButton: ImageButton = shopItemPrefabClone:FindFirstChild("Equip")
+		local buyButton: ImageButton = shopItemPrefabClone:FindFirstChild("Buy")
+		local buyRobuxButton: ImageButton = shopItemPrefabClone:FindFirstChild("BuyRobux")
+		local buyRobuxButtonText: TextLabel = buyRobuxButton and buyRobuxButton:FindFirstChildOfClass("TextLabel")
 		local imageLabel: ImageLabel = shopItemPrefabClone:FindFirstChildOfClass("ImageLabel")
+
+		cache[shopItem.Id] = {
+			equipButtonRef = equipButton,
+			buyButtonRef = buyButton,
+			buyRobuxButtonRef = buyRobuxButton,
+			priceRef = price,
+		}
 
 		if table.find(ownedShopItems, shopItem.Id) then
 			SetupButton(
-				actionButton,
-				actionButtonText,
+				equipButton,
+				buyButton,
+				buyRobuxButton,
 				"Equip",
 				shopItem.Id,
 				price,
@@ -178,24 +231,38 @@ updateGUI = function()
 				shopItem.ItemPlacement
 			)
 		elseif shopItem.ShopFunction == enums.ShopItemType.GroupJoin then
-			SetupButton(
-				actionButton,
-				actionButtonText,
-				"GroupClaim",
-				shopItem.Id,
-				price,
-				shopItem.PriceMoney,
-				shopItem.ItemPlacement
-			)
+			-- SetupButton(
+			-- 	actionButton,
+			-- 	actionButtonText,
+			-- 	"GroupClaim",
+			-- 	shopItem.Id,
+			-- 	price,
+			-- 	shopItem.PriceMoney,
+			-- 	shopItem.ItemPlacement
+			-- )
+			warn("THIS SHOULD NOT BE IN USE")
 		else
 			SetupButton(
-				actionButton,
-				actionButtonText,
+				equipButton,
+				buyButton,
+				buyRobuxButton,
 				"Buy",
 				shopItem.Id,
 				price,
 				shopItem.PriceMoney,
 				shopItem.ItemPlacement
+			)
+			SetupButton(
+				equipButton,
+				buyButton,
+				buyRobuxButton,
+				"BuyRobux",
+				shopItem.Id,
+				price,
+				shopItem.PriceMoney,
+				shopItem.ItemPlacement,
+				shopItem.PriceRobux,
+				buyRobuxButtonText
 			)
 		end
 
@@ -221,6 +288,24 @@ local function start()
 	SetupShop()
 end
 start()
+
+processPurchaseEvent.OnClientEvent:Connect(function(id: number, typename: "Model" | "Particle")
+	local shopItemToUpdate = cache[id]
+
+	if shopItemToUpdate then
+		SetupButton(
+			shopItemToUpdate.equipButtonRef,
+			shopItemToUpdate.buyButtonRef,
+			shopItemToUpdate.buyRobuxButtonRef,
+			"Equip",
+			id,
+			shopItemToUpdate.priceRef,
+			0,
+			typename
+		)
+		print("update after purchse")
+	end
+end)
 
 -- Close Connection (distance-based)
 RunService.Heartbeat:Connect(function()

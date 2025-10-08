@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
 local enums = require(ReplicatedStorage.Shared.enums)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
@@ -66,7 +67,7 @@ getOwnedShopItemsEvent.OnServerInvoke = function(player: Player)
 	return ownedItems
 end
 
-buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
+buyShopItemEvent.OnServerInvoke = function(player: Player, id: number, equipMode: string?)
 	local itemToBuy
 	for _, shopItem in ipairs(shopItems) do
 		local itemId = shopItem:GetAttribute("Id")
@@ -117,6 +118,10 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number)
 
 				return ownedObjects
 			end)
+		else
+			if equipMode then
+				MonetizationHandler.PromptRobuxPurchase(player, equipMode, tostring(id))
+			end
 		end
 	end
 
