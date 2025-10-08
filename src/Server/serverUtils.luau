@@ -60,6 +60,32 @@ function serverUtils.modifyPlayerLeaderStats(playerId: string, mode: "Wins" | "M
 	end
 end
 
+function serverUtils.GetLeaderStatVal(playerId: string, mode: "Wins" | "Money" | "WinStreak"): number?
+	local player = Players:GetPlayerByUserId(playerId)
+	local leaderStats = player:FindFirstChild("leaderstats")
+
+	if mode == "Money" then
+		local money: IntValue? = leaderStats:FindFirstChild("Money")
+		if money then
+			return money.Value
+		end
+	end
+	if mode == "Wins" then
+		local wins: IntValue? = leaderStats:FindFirstChild("Wins")
+		if wins then
+			return wins.Value
+		end
+	end
+	if mode == "WinStreak" then
+		local winStreak: IntValue? = leaderStats:FindFirstChild("WinStreak")
+		if winStreak then
+			return winStreak.Value
+		end
+	end
+
+	return nil
+end
+
 function serverUtils.useAction(playerId: string, actionId: string)
 	local player = Players:GetPlayerByUserId(playerId)
 	local localstats = player and player:FindFirstChild("localstats")

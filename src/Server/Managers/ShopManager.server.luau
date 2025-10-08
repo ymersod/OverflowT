@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local EconomyFunnels = require(ServerScriptService.Server.EconomyFunnels)
 local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
 local enums = require(ReplicatedStorage.Shared.enums)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
@@ -77,11 +78,12 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number, equipMode
 	end
 
 	local itemPrice = itemToBuy and itemToBuy:GetAttribute("PriceMoney")
+	local itemName = itemToBuy and itemToBuy:GetAttribute("Name")
 
 	local localstats = player:FindFirstChild("leaderstats")
 	local money: IntValue? = localstats and localstats:FindFirstChild("Money")
 
-	if itemPrice and money then
+	if itemPrice and money and itemName then
 		funnelEvents.LogStepPlayers(
 			{ player },
 			enums.Analytics.Shop.TryBuy.Name,
@@ -90,6 +92,21 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number, equipMode
 			true
 		)
 		if money.Value >= itemPrice then
+			task.spawn(function()
+				local curMoney = serverUtils.GetLeaderStatVal(tostring(player.UserId), "Money")
+				if curMoney then
+					EconomyFunnels.LogEconomyEventPlayers(
+						{ player },
+						Enum.AnalyticsEconomyFlowType.Sink,
+						"Money",
+						itemPrice,
+						curMoney - itemPrice,
+						Enum.AnalyticsEconomyTransactionType.Shop.Name,
+						itemName .. " Money"
+					)
+				end
+			end)
+
 			serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", -itemPrice)
 			task.defer(function()
 				funnelEvents.OnboardPlayersPlayer({ player }, enums.Analytics.Onboarding.BoughtFirstItem.Name)

@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Stats = game:GetService("Stats")
+local EconomyFunnels = require(script.Parent.EconomyFunnels)
 local enums = require(ReplicatedStorage.Shared.enums)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local funnelEvents = require(script.Parent.funnelEvents)
@@ -128,6 +129,19 @@ giveRewardEvent.OnServerEvent:Connect(function(player, rewardNr)
 	cp1 = cp1 * mult
 	cp2 = cp2 * mult
 
+	local rewType = (rewardNr == 1 or rewardNr == 2) and "Money" or nil
+	local curMoney = serverUtils.GetLeaderStatVal(tostring(player.UserId), "Money")
+	if rewType then
+		EconomyFunnels.LogEconomyEventPlayers(
+			{ player },
+			Enum.AnalyticsEconomyFlowType.Source,
+			rewType,
+			cp1,
+			curMoney + cp1,
+			Enum.AnalyticsEconomyTransactionType.TimedReward.Name,
+			(CHECK_POINT1 / 60) .. " minutes played reward"
+		)
+	end
 	if rewardNr == 1 then
 		serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", cp1)
 		task.spawn(function()

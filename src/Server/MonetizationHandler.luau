@@ -2,6 +2,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local EconomyFunnels = require(script.Parent.EconomyFunnels)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
 local serverUtils = require(script.Parent.serverUtils)
 
@@ -85,6 +86,18 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 						if not table.find(ownedObjects, tonumber(localId)) then
 							granted = true
 							table.insert(ownedObjects, tonumber(localId))
+
+							task.spawn(function()
+								EconomyFunnels.LogEconomyEventPlayers(
+									{ player },
+									Enum.AnalyticsEconomyFlowType.Sink,
+									"Robux",
+									receiptInfo.CurrencySpent,
+									0,
+									Enum.AnalyticsEconomyTransactionType.Shop.Name,
+									data.name .. " Robux"
+								)
+							end)
 						end
 
 						return ownedObjects

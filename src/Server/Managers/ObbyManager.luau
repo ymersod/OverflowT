@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local EconomyFunnels = require(ServerScriptService.Server.EconomyFunnels)
 local enums = require(ReplicatedStorage.Shared.enums)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local RewardsHandler = require(ServerScriptService.Server.RewardsHandler)
@@ -96,6 +97,18 @@ local function SetupConnection(part: BasePart, mode: "Kill" | "Win", session: st
 			end
 			clientWinEvent:FireClient(player, winningPrize)
 			funnelEvents.LogStepPlayers({ player }, enums.Analytics[session].Completed.Name, session, true)
+			local val = serverUtils.GetLeaderStatVal(tostring(player.UserId), "Money")
+			if val then
+				EconomyFunnels.LogEconomyEventPlayers(
+					{ player },
+					Enum.AnalyticsEconomyFlowType.Source,
+					"Money",
+					winningPrize,
+					val,
+					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+					session .. " completed"
+				)
+			end
 		end
 
 		task.delay(0.5, function()

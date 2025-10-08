@@ -7,6 +7,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("ClientEvents")
 	:WaitForChild("EndGameScreen")
 
+local EconomyFunnels = require(script.Parent.EconomyFunnels)
 local enums = require(ReplicatedStorage.Shared.enums)
 local Globals = require(script.Parent.Globals)
 local RewardsHandler = require(script.Parent.RewardsHandler)
@@ -65,6 +66,19 @@ local function RewardWinners()
 
 			serverUtils.modifyPlayerLeaderStats(losingPlayer, "WinStreak", -1)
 			task.spawn(function()
+				local curWinStreak = serverUtils.GetLeaderStatVal(losingPlayerId, "WinStreak")
+				if curWinStreak then
+					EconomyFunnels.LogEconomyEventPlayers(
+						{ losingPlayer },
+						Enum.AnalyticsEconomyFlowType.Sink,
+						"WinStreak",
+						curWinStreak,
+						0,
+						Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+						"Lose match (WINSTREAK)"
+					)
+				end
+
 				Stats.UpdatePlayerStats(losingPlayer, function(currentStats)
 					currentStats.Coins += 0
 					currentStats.Wins += 0
@@ -90,6 +104,42 @@ local function RewardWinners()
 			coinsEarned,
 			winsEarned
 		)
+
+		task.defer(function()
+			local curWinStreaks = serverUtils.GetLeaderStatVal(playerId, "WinStreak")
+			local curWins = serverUtils.GetLeaderStatVal(playerId, "Wins")
+			local curMoney = serverUtils.GetLeaderStatVal(playerId, "Money")
+
+			if curWinStreaks and curWins and curMoney then
+				EconomyFunnels.LogEconomyEventPlayerIds(
+					{ playerId },
+					Enum.AnalyticsEconomyFlowType.Source,
+					"WinStreak",
+					1,
+					curWinStreaks + 1,
+					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+					"Win match (WINSTREAK)"
+				)
+				EconomyFunnels.LogEconomyEventPlayerIds(
+					{ playerId },
+					Enum.AnalyticsEconomyFlowType.Source,
+					"Wins",
+					winsEarned,
+					curWins + winsEarned,
+					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+					"Win match (WINS)"
+				)
+				EconomyFunnels.LogEconomyEventPlayerIds(
+					{ playerId },
+					Enum.AnalyticsEconomyFlowType.Source,
+					"Money",
+					coinsEarned,
+					curMoney + coinsEarned,
+					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+					"Win match (MONEY)"
+				)
+			end
+		end)
 
 		task.delay(soundLength, function()
 			serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)
