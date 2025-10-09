@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local StreakHandler = require(script.Parent.StreakHandler)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local tags = require(ReplicatedStorage.Shared.tags)
 
@@ -14,6 +15,11 @@ local leaderboardNames: { TextLabel } = leaderboardSpots:WaitForChild("Names"):G
 local leaderboardPhotos: { ImageLabel } = leaderboardSpots:WaitForChild("Photos"):GetChildren()
 local leaderboardScores: { TextLabel } = leaderboardSpots:WaitForChild("Score"):GetChildren()
 local topPlayers = CollectionService:GetTagged(tags.TOP_PLAYERS)[1]
+local winStreakStatue: Model = CollectionService:GetTagged(tags.WINSTREAK_STATUE)[1]
+local winStreakStats = CollectionService:GetTagged(tags.WINSTREAK_STATS)[1]
+local winStreakframe = winStreakStats:FindFirstChildOfClass("BillboardGui"):FindFirstChildOfClass("Frame")
+local streakAmountText: TextLabel = winStreakframe:FindFirstChild("StreakAmount")
+local streakNameText: TextLabel = winStreakframe:FindFirstChild("PlayerName")
 
 local LEADERBOARD_UPDATE = 60
 local curTime = 0
@@ -101,11 +107,52 @@ local function UpdateLeaderboardWorldData(top10Arr: { key: string, value: number
 	end
 end
 
+local function SetTopModelWinStreakModel(statue: Model?, userId: string, winstreak: number)
+	local hum: Humanoid? = statue and statue:FindFirstChildOfClass("Humanoid")
+	local animator: Animator? = hum and hum:FindFirstChildOfClass("Animator")
+	local animation: Animation? = statue and statue:FindFirstChildOfClass("Animation")
+
+	if hum and animator and animation then
+		if tonumber(userId) > 0 then
+			hum:ApplyDescription(Players:GetHumanoidDescriptionFromUserId(tonumber(userId)))
+		end
+		local anim
+		pcall(function()
+			anim = animator:LoadAnimation(animation)
+		end)
+		anim:Play()
+	end
+
+	if streakAmountText and streakNameText then
+		streakAmountText.Text = "WinStreak: " .. winstreak
+		if tonumber(userId) > 0 then
+			streakNameText.Text = Players:GetNameFromUserIdAsync(userId)
+		else
+			streakNameText.Text = userId
+		end
+	end
+end
+
+local function UpdateTopWinstreak(top10Arr: { key: string, value: number }?)
+	if top10Arr and #top10Arr == 1 then
+		local topPlayer = top10Arr[1]
+		SetTopModelWinStreakModel(winStreakStatue, topPlayer.key, topPlayer.value)
+		StreakHandler.Setup(topPlayer.value, winStreakStatue, false, true)
+	end
+end
+
 RunService.Heartbeat:Connect(function()
 	local timeDiff = os.clock() - curTime
 	if timeDiff >= LEADERBOARD_UPDATE then
 		curTime = os.clock()
-		UpdateLeaderboardWorldData(Stats.GetTopPlayers(10))
+		task.spawn(function()
+			UpdateLeaderboardWorldData(Stats.GetTopPlayers(10))
+		end)
+
+		task.spawn(function()
+			UpdateTopWinstreak(Stats.GetTopWinstreaker(1))
+		end)
+
 		-- updateleaderboard
 	end
 

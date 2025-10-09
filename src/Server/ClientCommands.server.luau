@@ -89,6 +89,10 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local response = dataStoreDevManagement.removePlayerFromOrderedStatsStore(command.args[1])
 					print(response)
 				end
+				if #command.args == 1 or #command.args == 2 and command.args[2] == "orderedwinstreak" then
+					local response = dataStoreDevManagement.removePlayerFromOrderedWinstreakStore(command.args[1])
+					print(response)
+				end
 				if #command.args == 1 or #command.args == 2 and command.args[2] == "playerflags" then
 					local response = dataStoreDevManagement.removePlayerFromPlayerFlagsStore(command.args[1])
 					print(response)
@@ -120,7 +124,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local newStats = Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
 						currentStats.Coins += 0
 						currentStats.Wins += tonumber(command.args[1])
-						currentStats.WinStreak += 0
+						currentStats.WinStreak = currentStats.WinStreak and currentStats.WinStreak or 0
 						return currentStats
 					end)
 					serverUtils.updatePlayerLeaderStats(tostring(player.UserId), newStats)
@@ -129,7 +133,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local newStats = Stats.UpdatePlayerStats(command.args[2], function(currentStats)
 						currentStats.Coins += 0
 						currentStats.Wins += tonumber(command.args[1])
-						currentStats.WinStreak += 0
+						currentStats.WinStreak = currentStats.WinStreak and currentStats.WinStreak or 0
 						return currentStats
 					end)
 					serverUtils.updatePlayerLeaderStats(command.args[2], newStats)

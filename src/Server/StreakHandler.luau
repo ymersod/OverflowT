@@ -3,7 +3,9 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local streakFolder = ServerStorage:WaitForChild("Streaks"):GetChildren()
 
+local streakHandler = {}
 local cleanupCache: { [string]: { Instance } } = {}
+
 local function Cleanup(userId: string, head: Model)
 	local bb = head:FindFirstChildOfClass("BillboardGui")
 	if bb then
@@ -139,12 +141,14 @@ local function SetBBProperties(bbClone: BillboardGui, winStreakVal: number)
 end
 
 local activeAura: { [string]: { Aura: number } } = {}
-local function BBHandler(winStreakVal: number, player: Player)
-	local char = player.Character :: Model?
+
+function streakHandler.Setup(winStreakVal: number, player: Player | Model, setBb: boolean, setAura: boolean)
+	local char = player:IsA("Player") and (player.Character or player.CharacterAdded:Wait()) or player
 	local head = char and char:FindFirstChild("Head") :: MeshPart?
 	local torso = char and char:FindFirstChild("UpperTorso") :: MeshPart?
 
-	if head and char and torso then
+	if head and char and char:IsA("Model") and torso then
+		local userId = player:IsA("Player") and player.UserId or -1
 		local streakFound
 		local curWinsReq = -1
 		for _, streak in ipairs(streakFolder) do
@@ -155,13 +159,13 @@ local function BBHandler(winStreakVal: number, player: Player)
 			end
 		end
 
-		if activeAura[tostring(player.UserId)] and activeAura[tostring(player.UserId)].Aura == curWinsReq then
+		if activeAura[tostring(userId)] and activeAura[tostring(userId)].Aura == curWinsReq then
 			print("Streak already on")
 			return
 		end
-		activeAura[tostring(player.UserId)] = { Aura = curWinsReq }
+		activeAura[tostring(userId)] = { Aura = curWinsReq }
 
-		Cleanup(tostring(player.UserId), head)
+		Cleanup(tostring(userId), head)
 
 		if not streakFound then
 			warn("STREAK IN SERVERSTORAGE NOT FOUND")
@@ -169,32 +173,36 @@ local function BBHandler(winStreakVal: number, player: Player)
 		end
 
 		-- BB Stuff
-		task.spawn(function()
-			local bbPrefab = streakFound:FindFirstChildOfClass("BillboardGui")
+		if setBb then
+			task.spawn(function()
+				local bbPrefab = streakFound:FindFirstChildOfClass("BillboardGui")
 
-			if not bbPrefab then
-				warn("NO BB FOUND")
-				return
-			end
+				if not bbPrefab then
+					warn("NO BB FOUND")
+					return
+				end
 
-			local bbClone = bbPrefab:Clone()
-			SetBBProperties(bbClone, winStreakVal)
-			bbClone.Parent = head
-			bbClone.Adornee = head
-		end)
+				local bbClone = bbPrefab:Clone()
+				SetBBProperties(bbClone, winStreakVal)
+				bbClone.Parent = head
+				bbClone.Adornee = head
+			end)
+		end
 
 		-- Aura stuff
-		task.spawn(function()
-			local auraPrefab = streakFound and streakFound:FindFirstChildOfClass("Model")
-			if not auraPrefab then
-				if curWinsReq > 0 then
-					warn("NO BB FOUND")
+		if setAura then
+			task.spawn(function()
+				local auraPrefab = streakFound and streakFound:FindFirstChildOfClass("Model")
+				if not auraPrefab then
+					if curWinsReq > 0 then
+						warn("NO BB FOUND")
+					end
+					return
 				end
-				return
-			end
 
-			SetupAura(auraPrefab, char, tostring(player.UserId), streakFound:GetAttribute("useSubParts"))
-		end)
+				SetupAura(auraPrefab, char, tostring(userId), streakFound:GetAttribute("useSubParts"))
+			end)
+		end
 	else
 		warn("Could not find model or head")
 	end
@@ -206,13 +214,15 @@ Players.PlayerAdded:Connect(function(player)
 		local curValue = winStreakIntValue and winStreakIntValue.Value
 
 		if curValue and winStreakIntValue then
-			BBHandler(curValue, player)
+			streakHandler.Setup(curValue, player, true, true)
 
 			winStreakIntValue.Changed:Connect(function(newVal)
-				BBHandler(newVal, player)
+				streakHandler.Setup(newVal, player, true, true)
 			end)
 		else
 			warn("Didnt find winstreak intvalue")
 		end
 	end)
 end)
+
+return streakHandler

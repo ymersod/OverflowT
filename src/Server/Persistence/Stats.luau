@@ -1,6 +1,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local Stats = DataStoreService:GetDataStore("PlayerStats")
 local OrderedStatsStore = DataStoreService:GetOrderedDataStore("PlayerStatsStore")
+local OrderedWinStreakStatsStore = DataStoreService:GetOrderedDataStore("PlayerWinstreakStore")
 
 local statPrefix = "Stats_"
 
@@ -85,12 +86,20 @@ function statsHandler.UpdatePlayerStats(playerId: string, updater: (PlayerStats)
 end
 
 function statsHandler.UpdateOrderedPlayerStatsStore(playerId, currentStats: PlayerStats)
-	local success, err = pcall(function()
+	local successOrdered, errOrdered = pcall(function()
 		return OrderedStatsStore:SetAsync(playerId, currentStats.Wins)
 	end)
 
-	if not success then
-		warn("Failed to update ordered store for playerId:", playerId, err)
+	if not successOrdered then
+		warn("Failed to update ordered store for playerId:", playerId, errOrdered)
+	end
+
+	local successStreak, errStreak = pcall(function()
+		return OrderedWinStreakStatsStore:SetAsync(playerId, currentStats.WinStreak)
+	end)
+
+	if not successStreak then
+		warn("Failed to update ordered store for playerId:", playerId, errStreak)
 	end
 end
 
@@ -108,6 +117,23 @@ function statsHandler.GetTopPlayers(limit: number): { key: string, value: number
 	end
 
 	-- GetCurrentPage returns an array of { key = playerId, value = score }
+	local topPlayers = pages:GetCurrentPage()
+	return topPlayers
+end
+
+function statsHandler.GetTopWinstreaker(limit: number): { key: string, value: number }?
+	limit = limit or 1
+
+	local success, pages = pcall(function()
+		-- false = descending order (highest first)
+		return OrderedWinStreakStatsStore:GetSortedAsync(false, limit)
+	end)
+
+	if not success then
+		warn("Failed to get top players:", pages)
+		return nil
+	end
+
 	local topPlayers = pages:GetCurrentPage()
 	return topPlayers
 end

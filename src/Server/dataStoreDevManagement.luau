@@ -5,6 +5,7 @@ local Stats = DataStoreService:GetDataStore("PlayerStats")
 local Actions = DataStoreService:GetDataStore("Actions")
 local OrderedStatsStore = DataStoreService:GetOrderedDataStore("PlayerStatsStore")
 local playerFlags = DataStoreService:GetDataStore("PlayerFlags")
+local OrderedWinStreakStatsStore = DataStoreService:GetOrderedDataStore("PlayerWinstreakStore")
 
 local dataStoreManagementFunctions = {}
 
@@ -49,6 +50,16 @@ function dataStoreManagementFunctions.removePlayerFromOrderedStatsStore(playerId
 	end)
 	if success then
 		return { success = true, payload = "player " .. playerId .. " removed from ordered stats store" }
+	end
+	return { success = false, payload = err }
+end
+
+function dataStoreManagementFunctions.removePlayerFromOrderedWinstreakStore(playerId)
+	local success, err = pcall(function()
+		return OrderedWinStreakStatsStore:RemoveAsync(playerId)
+	end)
+	if success then
+		return { success = true, payload = "player " .. playerId .. " removed from ordered winstreak store" }
 	end
 	return { success = false, payload = err }
 end

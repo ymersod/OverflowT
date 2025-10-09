@@ -44,6 +44,8 @@ local tags = {
 	IS_FREEZED = "IsFreezed",
 	IS_JAMMED = "IsJammed",
 	JAMMED_TEXT = "JammedText",
+	WINSTREAK_STATUE = "WinstreakStatue",
+	WINSTREAK_STATS = "WinstreakStats",
 }
 
 return tags
