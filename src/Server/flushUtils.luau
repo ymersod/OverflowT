@@ -176,6 +176,25 @@ local function SetSpecialEffects(selectedToilet: Model)
 	end
 end
 
+local curDecals = {}
+local function SetDecals(selectedToiletPart: MeshPart?, toiletPart: MeshPart)
+	local decals = selectedToiletPart and selectedToiletPart:GetChildren()
+
+	if decals then
+		print("Found some sick decals")
+
+		for _, decal in ipairs(decals) do
+			if decal:IsA("Decal") then
+				local decalClone = decal:Clone()
+				decalClone.Parent = toiletPart
+				table.insert(curDecals, decal)
+			end
+		end
+	else
+		return
+	end
+end
+
 local function extractDataFromToiletModel(
 	model: Instance,
 	mode: "Color" | "Material"
@@ -219,6 +238,16 @@ function flushUtils.SetPlayerToilet(player: Player)
 	local colors = extractDataFromToiletModel(selectedToilet, "Color")
 	local materials = extractDataFromToiletModel(selectedToilet, "Material")
 	SetSpecialEffects(selectedToilet)
+
+	if curDecals and #curDecals > 0 then
+		for _, decal in ipairs(curDecals) do
+			decal:Destroy()
+		end
+	end
+	curDecals = {}
+	SetDecals(selectedToilet:FindFirstChild("Lid"), flushUtils.toiletLid)
+	SetDecals(selectedToilet:FindFirstChild("Body"), flushUtils.toiletBody)
+	SetDecals(selectedToilet:FindFirstChild("Seat"), flushUtils.toiletSeat)
 
 	print(colors)
 	print(materials)

@@ -1,23 +1,14 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local ServerScriptService = game:GetService("ServerScriptService")
-local enums = require(ReplicatedStorage.Shared.enums)
 local FlushHandler = require(script.Parent.FlushHandler)
-local Globals = require(script.Parent.Globals)
 local LineArray = require(script.Parent.LineArray)
-local ragdollUtils = require(script.Parent.ragdollUtils)
-local serverUtils = require(script.Parent.serverUtils)
-local ActionHandler = require(ServerScriptService.Server.ActionHandler)
+local MonetizationHandler = require(script.Parent.MonetizationHandler)
 local proximityPrompt: ProximityPrompt = ReplicatedStorage:WaitForChild("TrollProx")
 local trollEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("GameEvents")
 	:WaitForChild("TrollEvent")
-local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
-	:WaitForChild("Events")
-	:WaitForChild("ClientEvents")
-	:WaitForChild("EndGameScreen")
 
 local proxArr: { [string]: { prox: ProximityPrompt } } = {}
 Players.PlayerAdded:Connect(function(newPlayer)
@@ -36,22 +27,8 @@ Players.PlayerRemoving:Connect(function(playerToRemove)
 	proxArr[tostring(playerToRemove.UserId)] = nil
 end)
 
-trollEvent.OnServerEvent:Connect(function(_, playerToRemove: Player)
-	ActionHandler:Enqueue(function()
-		LineArray:Remove(playerToRemove.UserId)
-	end)
-
-	local char = playerToRemove.Character
-	local root: Part? = char and char:FindFirstChild("HumanoidRootPart")
-	serverUtils.playExplosionOnPlayer(playerToRemove, 3)
-	if root then
-		local _ = -root.CFrame.LookVector
-		ragdollUtils.ragdoll(playerToRemove, Globals.BlowBackDir, 3)
-	else
-		ragdollUtils.ragdoll(playerToRemove, Globals.BlowBackDir, 3)
-		warn("No HumanoidRootPart found for " .. playerToRemove.Name)
-	end
-	EndGameScreenEvent:InvokeClient(playerToRemove, enums.EndGameScreen.Trolled)
+trollEvent.OnServerEvent:Connect(function(player, playerToRemove: Player)
+	MonetizationHandler.PromptRobuxPurchase(player, "TrollPlayer", "1", nil, playerToRemove)
 end)
 
 task.spawn(function()

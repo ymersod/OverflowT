@@ -6,6 +6,7 @@ enums.ShopItemType = {
 	RobuxAndMoney = "RobuxAndMoney",
 	GroupJoin = "GroupJoin",
 	StartsWith = "StartsWith",
+	EasterEgg = "EasterEgg",
 }
 
 enums.EndGameScreen = {

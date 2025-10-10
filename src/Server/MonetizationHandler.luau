@@ -2,9 +2,20 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local enums = require(ReplicatedStorage.Shared.enums)
+local ActionHandler = require(script.Parent.ActionHandler)
 local EconomyFunnels = require(script.Parent.EconomyFunnels)
+local Globals = require(script.Parent.Globals)
+local LineArray = require(script.Parent.LineArray)
+local ragdollUtils = require(script.Parent.ragdollUtils)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local serverUtils = require(script.Parent.serverUtils)
+
+local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("EndGameScreen")
 
 local processPurchaseEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
@@ -55,11 +66,31 @@ local devProductList: { [string]: { [string]: { devProductId: number, name: stri
 		["202"] = { devProductId = 3425221629, name = "Thunder" },
 		["203"] = { devProductId = 3425221723, name = "Skibidi" },
 	},
+	RecoverWinstreak = {
+		["1"] = { devProductId = 3426742148, name = "Recover Winstreak" },
+	},
+	TrollPlayer = {
+		["1"] = { devProductId = 3426798468, name = "Troll player" },
+	},
 }
 
-function monetizationHandler.PromptRobuxPurchase(player, type: string, localId: string)
+local revoveryCache: { [string]: { winStreakVal: number } } = {}
+local playerTrollCache: { [string]: { playerToTroll: Player } } = {}
+function monetizationHandler.PromptRobuxPurchase(
+	player,
+	type: string,
+	localId: string,
+	addToRecoverCache: number?,
+	addToTrollCache: Player?
+)
 	local devProduct = devProductList[type][localId]
 
+	if addToRecoverCache then
+		revoveryCache[tostring(player.UserId)] = { winStreakVal = addToRecoverCache }
+	end
+	if addToTrollCache then
+		playerTrollCache[tostring(player.UserId)] = { playerToTroll = addToTrollCache }
+	end
 	if devProduct then
 		MarketplaceService:PromptProductPurchase(player, devProduct.devProductId)
 	else
@@ -79,7 +110,7 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 		for localId, data in pairs(typeTable) do
 			if data.devProductId == receiptInfo.ProductId then
 				if typeName == "Action" then
-					serverUtils.addToAction(player.UserId, localId, 1)
+					serverUtils.addToAction(tostring(player.UserId), localId, 1)
 					granted = true
 				elseif typeName == "Model" or typeName == "Particle" then
 					ShopObjects.UpdatePlayerOwnedShopObjects(tostring(player.UserId), function(ownedObjects)
@@ -103,6 +134,88 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 						return ownedObjects
 					end)
 					processPurchaseEvent:FireClient(player, tonumber(localId), typeName)
+				elseif typeName == "RecoverWinstreak" and revoveryCache[tostring(player.UserId)] then
+					serverUtils.modifyPlayerLeaderStats(
+						tostring(player.UserId),
+						"WinStreak",
+						revoveryCache[tostring(player.UserId)].winStreakVal
+					)
+					task.spawn(function()
+						EconomyFunnels.LogEconomyEventPlayers(
+							{ player },
+							Enum.AnalyticsEconomyFlowType.Sink,
+							"Robux",
+							receiptInfo.CurrencySpent,
+							0,
+							Enum.AnalyticsEconomyTransactionType.ContextualPurchase.Name,
+							"Recover winstreak"
+						)
+						EconomyFunnels.LogEconomyEventPlayers(
+							{ player },
+							Enum.AnalyticsEconomyFlowType.Sink,
+							"WinStreak",
+							revoveryCache[tostring(player.UserId)].winStreakVal,
+							revoveryCache[tostring(player.UserId)].winStreakVal,
+							Enum.AnalyticsEconomyTransactionType.ContextualPurchase.Name,
+							"Recover winstreak follow-up"
+						)
+
+						Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
+							currentStats.Coins += 0
+							currentStats.Wins += 0
+							currentStats.WinStreak = revoveryCache[tostring(player.UserId)].winStreakVal
+							return currentStats
+						end)
+
+						revoveryCache[tostring(player.UserId)] = nil
+						granted = true
+					end)
+				elseif typeName == "TrollPlayer" and playerTrollCache[tostring(player.UserId)] then
+					local playerToRemove = playerTrollCache[tostring(player.UserId)].playerToTroll
+					ActionHandler:Enqueue(function()
+						LineArray:Remove(playerToRemove.UserId)
+					end)
+
+					local char = playerToRemove.Character
+					local root: Part? = char and char:FindFirstChild("HumanoidRootPart")
+					serverUtils.playExplosionOnPlayer(playerToRemove, 3)
+					if root then
+						local _ = -root.CFrame.LookVector
+						ragdollUtils.ragdoll(playerToRemove, Globals.BlowBackDir, 3)
+					else
+						ragdollUtils.ragdoll(playerToRemove, Globals.BlowBackDir, 3)
+						warn("No HumanoidRootPart found for " .. playerToRemove.Name)
+					end
+					EndGameScreenEvent:InvokeClient(playerToRemove, enums.EndGameScreen.Trolled)
+
+					local curWinStreak = serverUtils.GetLeaderStatVal(tostring(playerToRemove.UserId), "WinStreak")
+
+					monetizationHandler.PromptRobuxPurchase(playerToRemove, "RecoverWinstreak", "1", curWinStreak)
+
+					serverUtils.modifyPlayerLeaderStats(tostring(playerToRemove.UserId), "WinStreak", -1)
+					task.spawn(function()
+						if curWinStreak then
+							EconomyFunnels.LogEconomyEventPlayers(
+								{ playerToRemove },
+								Enum.AnalyticsEconomyFlowType.Sink,
+								"WinStreak",
+								curWinStreak,
+								0,
+								Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+								"AfkKick lose (WINSTREAK)"
+							)
+						end
+
+						Stats.UpdatePlayerStats(tostring(playerToRemove.UserId), function(currentStats)
+							currentStats.Coins += 0
+							currentStats.Wins += 0
+							currentStats.WinStreak = 0
+							return currentStats
+						end)
+
+						playerTrollCache[tostring(player.UserId)] = nil
+						granted = true
+					end)
 				end
 			end
 		end
@@ -115,5 +228,9 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 
 	return Enum.ProductPurchaseDecision.NotProcessedYet
 end
+
+Players.PlayerRemoving:Connect(function(player)
+	revoveryCache[tostring(player.UserId)] = nil
+end)
 
 return monetizationHandler

@@ -6,12 +6,7 @@ local streakFolder = ServerStorage:WaitForChild("Streaks"):GetChildren()
 local streakHandler = {}
 local cleanupCache: { [string]: { Instance } } = {}
 
-local function Cleanup(userId: string, head: Model)
-	local bb = head:FindFirstChildOfClass("BillboardGui")
-	if bb then
-		bb:Destroy()
-	end
-
+local function CleanupAura(userId: string)
 	local localCache = cleanupCache[userId]
 	if localCache then
 		for _, item in ipairs(localCache) do
@@ -19,6 +14,13 @@ local function Cleanup(userId: string, head: Model)
 		end
 	end
 	cleanupCache[userId] = {}
+end
+
+local function CleanupBB(head)
+	local bb = head:FindFirstChildOfClass("BillboardGui")
+	if bb then
+		bb:Destroy()
+	end
 end
 
 local function SetCorrToR16(r6Name: string, item: Instance, char: Model, setPos: boolean?, useSubParts: boolean?)
@@ -159,20 +161,13 @@ function streakHandler.Setup(winStreakVal: number, player: Player | Model, setBb
 			end
 		end
 
-		if activeAura[tostring(userId)] and activeAura[tostring(userId)].Aura == curWinsReq then
-			print("Streak already on")
-			return
-		end
-		activeAura[tostring(userId)] = { Aura = curWinsReq }
-
-		Cleanup(tostring(userId), head)
-
 		if not streakFound then
 			warn("STREAK IN SERVERSTORAGE NOT FOUND")
 			return
 		end
 
 		-- BB Stuff
+		CleanupBB(head)
 		if setBb then
 			task.spawn(function()
 				local bbPrefab = streakFound:FindFirstChildOfClass("BillboardGui")
@@ -189,6 +184,13 @@ function streakHandler.Setup(winStreakVal: number, player: Player | Model, setBb
 			end)
 		end
 
+		if activeAura[tostring(userId)] and activeAura[tostring(userId)].Aura == curWinsReq then
+			print("Streak already on")
+			return
+		end
+		activeAura[tostring(userId)] = { Aura = curWinsReq }
+
+		CleanupAura(tostring(userId))
 		-- Aura stuff
 		if setAura then
 			task.spawn(function()
@@ -217,6 +219,7 @@ Players.PlayerAdded:Connect(function(player)
 			streakHandler.Setup(curValue, player, true, true)
 
 			winStreakIntValue.Changed:Connect(function(newVal)
+				print("NEW STREEEEEEAK")
 				streakHandler.Setup(newVal, player, true, true)
 			end)
 		else

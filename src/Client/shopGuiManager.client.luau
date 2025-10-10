@@ -194,6 +194,7 @@ end
 
 local cache: {
 	[number]: {
+		item: Frame,
 		equipButtonRef: ImageButton,
 		buyButtonRef: ImageButton,
 		buyRobuxButtonRef: ImageButton,
@@ -203,7 +204,7 @@ local cache: {
 	{}
 updateGUI = function()
 	for _, shopItem in ipairs(filteredShopItems) do
-		local shopItemPrefabClone = shopItemPrefab:Clone()
+		local shopItemPrefabClone = shopItemPrefab:Clone() :: Frame
 		local price: TextLabel = shopItemPrefabClone:FindFirstChild("Price")
 		local title: TextLabel = shopItemPrefabClone:FindFirstChild("Title")
 		local equipButton: ImageButton = shopItemPrefabClone:FindFirstChild("Equip")
@@ -213,6 +214,7 @@ updateGUI = function()
 		local imageLabel: ImageLabel = shopItemPrefabClone:FindFirstChildOfClass("ImageLabel")
 
 		cache[shopItem.Id] = {
+			item = shopItemPrefabClone,
 			equipButtonRef = equipButton,
 			buyButtonRef = buyButton,
 			buyRobuxButtonRef = buyRobuxButton,
@@ -230,18 +232,9 @@ updateGUI = function()
 				shopItem.PriceMoney,
 				shopItem.ItemPlacement
 			)
-		elseif shopItem.ShopFunction == enums.ShopItemType.GroupJoin then
-			-- SetupButton(
-			-- 	actionButton,
-			-- 	actionButtonText,
-			-- 	"GroupClaim",
-			-- 	shopItem.Id,
-			-- 	price,
-			-- 	shopItem.PriceMoney,
-			-- 	shopItem.ItemPlacement
-			-- )
-			warn("THIS SHOULD NOT BE IN USE")
-		else
+		elseif shopItem.ShopFunction == enums.ShopItemType.EasterEgg then
+			shopItemPrefabClone.Visible = false
+		elseif shopItem.ShopFunction == enums.ShopItemType.RobuxAndMoney then
 			SetupButton(
 				equipButton,
 				buyButton,
@@ -293,6 +286,10 @@ processPurchaseEvent.OnClientEvent:Connect(function(id: number, typename: "Model
 	local shopItemToUpdate = cache[id]
 
 	if shopItemToUpdate then
+		if not shopItemToUpdate.item.Visible then
+			shopItemToUpdate.item.Visible = true
+		end
+
 		SetupButton(
 			shopItemToUpdate.equipButtonRef,
 			shopItemToUpdate.buyButtonRef,

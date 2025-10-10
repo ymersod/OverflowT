@@ -46,6 +46,8 @@ local tags = {
 	JAMMED_TEXT = "JammedText",
 	WINSTREAK_STATUE = "WinstreakStatue",
 	WINSTREAK_STATS = "WinstreakStats",
+	EASTER_EGG_LEVER = "EasterEggLever",
+	EASTER_EGG_CHEST = "EasterEggChest",
 }
 
 return tags

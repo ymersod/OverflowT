@@ -1,13 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-local EconomyFunnels = require(ServerScriptService.Server.EconomyFunnels)
-local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
 local enums = require(ReplicatedStorage.Shared.enums)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
-local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local funnelEvents = require(ServerScriptService.Server.funnelEvents)
-local serverUtils = require(ServerScriptService.Server.serverUtils)
+local shopHandler = require(ServerScriptService.Server.shopHandler)
 local types = require(ReplicatedStorage.Shared.types)
 
 local getShopItemsEvent = ReplicatedStorage:WaitForChild("Shared")
@@ -69,80 +66,7 @@ getOwnedShopItemsEvent.OnServerInvoke = function(player: Player)
 end
 
 buyShopItemEvent.OnServerInvoke = function(player: Player, id: number, equipMode: string?)
-	local itemToBuy
-	for _, shopItem in ipairs(shopItems) do
-		local itemId = shopItem:GetAttribute("Id")
-		if itemId and itemId == id then
-			itemToBuy = shopItem
-		end
-	end
-
-	local itemPrice = itemToBuy and itemToBuy:GetAttribute("PriceMoney")
-	local itemName = itemToBuy and itemToBuy:GetAttribute("Name")
-
-	local localstats = player:FindFirstChild("leaderstats")
-	local money: IntValue? = localstats and localstats:FindFirstChild("Money")
-
-	if itemPrice and money and itemName then
-		funnelEvents.LogStepPlayers(
-			{ player },
-			enums.Analytics.Shop.TryBuy.Name,
-			enums.Analytics.Shop.SessionName,
-			false,
-			true
-		)
-		if money.Value >= itemPrice then
-			task.spawn(function()
-				local curMoney = serverUtils.GetLeaderStatVal(tostring(player.UserId), "Money")
-				if curMoney then
-					EconomyFunnels.LogEconomyEventPlayers(
-						{ player },
-						Enum.AnalyticsEconomyFlowType.Sink,
-						"Money",
-						itemPrice,
-						curMoney - itemPrice,
-						Enum.AnalyticsEconomyTransactionType.Shop.Name,
-						itemName .. " Money"
-					)
-				end
-			end)
-
-			serverUtils.modifyPlayerLeaderStats(tostring(player.UserId), "Money", -itemPrice)
-			task.defer(function()
-				funnelEvents.OnboardPlayersPlayer({ player }, enums.Analytics.Onboarding.BoughtFirstItem.Name)
-				funnelEvents.LogStepPlayers(
-					{ player },
-					enums.Analytics.Shop.BuyItem.Name,
-					enums.Analytics.Shop.SessionName,
-					false,
-					true
-				)
-			end)
-
-			task.spawn(function()
-				Stats.UpdatePlayerStats(tostring(player.UserId), function(currentStats)
-					currentStats.Coins -= itemPrice
-					currentStats.Wins += 0
-					currentStats.WinStreak += 0
-					return currentStats
-				end)
-			end)
-
-			return ShopObjects.UpdatePlayerOwnedShopObjects(tostring(player.UserId), function(ownedObjects)
-				if not table.find(ownedObjects, id) then
-					table.insert(ownedObjects, id)
-				end
-
-				return ownedObjects
-			end)
-		else
-			if equipMode then
-				MonetizationHandler.PromptRobuxPurchase(player, equipMode, tostring(id))
-			end
-		end
-	end
-
-	return ShopObjects.GetPlayerOwnedShopObjects(tostring(player.UserId))
+	return shopHandler.BuyItem(player, id, equipMode)
 end
 
 equipShopItemEvent.OnServerInvoke = function(player: Player, id: number, mode: "Model" | "Particle")

@@ -7,7 +7,10 @@ local LineArray = require(script.Parent.LineArray)
 local ragdollUtils = require(script.Parent.ragdollUtils)
 local serverUtils = require(script.Parent.serverUtils)
 local ServerScriptService = game:GetService("ServerScriptService")
+local EconomyFunnels = require(script.Parent.EconomyFunnels)
+local MonetizationHandler = require(script.Parent.MonetizationHandler)
 local ActionHandler = require(ServerScriptService.Server.ActionHandler)
+local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local afkWarning = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("ClientEvents")
@@ -58,6 +61,32 @@ local function checkAfks()
 						LineArray:Remove(playerId)
 						serverUtils.playExplosionOnPlayer(player, 3)
 						ragdollUtils.ragdoll(player, Globals.BlowBackDir, 3)
+
+						local curWinStreak = serverUtils.GetLeaderStatVal(tostring(playerId), "WinStreak")
+
+						MonetizationHandler.PromptRobuxPurchase(player, "RecoverWinstreak", "1", curWinStreak)
+
+						serverUtils.modifyPlayerLeaderStats(tostring(playerId), "WinStreak", -1)
+						task.spawn(function()
+							if curWinStreak then
+								EconomyFunnels.LogEconomyEventPlayers(
+									{ player },
+									Enum.AnalyticsEconomyFlowType.Sink,
+									"WinStreak",
+									curWinStreak,
+									0,
+									Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+									"AfkKick lose (WINSTREAK)"
+								)
+							end
+
+							Stats.UpdatePlayerStats(tostring(playerId), function(currentStats)
+								currentStats.Coins += 0
+								currentStats.Wins += 0
+								currentStats.WinStreak = 0
+								return currentStats
+							end)
+						end)
 					end
 				end)
 			end

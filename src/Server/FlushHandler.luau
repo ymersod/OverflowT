@@ -10,6 +10,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 local EconomyFunnels = require(script.Parent.EconomyFunnels)
 local enums = require(ReplicatedStorage.Shared.enums)
 local Globals = require(script.Parent.Globals)
+local MonetizationHandler = require(script.Parent.MonetizationHandler)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local flushUtils = require(script.Parent.flushUtils)
 local funnelEvents = require(script.Parent.funnelEvents)
@@ -64,9 +65,12 @@ local function RewardWinners()
 			ragdollUtils.ragdoll(losingPlayer, Globals.BlowBackDir, 3)
 			EndGameScreenEvent:InvokeClient(losingPlayer, enums.EndGameScreen.Lose)
 
-			serverUtils.modifyPlayerLeaderStats(losingPlayer, "WinStreak", -1)
+			local curWinStreak = serverUtils.GetLeaderStatVal(losingPlayerId, "WinStreak")
+
+			MonetizationHandler.PromptRobuxPurchase(losingPlayer, "RecoverWinstreak", "1", curWinStreak)
+
+			serverUtils.modifyPlayerLeaderStats(losingPlayerId, "WinStreak", -1)
 			task.spawn(function()
-				local curWinStreak = serverUtils.GetLeaderStatVal(losingPlayerId, "WinStreak")
 				if curWinStreak then
 					EconomyFunnels.LogEconomyEventPlayers(
 						{ losingPlayer },
@@ -79,10 +83,10 @@ local function RewardWinners()
 					)
 				end
 
-				Stats.UpdatePlayerStats(losingPlayer, function(currentStats)
+				Stats.UpdatePlayerStats(losingPlayerId, function(currentStats)
 					currentStats.Coins += 0
 					currentStats.Wins += 0
-					currentStats.WinStreak += -currentStats.WinStreak
+					currentStats.WinStreak = 0
 					return currentStats
 				end)
 			end)
