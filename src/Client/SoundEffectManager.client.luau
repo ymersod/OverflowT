@@ -2,6 +2,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 
+local playSondLocal = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("playSoundLocal")
+
 local soundHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local tags = require(ReplicatedStorage.Shared.tags)
 
@@ -67,4 +72,8 @@ end)
 playerGui.ChildAdded:Connect(function(newGui)
 	print("New Gui added:", newGui.Name)
 	hookEvents()
+end)
+
+playSondLocal.OnClientEvent:Connect(function(soundName: SoundName)
+	soundHandler.Play(soundName)
 end)

@@ -1,14 +1,20 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
 local shopHandler = require(ServerScriptService.Server.shopHandler)
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
+local enums = require(ReplicatedStorage.Shared.enums)
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local processPurchaseEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Events")
 	:WaitForChild("MonetizationEvents")
 	:WaitForChild("ProcessPurchase")
+local event = ReplicatedStorage:WaitForChild("Shared")
+	:WaitForChild("Events")
+	:WaitForChild("ClientEvents")
+	:WaitForChild("EndGameScreen")
 
 local Lever = CollectionService:GetTagged(tags.EASTER_EGG_LEVER)[1]
 local Chest = CollectionService:GetTagged(tags.EASTER_EGG_CHEST)[1]
@@ -22,8 +28,12 @@ local OriginalCFrame = Stick.CFrame
 local Offset = CFrame.new(-1.74798584, -1.748016357, 0, 0, -0.999999881, 0, 0.999999881, 0, 0, 0, 0, 1)
 
 chestProx.Triggered:Connect(function(player)
-	shopHandler.BuyItem(player, -100, "Model")
-	processPurchaseEvent:FireClient(player, -100, "Model")
+	local ownedItems = ShopObjects.GetPlayerOwnedShopObjects(tostring(player.UserId))
+	if not table.find(ownedItems, -100) then
+		event:InvokeClient(player, enums.EndGameScreen.EasterEgg)
+		shopHandler.BuyItem(player, -100, "Model")
+		processPurchaseEvent:FireClient(player, -100, "Model")
+	end
 end)
 
 local function OpenChest()
@@ -50,7 +60,7 @@ local function Switch()
 	end
 end
 
-local cap = 40
+local cap = 35
 local canSwitch = true
 prox.Triggered:Connect(function()
 	if canSwitch then

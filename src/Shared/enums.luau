@@ -14,6 +14,7 @@ enums.EndGameScreen = {
 	Lose = "Lose",
 	Afk = "Afk",
 	Trolled = "Trolled",
+	EasterEgg = "EasterEgg",
 }
 
 enums.Analytics = {

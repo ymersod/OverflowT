@@ -52,6 +52,7 @@ local LoseFrame: Frame = GameEndFrames:WaitForChild("LoseFrame")
 local WinFrame = GameEndFrames:WaitForChild("WinFrame") :: Frame
 local afkFrame: Frame = GameEndFrames:WaitForChild("AfkFrame")
 local trolledFrame: Frame = GameEndFrames:WaitForChild("TrolledFrame")
+local easterEggFrame: Frame = GameEndFrames:WaitForChild("SecretOpen")
 local winText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("WinLabel")
 local MoneyText: TextLabel = WinFrame:WaitForChild("TextParent"):WaitForChild("MoneyLabel")
 
@@ -120,6 +121,11 @@ EndGameScreen.OnClientInvoke = function(endType: string, money: number?, wins: n
 		trolledFrame.Visible = true
 		frame = trolledFrame
 		soundLength = SoundEffectHandler.GetSound("LoseRound").TimeLength
+	elseif endType == enums.EndGameScreen.EasterEgg then
+		SoundEffectHandler.Play("GDReward")
+		easterEggFrame.Visible = true
+		frame = easterEggFrame
+		soundLength = SoundEffectHandler.GetSound("GDReward").TimeLength * 3
 	else
 		warn("No endtype found, frame cant be set")
 		return 0
