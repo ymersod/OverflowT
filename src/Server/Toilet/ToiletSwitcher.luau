@@ -75,7 +75,6 @@ local function enableFrozen()
 end
 
 local function disableFrozen()
-	print("yoyoyo")
 	WoodCrackSound:Stop()
 	ToiletSwitcher.ActiveToilet = mainParts
 	for _, part in ipairs(frozenToiletParts) do
