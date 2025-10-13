@@ -4,6 +4,8 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local FlushHandler = require(ServerScriptService.Server.FlushHandler)
+local ActionHandler = require(ServerScriptService.Server.ActionHandler)
+local serverUtils = require(ServerScriptService.Server.serverUtils)
 
 local GameEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("GameEvents")
 local StartFlushEvent = GameEvents:WaitForChild("StartFlush")
@@ -19,9 +21,11 @@ local enums = require(ReplicatedStorage.Shared.enums)
 local Globals = require(ServerScriptService.Server.Globals)
 
 local LineArray = require(ServerScriptService.Server.LineArray)
+local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
 local flushUtils = require(ServerScriptService.Server.flushUtils)
 local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local tags = require(ReplicatedStorage.Shared.tags)
+local ServerEnums = require(ServerScriptService.Server.ServerEnums)
 
 local Sound = require(game.ServerScriptService.Server.Toilet.ToiletSoundHandler)
 
@@ -136,9 +140,32 @@ local function turnOfRumbleAnimation()
 	Rumble.Stop(flushUtils.toiletBody)
 end
 
-ResetFlushEvent.OnServerEvent:Connect(function()
-	FlushHandler.ResetTimeHeld()
-	flushUtils.CleanToilet()
+local function UsedAction(userId: number, actionId: string)
+	if not LineArray:GetIndex(userId) then
+		return false
+	end
+	local playerId = tostring(userId)
+	local usableAction = serverUtils.getActionIfUsable(playerId, actionId)
+	if not usableAction then
+		MonetizationHandler.PromptRobuxPurchase(
+			Players:GetPlayerByUserId(userId),
+			ServerEnums.DevProducts.Action.Name,
+			actionId
+		)
+		return false
+	end
+	serverUtils.updateActionDB(playerId, usableAction)
+	return true
+end
+
+ResetFlushEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
+	ActionHandler:Enqueue(function()
+		if not UsedAction(player.UserId, actionId) then
+			return
+		end
+		FlushHandler.ResetTimeHeld()
+		flushUtils.CleanToilet()
+	end)
 end)
 
 local function playOnClickExplosionSplash(explDur: number, volume: number, manualRate: number?, callback: () -> ()?)
@@ -151,21 +178,30 @@ local function playOnClickExplosionSplash(explDur: number, volume: number, manua
 		end
 	end)
 end
-
+local isInOverflow = false
 local OVERFLOW_DUR = 0.7
-OverflowToiletEvent.OnServerEvent:Connect(function()
-	SetupForFlush()
+OverflowToiletEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
+	ActionHandler:Enqueue(function()
+		if isInOverflow then
+			return
+		end
+		if not UsedAction(player.UserId, actionId) then
+			return
+		end
+		isInOverflow = true
+		SetupForFlush()
+		local overflowExplosionClone = overflowExplosion:Clone()
+		overflowExplosionClone.Parent = flushUtils.toiletBody -- Doesnt really matter what parent is, position is already set
+		SoundEffectHandler.Play("Explosion")
+		task.delay(OVERFLOW_DUR * 2, function()
+			overflowExplosionClone:Destroy()
+		end)
 
-	local overflowExplosionClone = overflowExplosion:Clone()
-	overflowExplosionClone.Parent = flushUtils.toiletBody -- Doesnt really matter what parent is, position is already set
-	SoundEffectHandler.Play("Explosion")
-	task.delay(OVERFLOW_DUR * 2, function()
-		overflowExplosionClone:Destroy()
-	end)
-
-	playOnClickExplosionSplash(OVERFLOW_DUR, 2, 100, function()
-		task.delay(OVERFLOW_DUR, function()
-			FlushHandler.Overflow()
+		playOnClickExplosionSplash(OVERFLOW_DUR, 2, 100, function()
+			task.delay(OVERFLOW_DUR, function()
+				FlushHandler.Overflow()
+				isInOverflow = false
+			end)
 		end)
 	end)
 end)
@@ -205,14 +241,19 @@ local function startFlush(playerCall)
 end
 StartFlushEvent.OnServerEvent:Connect(function(playerCall: Player)
 	if not isJammed.Value then
-		funnelEvents.LogStepPlayers(
-			{ playerCall },
-			enums.Analytics.Game.FlushedToilet.Name,
-			enums.Analytics.Game.SessionName,
-			false,
-			true
-		)
-		startFlush(playerCall)
+		ActionHandler:Enqueue(function()
+			if LineArray:GetIndex(playerCall.UserId) ~= 1 then
+				return
+			end
+			funnelEvents.LogStepPlayers(
+				{ playerCall },
+				enums.Analytics.Game.FlushedToilet.Name,
+				enums.Analytics.Game.SessionName,
+				false,
+				true
+			)
+			startFlush(playerCall)
+		end)
 	end
 end)
 
@@ -226,17 +267,23 @@ isFreezed:GetPropertyChangedSignal("Value"):Connect(function()
 	FlushHandler.SetToFrozen(newVal)
 end)
 
-FreezeToiletEvent.OnServerEvent:Connect(function()
-	if freezeTimer then
-		task.cancel(freezeTimer)
-		freezeTimer = nil
-	end
+FreezeToiletEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
+	ActionHandler:Enqueue(function()
+		if not UsedAction(player.UserId, actionId) then
+			return
+		end
 
-	isFreezed.Value = true
+		if freezeTimer then
+			task.cancel(freezeTimer)
+			freezeTimer = nil
+		end
 
-	freezeTimer = task.delay(TIME_FROZEN, function()
-		isFreezed.Value = false
-		freezeTimer = nil
+		isFreezed.Value = true
+
+		freezeTimer = task.delay(TIME_FROZEN, function()
+			isFreezed.Value = false
+			freezeTimer = nil
+		end)
 	end)
 end)
 
@@ -252,41 +299,52 @@ isJammed:GetPropertyChangedSignal("Value"):Connect(function()
 end)
 
 local checkTaskConnection
-JamFlushEvent.OnServerEvent:Connect(function()
-	if jamTimer then
-		task.cancel(jamTimer)
-		jamTimer = nil
+JamFlushEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
+	print(actionId)
+	local playerId = tostring(player.UserId)
+	local check = serverUtils.getActionIfUsable(playerId, actionId)
+	if not check then
+		return
 	end
+	ActionHandler:Enqueue(function()
+		if not UsedAction(player.UserId, actionId) then
+			return
+		end
+		if jamTimer then
+			task.cancel(jamTimer)
+			jamTimer = nil
+		end
 
-	isJammed.Value = true
-	jamTimer = task.delay(TIME_JAMMED, function()
-		isJammed.Value = false
-		jamTimer = nil
+		isJammed.Value = true
+		jamTimer = task.delay(TIME_JAMMED, function()
+			isJammed.Value = false
+			jamTimer = nil
+
+			if checkTaskConnection then
+				checkTaskConnection:Disconnect()
+				checkTaskConnection = nil
+				stopToiletAnimation()
+			end
+		end)
 
 		if checkTaskConnection then
 			checkTaskConnection:Disconnect()
-			checkTaskConnection = nil
-			stopToiletAnimation()
-		end
-	end)
-
-	if checkTaskConnection then
-		checkTaskConnection:Disconnect()
-	end
-
-	local prevJammedPlayer
-	checkTaskConnection = RunService.Heartbeat:Connect(function()
-		local line = LineArray:GetLine()
-		local newHolderId = (line[1] or nil)
-		local curJammedPlayer = newHolderId
-
-		if newHolderId and curJammedPlayer ~= prevJammedPlayer then
-			print("Setting new player!")
-			local player = Players:GetPlayerByUserId(newHolderId)
-			startFlush(player)
 		end
 
-		prevJammedPlayer = curJammedPlayer
+		local prevJammedPlayer
+		checkTaskConnection = RunService.Heartbeat:Connect(function()
+			local line = LineArray:GetLine()
+			local newHolderId = (line[1] or nil)
+			local curJammedPlayer = newHolderId
+
+			if newHolderId and curJammedPlayer ~= prevJammedPlayer then
+				print("Setting new player!")
+				local player = Players:GetPlayerByUserId(newHolderId)
+				startFlush(player)
+			end
+
+			prevJammedPlayer = curJammedPlayer
+		end)
 	end)
 end)
 

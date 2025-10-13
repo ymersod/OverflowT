@@ -6,6 +6,8 @@ local ServerStorage = game:GetService("ServerStorage")
 local tags = require(ReplicatedStorage.Shared.tags)
 local Actions = require(ServerScriptService.Server.Persistence.Actions)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
+local funnelEvents = require(ServerScriptService.Server.funnelEvents)
+local enums = require(ReplicatedStorage.Shared.enums)
 
 local serverUtils = {}
 
@@ -86,30 +88,16 @@ function serverUtils.GetLeaderStatVal(playerId: string, mode: "Wins" | "Money" |
 	return nil
 end
 
-function serverUtils.useAction(playerId: string, actionId: string)
-	local player = Players:GetPlayerByUserId(playerId)
-	local localstats = player and player:FindFirstChild("localstats")
-	local localstatsactions = localstats and localstats:FindFirstChild("localstatsactions")
-
-	if localstatsactions then
-		local currAction
-		for _, action in ipairs(localstatsactions:GetChildren()) do
-			if action:IsA("IntValue") and action.Name == actionId then
-				currAction = action
-			end
-		end
-
-		if currAction then
-			local val = currAction.Value
-			if val >= 1 then
-				currAction.Value -= 1
-				Actions.UpdateCache(playerId, actionId, -1)
-				return true
-			end
-		end
-	end
-
-	return false
+function PromptRobuxPurchase(player, actionId)
+	task.defer(function()
+		funnelEvents.LogStepPlayers(
+			{ player },
+			enums.Analytics.Game.TryUseAction.Name,
+			enums.Analytics.Game.SessionName,
+			false,
+			true
+		)
+	end)
 end
 
 function serverUtils.getActionIfUsable(playerId: string, actionId: string): IntValue?
@@ -122,6 +110,7 @@ function serverUtils.getActionIfUsable(playerId: string, actionId: string): IntV
 	for _, action in ipairs(localstatsactions:GetChildren()) do
 		if action:IsA("IntValue") and action.Name == actionId then
 			if action.Value > 0 then
+				PromptRobuxPurchase(player, actionId)
 				return action
 			else
 				return nil
@@ -136,6 +125,13 @@ function serverUtils.updateActionDB(playerId: string, action: IntValue)
 	if val >= 1 then
 		action.Value -= 1
 		Actions.UpdateCache(playerId, action.Name, -1)
+		funnelEvents.LogStepPlayerIds(
+			{ playerId },
+			enums.Analytics.Game.UsedActon.Name,
+			enums.Analytics.Game.SessionName,
+			false,
+			true
+		)
 		return true
 	end
 end

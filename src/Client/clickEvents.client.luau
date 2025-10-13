@@ -16,9 +16,6 @@ local overflowToiletEvent = gameEvents:WaitForChild("OverflowToilet")
 local freezeToiletEvent = gameEvents:WaitForChild("FreezeToilet")
 local jamFlushEvent = gameEvents:WaitForChild("Jamflush")
 
-local actionEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ActionsEvents")
-local tryUseActions = actionEvents:WaitForChild("TryUseAction")
-
 -- UI
 local StaterGUI = Player:WaitForChild("PlayerGui")
 local ScreenGUI = StaterGUI:WaitForChild("ScreenGui")
@@ -39,49 +36,31 @@ local overflowButton = contextActionMenu2:WaitForChild("Overflow"):FindFirstChil
 local freezeToiletButton = contextActionMenu2:WaitForChild("FreezeWater"):FindFirstChildOfClass("TextButton")
 local jamFlushButton = contextActionMenu2:WaitForChild("JamFlush"):FindFirstChildOfClass("TextButton")
 
-local DEBOUNCE_TIME = 0.5
-local debounces = {}
-
-local function debounceCheck(button)
-	if debounces[button] then
-		return false
-	end
-
-	debounces[button] = true
-	task.delay(DEBOUNCE_TIME, function()
-		debounces[button] = false
-	end)
-	return true
-end
-
 -- Flush button
 flushButton.MouseButton1Down:Connect(function()
-	if debounceCheck(flushButton) then
-		flushStarted = true
+	--flushStarted = true ??????
+	local leaveConn, upConn
 
-		local leaveConn, upConn
+	local function flushFinishWrapper()
+		nextEvent:FireServer("Flush", nil)
 
-		local function flushFinishWrapper()
-			nextEvent:FireServer("Flush", nil)
+		local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
+		linePosition.Changed:Once(function(newVal)
+			actionGuiState.updateGUI(newVal)
+		end)
 
-			local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
-			linePosition.Changed:Once(function(newVal)
-				actionGuiState.updateGUI(newVal)
-			end)
-
-			if leaveConn then
-				leaveConn:Disconnect()
-				leaveConn = nil
-			end
-			if upConn then
-				upConn:Disconnect()
-				upConn = nil
-			end
+		if leaveConn then
+			leaveConn:Disconnect()
+			leaveConn = nil
 		end
-		leaveConn = flushButton.MouseLeave:Connect(flushFinishWrapper)
-		upConn = flushButton.MouseButton1Up:Connect(flushFinishWrapper)
-		startFlushEvent:FireServer()
+		if upConn then
+			upConn:Disconnect()
+			upConn = nil
+		end
 	end
+	leaveConn = flushButton.MouseLeave:Connect(flushFinishWrapper)
+	upConn = flushButton.MouseButton1Up:Connect(flushFinishWrapper)
+	startFlushEvent:FireServer()
 end)
 
 -- More less button
@@ -98,13 +77,6 @@ moreLessButton.MouseButton1Down:Connect(function()
 	end
 end)
 
-local function useAction(buttonRef: TextButton)
-	local parentFrame = buttonRef.Parent
-	local actionId = parentFrame and parentFrame:GetAttribute("ActionId")
-	local canUse = tryUseActions:InvokeServer(tostring(actionId))
-	return canUse
-end
-
 local function getActionId(buttonRef: TextButton)
 	local parentFrame = buttonRef.Parent
 	local actionId = parentFrame and parentFrame:GetAttribute("ActionId")
@@ -113,46 +85,22 @@ end
 
 -- Reset toilet
 resetToiletButton.MouseButton1Down:Connect(function()
-	if debounceCheck(resetToiletButton) then
-		if useAction(resetToiletButton) then
-			resetFlushEvent:FireServer()
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	resetFlushEvent:FireServer(getActionId(resetToiletButton))
 end)
 
 -- Overflow
 overflowButton.MouseButton1Down:Connect(function()
-	if debounceCheck(overflowButton) then
-		if useAction(overflowButton) then
-			overflowToiletEvent:FireServer()
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	overflowToiletEvent:FireServer(getActionId(overflowButton))
 end)
 
 -- Freeze
 freezeToiletButton.MouseButton1Down:Connect(function()
-	if debounceCheck(freezeToiletButton) then
-		if useAction(freezeToiletButton) then
-			freezeToiletEvent:FireServer()
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	freezeToiletEvent:FireServer(getActionId(freezeToiletButton))
 end)
 
 -- Jam flush
 jamFlushButton.MouseButton1Down:Connect(function()
-	if debounceCheck(jamFlushButton) then
-		if useAction(jamFlushButton) then
-			jamFlushEvent:FireServer()
-		else
-			warn("Not enough charges!!")
-		end
-	end
+	jamFlushEvent:FireServer(getActionId(jamFlushButton))
 end)
 
 -- Cut button

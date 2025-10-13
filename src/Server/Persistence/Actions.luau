@@ -51,7 +51,9 @@ function actionsHandler.UpdatePlayerOwnedActions(
 end
 
 function actionsHandler.UpdateCache(playerId: string, actionId: string, amount: number)
-	local currAction = actionsCache[playerId][actionId]
+	playerId = tostring(playerId)
+	actionId = tostring(actionId)
+	local currAction = actionsCache[tostring(playerId)][tostring(actionId)]
 
 	if not currAction then
 		-- print("el not found in cahce creating new one")

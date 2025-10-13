@@ -8,6 +8,8 @@ local tags = require(ReplicatedStorage.Shared.tags)
 local Line = require(ServerScriptService.Server.LineArray)
 local ActionHandler = require(ServerScriptService.Server.ActionHandler)
 local serverUtils = require(ServerScriptService.Server.serverUtils)
+local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
+local ServerEnums = require(ServerScriptService.Server.ServerEnums)
 local LineEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("LineEvents")
 
 local SkipAheadEvent = LineEvents:WaitForChild("SkipAhead")
@@ -20,8 +22,9 @@ local isJammed: BoolValue = CollectionService:GetTagged(tags.IS_JAMMED)[1]
 local function makeLineAction(player, actionId, lineFunc, validationFunc: (() -> boolean)?)
 	return function()
 		local playerId = player.UserId
-		local usableAction = serverUtils.getActionIfUsable(playerId, actionId)
+		local usableAction = serverUtils.getActionIfUsable(tostring(playerId), actionId)
 		if not usableAction then
+			MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, actionId)
 			return
 		end
 		if validationFunc and not validationFunc() then
@@ -31,7 +34,7 @@ local function makeLineAction(player, actionId, lineFunc, validationFunc: (() ->
 		if not success then
 			return
 		end
-		serverUtils.updateActionDB(playerId, usableAction)
+		serverUtils.updateActionDB(tostring(playerId), usableAction)
 	end
 end
 
