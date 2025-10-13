@@ -75,6 +75,9 @@ local function enableFrozen()
 end
 
 local function disableFrozen()
+	print("yoyoyo")
+	WoodCrackSound:Stop()
+	ToiletSwitcher.ActiveToilet = mainParts
 	for _, part in ipairs(frozenToiletParts) do
 		part.Transparency = 1
 	end
@@ -88,7 +91,6 @@ function ToiletSwitcher.SwitchToFrozen(switchToFrozen)
 		disableFrozen()
 		return
 	end
-
 	if switchToFrozen then
 		SoundEffectHandler.Play("FreezeIce")
 		WoodCrackSound:Play()
@@ -96,17 +98,13 @@ function ToiletSwitcher.SwitchToFrozen(switchToFrozen)
 		setPartsTransparency(mainParts, 1)
 		ToiletSwitcher.ActiveToilet = frozenToiletParts
 	else
-		WoodCrackSound:Stop()
-		disableFrozen()
 		setPartsTransparency(mainParts, 0)
-		ToiletSwitcher.ActiveToilet = mainParts
+		disableFrozen()
 	end
 end
 
-standardToilet:GetPropertyChangedSignal("Value"):Connect(function()
-	if not standardToilet.Value then
-		ToiletSwitcher.SwitchToFrozen(false)
-	end
+standardToilet.Changed:Connect(function()
+	disableFrozen()
 end)
 
 return ToiletSwitcher
