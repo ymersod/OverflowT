@@ -39,7 +39,7 @@ end)
 local function OpenChest()
 	for _, desc in ipairs(chestPartChildren) do
 		if desc:IsA("Decal") then
-			desc.Transparency = desc.Transparency == 0 and 0.7 or 0
+			desc.Transparency = desc.Transparency == 0 and 0.8 or 0
 		elseif desc:IsA("ProximityPrompt") or desc:IsA("ParticleEmitter") then
 			desc.Enabled = not desc.Enabled
 		end
