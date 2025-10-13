@@ -225,7 +225,6 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: num
 	playTimeRewardsFrameClone.Parent = ScreenGUI
 	playTimeRewardsFrameClone.ZIndex = os.time()
 
-	local color = Color3.fromRGB(255, 255, 255)
 	local text = "???"
 	for _, action in ipairs(actionsRefs:GetChildren()) do
 		local actionRefId = action:GetAttribute("ActionId")
@@ -234,26 +233,12 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: num
 			local textLabel = textButton and textButton:FindFirstChildOfClass("TextLabel")
 
 			if textButton and textLabel then
-				color = textButton.BackgroundColor3
 				text = textLabel.Text
 				break
 			end
 		end
 	end
 
-	local function colorToHex(c)
-		local r = math.floor(c.R * 255 + 0.5)
-		local g = math.floor(c.G * 255 + 0.5)
-		local b = math.floor(c.B * 255 + 0.5)
-		return string.format("#%02X%02X%02X", r, g, b)
-	end
-
-	local function escapeRichText(s)
-		if not s then
-			return ""
-		end
-		return s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
-	end
 	local function fitTextToLabel(label)
 		local maxWidth = label.AbsoluteSize.X
 		local maxHeight = label.AbsoluteSize.Y
@@ -265,17 +250,7 @@ PlayTimeRewardEvent.OnClientEvent:Connect(function(actionId: string, amount: num
 			label.TextSize = size
 		end
 	end
-	local hex = colorToHex(color)
-
-	recievedText.Text = "You got "
-		.. amount
-		.. "x ["
-		.. '<font color="'
-		.. hex
-		.. '">'
-		.. escapeRichText(text)
-		.. "</font>"
-		.. "]"
+	recievedText.Text = "You got " .. amount .. "x [" .. text .. "]"
 	if type == "Random" then
 		whyText.Text = randomGiftArr[math.random(1, #randomGiftArr)]
 	else -- type == "Playtime"
