@@ -61,6 +61,7 @@ local devProductList: { [string]: { [string]: { devProductId: number, name: stri
 		["112"] = { devProductId = 3425221147, name = "Redstone" },
 		["113"] = { devProductId = 3425221288, name = "Diamond" },
 		["114"] = { devProductId = 3425221367, name = "Emerald" },
+		["115"] = { devProductId = 3430506027, name = "Obsidian" },
 		["200"] = { devProductId = 3425221462, name = "Shiny" },
 		["201"] = { devProductId = 3425221547, name = "Rainbow" },
 		["202"] = { devProductId = 3425221629, name = "Thunder" },

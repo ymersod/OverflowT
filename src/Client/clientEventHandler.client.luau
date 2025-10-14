@@ -79,9 +79,9 @@ local ELASTIC_DUR = 0.4
 local FADEOUT_TIME = 4
 local randomGiftArr = {
 	"You recieved a gift from the devs!",
-	"A gift for being a great player!",
 	"Thank you for playing!",
 	"The devs gave you a gift!",
+	"Keep playing to get more FREE gifts!",
 }
 local playTimeRewardsArr = {
 	"A gift for playing 15 minutes",

@@ -4,6 +4,7 @@ export type PlayerRewardsData = {
 
 export type Globals = {
 	flushStarted: boolean,
+	isInOverflow: boolean,
 	group: { [string]: PlayerRewardsData },
 	premium: { [string]: PlayerRewardsData },
 	BlowBackDir: Vector3,
@@ -11,6 +12,7 @@ export type Globals = {
 
 local globals: Globals = {
 	flushStarted = false,
+	isInOverflow = false,
 	group = {},
 	premium = {},
 	BlowBackDir = Vector3.new(0, 1, 1),

@@ -36,12 +36,17 @@ SetupContextActionMenus(contextActionMenu2)
 local function shade(frames: { Frame }, modification: "Add" | "Remove")
 	if modification == "Add" then
 		for _, frame in ipairs(frames) do
-			local shadeClone = shadePrefab:Clone()
-			shadeClone.Name = "ShadeClone"
-			shadeClone.Parent = frame
+			-- Check if a shade already exists
+			if not frame:FindFirstChild("ShadeClone") then
+				local shadeClone = shadePrefab:Clone()
+				shadeClone.Name = "ShadeClone"
+				shadeClone.Parent = frame
 
-			local actionButton = frame:FindFirstChildOfClass("TextButton")
-			actionButton.Interactable = false
+				local actionButton = frame:FindFirstChildOfClass("TextButton")
+				if actionButton then
+					actionButton.Interactable = false
+				end
+			end
 		end
 	elseif modification == "Remove" then
 		for _, frame in ipairs(frames) do
@@ -90,8 +95,6 @@ function firstInLineState()
 end
 
 function inLineState()
-	actionMenu.Visible = true
-
 	flushFrame.Visible = false
 
 	local notFirstActions = findActions(tags.NOT_FIRST_TAG)
@@ -102,7 +105,12 @@ function inLineState()
 end
 
 function notInLineState()
-	actionMenu.Visible = false
+	flushFrame.Visible = false
+
+	local notFirstActions = findActions(tags.NOT_FIRST_TAG)
+	local onlyFirstActions = findActions(tags.ONLY_FIRST_TAG)
+	shade(notFirstActions, "Remove")
+	shade(onlyFirstActions, "Remove")
 end
 
 function actionGuiState.updateGUI(linePositionValue: number)

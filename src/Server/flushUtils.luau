@@ -187,7 +187,7 @@ local function SetDecals(selectedToiletPart: MeshPart?, toiletPart: MeshPart)
 			if decal:IsA("Decal") then
 				local decalClone = decal:Clone()
 				decalClone.Parent = toiletPart
-				table.insert(curDecals, decal)
+				table.insert(curDecals, decalClone)
 			end
 		end
 	else

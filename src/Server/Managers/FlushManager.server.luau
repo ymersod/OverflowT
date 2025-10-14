@@ -140,18 +140,18 @@ local function turnOfRumbleAnimation()
 	Rumble.Stop(flushUtils.toiletBody)
 end
 
-local function UsedAction(userId: number, actionId: string)
-	if not LineArray:GetIndex(userId) then
+local function UsedAction(player: Player, actionId: string)
+	if not LineArray:GetIndex(player.UserId) then
+		MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, actionId)
 		return false
 	end
-	local playerId = tostring(userId)
+	local playerId = tostring(player.UserId)
 	local usableAction = serverUtils.getActionIfUsable(playerId, actionId)
 	if not usableAction then
-		MonetizationHandler.PromptRobuxPurchase(
-			Players:GetPlayerByUserId(userId),
-			ServerEnums.DevProducts.Action.Name,
-			actionId
-		)
+		MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, actionId)
+		return false
+	end
+	if Globals.isInOverflow then
 		return false
 	end
 	serverUtils.updateActionDB(playerId, usableAction)
@@ -160,7 +160,7 @@ end
 
 ResetFlushEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
 	ActionHandler:Enqueue(function()
-		if not UsedAction(player.UserId, actionId) then
+		if not UsedAction(player, actionId) then
 			return
 		end
 		FlushHandler.ResetTimeHeld()
@@ -178,17 +178,17 @@ local function playOnClickExplosionSplash(explDur: number, volume: number, manua
 		end
 	end)
 end
-local isInOverflow = false
+
 local OVERFLOW_DUR = 0.7
 OverflowToiletEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
 	ActionHandler:Enqueue(function()
-		if isInOverflow then
+		if Globals.isInOverflow then
 			return
 		end
-		if not UsedAction(player.UserId, actionId) then
+		if not UsedAction(player, actionId) then
 			return
 		end
-		isInOverflow = true
+		Globals.isInOverflow = true
 		SetupForFlush()
 		local overflowExplosionClone = overflowExplosion:Clone()
 		overflowExplosionClone.Parent = flushUtils.toiletBody -- Doesnt really matter what parent is, position is already set
@@ -200,7 +200,7 @@ OverflowToiletEvent.OnServerEvent:Connect(function(player: Player, actionId: str
 		playOnClickExplosionSplash(OVERFLOW_DUR, 2, 100, function()
 			task.delay(OVERFLOW_DUR, function()
 				FlushHandler.Overflow()
-				isInOverflow = false
+				Globals.isInOverflow = false
 			end)
 		end)
 	end)
@@ -240,7 +240,7 @@ local function startFlush(playerCall)
 	startToiletAnimation()
 end
 StartFlushEvent.OnServerEvent:Connect(function(playerCall: Player)
-	if not isJammed.Value then
+	if not isJammed.Value or Globals.isInOverflow then
 		ActionHandler:Enqueue(function()
 			if LineArray:GetIndex(playerCall.UserId) ~= 1 then
 				return
@@ -269,7 +269,7 @@ end)
 
 FreezeToiletEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
 	ActionHandler:Enqueue(function()
-		if not UsedAction(player.UserId, actionId) then
+		if not UsedAction(player, actionId) then
 			return
 		end
 
@@ -300,14 +300,15 @@ end)
 
 local checkTaskConnection
 JamFlushEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
-	print(actionId)
-	local playerId = tostring(player.UserId)
-	local check = serverUtils.getActionIfUsable(playerId, actionId)
-	if not check then
-		return
-	end
+	-- print(actionId)
+	-- local playerId = tostring(player.UserId)
+	-- local check = serverUtils.getActionIfUsable(playerId, actionId)
+	-- if not check then
+	-- 	return
+	-- end
 	ActionHandler:Enqueue(function()
-		if not UsedAction(player.UserId, actionId) then
+		if not UsedAction(player, actionId) then
+			MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, actionId)
 			return
 		end
 		if jamTimer then

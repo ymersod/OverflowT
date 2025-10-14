@@ -18,6 +18,7 @@ local event = ReplicatedStorage:WaitForChild("Shared")
 
 local Lever = CollectionService:GetTagged(tags.EASTER_EGG_LEVER)[1]
 local Chest = CollectionService:GetTagged(tags.EASTER_EGG_CHEST)[1]
+local semiBlocks = CollectionService:GetTagged(tags.SEMI_BLOCK)
 local chestPart = Chest:FindFirstChild("Part") :: Part
 local chestPartChildren = chestPart:GetDescendants()
 local chestProx = chestPart:FindFirstChildOfClass("ProximityPrompt")
@@ -36,6 +37,19 @@ chestProx.Triggered:Connect(function(player)
 	end
 end)
 
+local function EnableSemiBlocks(toEnable: boolean)
+	local trans = 1
+	if toEnable then
+		trans = 0.8
+	end
+
+	for _, block in ipairs(semiBlocks) do
+		if block:IsA("BasePart") then
+			block.Transparency = trans
+		end
+	end
+end
+
 local function OpenChest()
 	for _, desc in ipairs(chestPartChildren) do
 		if desc:IsA("Decal") then
@@ -52,15 +66,17 @@ local function Switch()
 	if ValueAtt == true then
 		Lever:SetAttribute("Value", false)
 		Stick.CFrame = Stick.CFrame:ToWorldSpace(Offset)
+		EnableSemiBlocks(true)
 		OpenChest()
 	else
 		Lever:SetAttribute("Value", true)
 		Stick.CFrame = OriginalCFrame
+		EnableSemiBlocks(false)
 		OpenChest()
 	end
 end
 
-local cap = 35
+local cap = 50
 local canSwitch = true
 prox.Triggered:Connect(function()
 	if canSwitch then

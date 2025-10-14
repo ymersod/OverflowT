@@ -7,6 +7,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local tags = require(ReplicatedStorage.Shared.tags)
 local Line = require(ServerScriptService.Server.LineArray)
 local ActionHandler = require(ServerScriptService.Server.ActionHandler)
+local Globals = require(ServerScriptService.Server.Globals)
 local serverUtils = require(ServerScriptService.Server.serverUtils)
 local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
 local ServerEnums = require(ServerScriptService.Server.ServerEnums)
@@ -21,10 +22,18 @@ local isJammed: BoolValue = CollectionService:GetTagged(tags.IS_JAMMED)[1]
 
 local function makeLineAction(player, actionId, lineFunc, validationFunc: (() -> boolean)?)
 	return function()
+		if not Line:GetIndex(player.UserId) then
+			MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, actionId)
+			return
+		end
+
 		local playerId = player.UserId
 		local usableAction = serverUtils.getActionIfUsable(tostring(playerId), actionId)
 		if not usableAction then
 			MonetizationHandler.PromptRobuxPurchase(player, ServerEnums.DevProducts.Action.Name, actionId)
+			return
+		end
+		if Globals.isInOverflow then
 			return
 		end
 		if validationFunc and not validationFunc() then
@@ -58,8 +67,8 @@ NextEvent.OnServerEvent:Connect(function(player: Player, from: "Flush" | "SkipAh
 		return
 	end
 
-	if isJammed.Value then
-		print("sry is jammed haha")
+	if isJammed.Value or Globals.isInOverflow then
+		print("sry is jammed or overflowing monkas haha")
 		return
 	end
 	ActionHandler:Enqueue(function()

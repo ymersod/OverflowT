@@ -135,17 +135,16 @@ local pendingValue = nil
 function processLineChange(newValue)
 	if newValue > 0 and prevLinePosition == 0 and not isInLine then
 		placeInLine(newValue)
-		actionGuiState.updateGUI(newValue)
 	elseif newValue == 0 and prevLinePosition > 0 and isInLine then
 		removeFromLine(newValue)
-		actionGuiState.updateGUI(newValue)
 	elseif isInLine and newValue ~= 0 and newValue ~= prevLinePosition then
 		moveInLine(newValue)
 	end
-
+	actionGuiState.updateGUI(newValue)
 	prevLinePosition = newValue
 end
 
+processLineChange(linePosition.Value)
 linePosition:GetPropertyChangedSignal("Value"):Connect(function()
 	local newValue = linePosition.Value
 	if ragdolledValue.Value then

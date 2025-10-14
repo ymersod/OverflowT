@@ -48,6 +48,7 @@ local tags = {
 	WINSTREAK_STATS = "WinstreakStats",
 	EASTER_EGG_LEVER = "EasterEggLever",
 	EASTER_EGG_CHEST = "EasterEggChest",
+	SEMI_BLOCK = "SemiBlock",
 }
 
 return tags
