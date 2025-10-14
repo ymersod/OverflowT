@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local tags = require(ReplicatedStorage.Shared.tags)
 
 local actionGuiState = {}
@@ -122,5 +123,19 @@ function actionGuiState.updateGUI(linePositionValue: number)
 		notInLineState()
 	end
 end
+
+task.spawn(function() --TODO: I DO NOT LIKE THIS :>>>>>>>>>>
+	local States = Player:WaitForChild("States")
+	local linePositionValue: IntValue = States:WaitForChild("LinePosition")
+
+	RunService.Heartbeat:Connect(function()
+		if linePositionValue.Value == 0 then
+			print("AHHH")
+			notInLineState()
+		end
+
+		task.wait(0.2)
+	end)
+end)
 
 return actionGuiState
