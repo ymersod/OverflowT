@@ -3,14 +3,15 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
 
-local StarterPlayer = game:GetService("StarterPlayer")
-
 local FREEZE_ACTION = "freezeMovement"
 
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local actionGuiState = require(script.Parent.actionGuiState)
 local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
+
+local PlayerModule = require(Player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")) :: ModuleScript
+local Controls = PlayerModule:GetControls()
 
 local linePosition: IntValue = Player:WaitForChild("States"):WaitForChild("LinePosition")
 local ragdolledValue: IntValue = Player:WaitForChild("States"):WaitForChild("Ragdolled")
@@ -61,11 +62,9 @@ local function placeInLine(lineNr)
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
 	local hrp = char and char.PrimaryPart
 
-	ContextActionService:BindAction(FREEZE_ACTION, function()
-		return Enum.ContextActionResult.Sink
-	end, false, unpack(Enum.PlayerActions:GetEnumItems()))
+	Controls:Disable()
 
-	hum.WalkSpeed = 24
+	hum.WalkSpeed = 32
 	local spot
 	for _, lilSpot in ipairs(spots) do
 		if lilSpot:GetAttribute("ArrayIndex") == lineNr then
@@ -89,7 +88,7 @@ local function removeFromLine(lineNr)
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
 	print("MY NEW SPOT: " .. lineNr)
 	-- Unfreeze player
-	ContextActionService:UnbindAction(FREEZE_ACTION)
+	Controls:Enable()
 
 	hum.WalkSpeed = 16
 	task.defer(MovePlayersToSpawn)

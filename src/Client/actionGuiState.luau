@@ -128,14 +128,13 @@ task.spawn(function() --TODO: I DO NOT LIKE THIS :>>>>>>>>>>
 	local States = Player:WaitForChild("States")
 	local linePositionValue: IntValue = States:WaitForChild("LinePosition")
 
-	RunService.Heartbeat:Connect(function()
+	while true do
 		if linePositionValue.Value == 0 then
-			print("AHHH")
 			notInLineState()
 		end
 
-		task.wait(0.2)
-	end)
+		task.wait(1)
+	end
 end)
 
 return actionGuiState

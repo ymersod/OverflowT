@@ -24,6 +24,7 @@ local flushHandler = {
 	curCap = 0,
 	totalTimeHeld = 0,
 	gameOnGoing = false,
+	lastLine = {},
 }
 
 type PlayerHeld = {
@@ -39,11 +40,11 @@ local function calcCoins(playerId: number)
 	if not timeHeld or timeHeld < 1 then
 		timeHeld = 1
 	end
-	return math.ceil(timeHeld * 10)
+	return 40 + math.ceil(timeHeld * 10)
 end
 
 local function RewardWinners()
-	local playerIds = LineArray:GetLine()
+	local playerIds = flushHandler.lastLine and flushHandler.lastLine or LineArray:GetLine()
 	task.defer(function()
 		funnelEvents.OnboardPlayersUserId(playerIds, enums.Analytics.Onboarding.CompletedFirstGame.Name)
 		funnelEvents.LogStepPlayerIds(
@@ -160,6 +161,7 @@ local function RewardWinners()
 		end)
 	end
 	serverUtils.handlePlayerSpots(false)
+	flushHandler.lastLine = {}
 end
 
 function flushHandler.Overflow()
@@ -170,9 +172,13 @@ function flushHandler.Overflow()
 	ToiletSwitcher.SwitchToilet(flushHandler.gameOnGoing)
 end
 
-function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player)
+function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player, lastLineRecieved: {}?)
 	if not flushHandler.gameOnGoing then
 		return
+	end
+
+	if lastLineRecieved then
+		flushHandler.lastLine = lastLineRecieved
 	end
 
 	flushHandler.totalTimeHeld += flushedTime

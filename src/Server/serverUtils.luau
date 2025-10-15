@@ -3,11 +3,15 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local TweenService = game:GetService("TweenService")
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local tags = require(ReplicatedStorage.Shared.tags)
 local Actions = require(ServerScriptService.Server.Persistence.Actions)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local enums = require(ReplicatedStorage.Shared.enums)
+
+local cuttingActions = CollectionService:GetTagged(tags.CUTTING_ACTIONS)[1] :: BillboardGui
 
 local serverUtils = {}
 
@@ -194,6 +198,69 @@ function serverUtils.playExplosionOnPlayer(player: Player, delay: number)
 			explosionClone:Destroy()
 		end)
 	end
+end
+
+function serverUtils.ActionOnPlayer(player: Player)
+	local sound = SoundEffectHandler.GetSound("CutSound")
+	local soundClone = sound:Clone()
+	soundClone.Parent = player
+	soundClone:Play()
+	soundClone.Ended:Once(function()
+		soundClone:Destroy()
+	end)
+
+	local char = player.Character
+	local head = char and char:FindFirstChild("Head")
+
+	if not (char and head) then
+		return
+	end
+
+	local bbClone = cuttingActions:Clone()
+	local frame = bbClone:FindFirstChildOfClass("Frame")
+	local imgLabel = frame and frame:FindFirstChildOfClass("ImageLabel")
+
+	if not (frame and imgLabel) then
+		return
+	end
+
+	bbClone.Parent = head
+
+	frame.Size = UDim2.fromScale(0, 0)
+	frame.BackgroundTransparency = 1
+	imgLabel.ImageTransparency = 1
+
+	local popUpTween =
+		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.fromScale(1, 1),
+		})
+
+	local fadeInImage =
+		TweenService:Create(imgLabel, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			ImageTransparency = 0,
+		})
+
+	local fadeOutTween =
+		TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size = UDim2.fromScale(0, 0),
+		})
+
+	local fadeOutImage =
+		TweenService:Create(imgLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			ImageTransparency = 1,
+		})
+
+	popUpTween:Play()
+	fadeInImage:Play()
+
+	task.delay(1.5, function()
+		fadeOutTween:Play()
+		fadeOutImage:Play()
+
+		fadeOutImage.Completed:Once(function()
+			bbClone:Destroy()
+		end)
+	end)
 end
 
 return serverUtils

@@ -227,7 +227,8 @@ local function stopFlushing()
 	end
 end
 
-local function startFlush(playerCall)
+local function startFlush(playerCall, line: {})
+	FlushHandler.AddFlushedTime(0.3, playerCall, line)
 	currentHolder = playerCall
 	lastTimeIteration = os.clock()
 	Globals.flushStarted = true
@@ -252,7 +253,7 @@ StartFlushEvent.OnServerEvent:Connect(function(playerCall: Player)
 				false,
 				true
 			)
-			startFlush(playerCall)
+			startFlush(playerCall, LineArray:GetLine())
 		end)
 	end
 end)
@@ -341,7 +342,7 @@ JamFlushEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
 			if newHolderId and curJammedPlayer ~= prevJammedPlayer then
 				print("Setting new player!")
 				local player = Players:GetPlayerByUserId(newHolderId)
-				startFlush(player)
+				startFlush(player, LineArray:GetLine())
 			end
 
 			prevJammedPlayer = curJammedPlayer

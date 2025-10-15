@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
+local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local tags = require(ReplicatedStorage.Shared.tags)
 local Line = require(ServerScriptService.Server.LineArray)
 local ActionHandler = require(ServerScriptService.Server.ActionHandler)
@@ -43,7 +44,12 @@ local function makeLineAction(player, actionId, lineFunc, validationFunc: (() ->
 		if not success then
 			return
 		end
-		serverUtils.updateActionDB(tostring(playerId), usableAction)
+		task.spawn(function()
+			serverUtils.updateActionDB(tostring(playerId), usableAction)
+		end)
+		task.spawn(function()
+			serverUtils.ActionOnPlayer(player)
+		end)
 	end
 end
 

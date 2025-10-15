@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local actions = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Actions")
+local BadgeHandler = require(script.Parent.BadgeHandler)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 
@@ -71,4 +72,5 @@ Players.PlayerAdded:Connect(function(player)
 
 	local playerStats = Stats.GetPlayerStats(player.UserId)
 	serverUtils.updatePlayerLeaderStats(player.UserId, playerStats)
+	BadgeHandler.GiveBadges(player)
 end)

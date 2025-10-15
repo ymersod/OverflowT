@@ -32,6 +32,7 @@ export type SoundName =
 	| "Lever"
 	| "WoodGroan"
 	| "GDReward"
+	| "CutSound"
 
 local trackList: { [SoundName]: number } = {
 	UniversalButtonHover = 6042053626,
@@ -63,6 +64,7 @@ local trackList: { [SoundName]: number } = {
 	Lever = 7639377355,
 	WoodGroan = 9120881682,
 	GDReward = 8363346672,
+	CutSound = 104554328676335,
 }
 
 local sounds: { [SoundName]: Sound } = {}

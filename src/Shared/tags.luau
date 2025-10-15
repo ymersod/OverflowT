@@ -49,6 +49,7 @@ local tags = {
 	EASTER_EGG_LEVER = "EasterEggLever",
 	EASTER_EGG_CHEST = "EasterEggChest",
 	SEMI_BLOCK = "SemiBlock",
+	CUTTING_ACTIONS = "CuttingAction",
 }
 
 return tags
