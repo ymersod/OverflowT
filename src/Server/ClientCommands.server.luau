@@ -93,6 +93,10 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 					local response = dataStoreDevManagement.removePlayerFromOrderedWinstreakStore(command.args[1])
 					print(response)
 				end
+				if #command.args == 1 or #command.args == 2 and command.args[2] == "orderedmoney" then
+					local response = dataStoreDevManagement.removePlayerFromOrderedMoneyStore(command.args[1])
+					print(response)
+				end
 				if #command.args == 1 or #command.args == 2 and command.args[2] == "playerflags" then
 					local response = dataStoreDevManagement.removePlayerFromPlayerFlagsStore(command.args[1])
 					print(response)

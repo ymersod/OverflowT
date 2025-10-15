@@ -2,6 +2,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local Stats = DataStoreService:GetDataStore("PlayerStats")
 local OrderedStatsStore = DataStoreService:GetOrderedDataStore("PlayerStatsStore")
 local OrderedWinStreakStatsStore = DataStoreService:GetOrderedDataStore("PlayerWinstreakStore")
+local OrderedMoneyStore = DataStoreService:GetOrderedDataStore("MoneyStore")
 
 local statPrefix = "Stats_"
 
@@ -91,7 +92,7 @@ function statsHandler.UpdateOrderedPlayerStatsStore(playerId, currentStats: Play
 	end)
 
 	if not successOrdered then
-		warn("Failed to update ordered store for playerId:", playerId, errOrdered)
+		warn("Failed to update ordered wins store for playerId:", playerId, errOrdered)
 	end
 
 	local successStreak, errStreak = pcall(function()
@@ -99,7 +100,15 @@ function statsHandler.UpdateOrderedPlayerStatsStore(playerId, currentStats: Play
 	end)
 
 	if not successStreak then
-		warn("Failed to update ordered store for playerId:", playerId, errStreak)
+		warn("Failed to update ordered winstreak store for playerId:", playerId, errStreak)
+	end
+
+	local successMoney, errMoney = pcall(function()
+		return OrderedMoneyStore:SetAsync(playerId, currentStats.Coins)
+	end)
+
+	if not successMoney then
+		warn("Failed to update ordered money store for playerId:", playerId, errMoney)
 	end
 end
 
@@ -127,6 +136,23 @@ function statsHandler.GetTopWinstreaker(limit: number): { key: string, value: nu
 	local success, pages = pcall(function()
 		-- false = descending order (highest first)
 		return OrderedWinStreakStatsStore:GetSortedAsync(false, limit)
+	end)
+
+	if not success then
+		warn("Failed to get top players:", pages)
+		return nil
+	end
+
+	local topPlayers = pages:GetCurrentPage()
+	return topPlayers
+end
+
+function statsHandler.GetTop10MoneyPlayers(limit: number): { key: string, value: number }?
+	limit = limit or 10
+
+	local success, pages = pcall(function()
+		-- false = descending order (highest first)
+		return OrderedMoneyStore:GetSortedAsync(false, limit)
 	end)
 
 	if not success then

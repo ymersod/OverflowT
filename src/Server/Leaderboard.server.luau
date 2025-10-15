@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local StreakHandler = require(script.Parent.StreakHandler)
+local funnelEvents = require(script.Parent.funnelEvents)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 local tags = require(ReplicatedStorage.Shared.tags)
 
@@ -24,38 +25,47 @@ local streakNameText: TextLabel = winStreakframe:FindFirstChild("PlayerName")
 local LEADERBOARD_UPDATE = 60
 local curTime = 0
 
-local function SetTopModel(userId: string, wins: number, i: number)
-	local spot = topPlayers:FindFirstChild(i)
+local function SetTopModel(top3Arr: { key: string, value: number }?)
+	-- userId: string, wins: number, i: number
+	if not top3Arr then
+		warn("Yikes no top3 winners")
+		return
+	end
+	for i, player in ipairs(top3Arr) do
+		local userId: string = player.key
+		local spot = topPlayers:FindFirstChild(i)
+		local wins = player.value
 
-	if spot then
-		local statue: Model? = spot:FindFirstChild("Statue")
-		local hum: Humanoid? = statue and statue:FindFirstChildOfClass("Humanoid")
-		local animator: Animator? = hum and hum:FindFirstChildOfClass("Animator")
-		local animation: Animation? = statue and statue:FindFirstChildOfClass("Animation")
+		if spot then
+			local statue: Model? = spot:FindFirstChild("Statue")
+			local hum: Humanoid? = statue and statue:FindFirstChildOfClass("Humanoid")
+			local animator: Animator? = hum and hum:FindFirstChildOfClass("Animator")
+			local animation: Animation? = statue and statue:FindFirstChildOfClass("Animation")
 
-		if hum and animator and animation then
-			if tonumber(userId) > 0 then
-				hum:ApplyDescription(Players:GetHumanoidDescriptionFromUserId(tonumber(userId)))
+			if hum and animator and animation then
+				if tonumber(userId) > 0 then
+					hum:ApplyDescription(Players:GetHumanoidDescriptionFromUserId(tonumber(userId)))
+				end
+				local anim
+				pcall(function()
+					anim = animator:LoadAnimation(animation)
+				end)
+				anim:Play()
 			end
-			local anim
-			pcall(function()
-				anim = animator:LoadAnimation(animation)
-			end)
-			anim:Play()
-		end
 
-		local statsHolder = spot and spot:FindFirstChild("Stats") :: Part?
-		local bb = statsHolder and statsHolder:FindFirstChildOfClass("BillboardGui")
-		local frame = bb and bb:FindFirstChildOfClass("Frame")
-		local winsText: TextLabel? = frame and frame:FindFirstChild("MoneyAmount")
-		local playerName: TextLabel? = frame and frame:FindFirstChild("PlayerName")
+			local statsHolder = spot and spot:FindFirstChild("Stats") :: Part?
+			local bb = statsHolder and statsHolder:FindFirstChildOfClass("BillboardGui")
+			local frame = bb and bb:FindFirstChildOfClass("Frame")
+			local winsText: TextLabel? = frame and frame:FindFirstChild("MoneyAmount")
+			local playerName: TextLabel? = frame and frame:FindFirstChild("PlayerName")
 
-		if winsText and playerName then
-			winsText.Text = "WINS: " .. wins
-			if tonumber(userId) > 0 then
-				playerName.Text = "#" .. i .. " " .. Players:GetNameFromUserIdAsync(userId)
-			else
-				playerName.Text = "#" .. i .. " " .. "Player " .. userId
+			if winsText and playerName then
+				winsText.Text = "WINS: " .. wins
+				if tonumber(userId) > 0 then
+					playerName.Text = "#" .. i .. " " .. Players:GetNameFromUserIdAsync(userId)
+				else
+					playerName.Text = "#" .. i .. " " .. "Player " .. userId
+				end
 			end
 		end
 	end
@@ -83,7 +93,7 @@ local function UpdateLeaderboardWorldData(top10Arr: { key: string, value: number
 		end
 		for _, leaderboardScore in ipairs(leaderboardScores) do
 			if leaderboardScore.Name == "Score" .. i then
-				leaderboardScore.Text = topPlayer.value
+				leaderboardScore.Text = topPlayer.value .. " $"
 			end
 		end
 		for _, leaderboardPhoto in ipairs(leaderboardPhotos) do
@@ -99,10 +109,6 @@ local function UpdateLeaderboardWorldData(top10Arr: { key: string, value: number
 					end
 				end
 			end
-		end
-
-		if i <= 3 then
-			SetTopModel(topPlayer.key, topPlayer.value, i)
 		end
 	end
 end
@@ -146,7 +152,11 @@ RunService.Heartbeat:Connect(function()
 	if timeDiff >= LEADERBOARD_UPDATE then
 		curTime = os.clock()
 		task.spawn(function()
-			UpdateLeaderboardWorldData(Stats.GetTopPlayers(10))
+			UpdateLeaderboardWorldData(Stats.GetTop10MoneyPlayers(10))
+		end)
+
+		task.spawn(function()
+			SetTopModel(Stats.GetTopPlayers(3))
 		end)
 
 		task.spawn(function()
