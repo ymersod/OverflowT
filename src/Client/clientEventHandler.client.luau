@@ -1,5 +1,6 @@
 local Player = game:GetService("Players").LocalPlayer
 
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local clientEvents = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Events"):WaitForChild("ClientEvents")
 local TopBarUpdate = clientEvents:WaitForChild("TopBarUpdate")
@@ -30,6 +31,7 @@ local playTimeFunnelEvent = ReplicatedStorage:WaitForChild("Shared")
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
 local enums = require(ReplicatedStorage.Shared.enums)
+local tags = require(ReplicatedStorage.Shared.tags)
 
 -- UI Elements
 local actionsRefs = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Actions")
@@ -44,8 +46,7 @@ local timeLabel: TextLabel = afkWarning:WaitForChild("TextParent"):WaitForChild(
 
 local InfoBar = ScreenGUI:WaitForChild("InfoBar"):WaitForChild("ParentFrame")
 local infoText = InfoBar:WaitForChild("Frame"):FindFirstChildOfClass("TextLabel")
-local rainbowText = InfoBar:FindFirstChildOfClass("TextLabel")
-local gradient = rainbowText:FindFirstChildOfClass("UIGradient")
+local gradients = CollectionService:GetTagged(tags.RAINBOW_TEXT)
 
 local GameEndFrames = ScreenGUI:WaitForChild("GameEndFrames")
 local LoseFrame: Frame = GameEndFrames:WaitForChild("LoseFrame")
@@ -345,5 +346,12 @@ ragDollClientEvent.OnClientEvent:Connect(function(toRagdoll: boolean)
 end)
 
 task.spawn(function()
-	clientUtils.RainbowIfyText(gradient)
+	for _, gradientParent in ipairs(gradients) do
+		local gradient = gradientParent:FindFirstChildOfClass("UIGradient")
+		task.spawn(function()
+			if gradient then
+				clientUtils.RainbowIfyText(gradient)
+			end
+		end)
+	end
 end)

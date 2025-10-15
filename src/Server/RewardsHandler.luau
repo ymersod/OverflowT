@@ -5,6 +5,8 @@ local GROUP_ID = 35951660
 
 local rewardsHandler = {}
 
+local itemMults: { [string]: { toiletMult: number, particleMult: number } } = {}
+
 function rewardsHandler.GetRewardMult(playerId): number
 	local mult = 1
 	if Globals.group[playerId] and Globals.group[playerId].DoubleRewards then
@@ -13,8 +15,29 @@ function rewardsHandler.GetRewardMult(playerId): number
 	if Globals.premium[playerId] and Globals.premium[playerId].DoubleRewards then
 		mult = mult * 2
 	end
+	if itemMults[playerId] then
+		mult = mult * itemMults[playerId].toiletMult
+		mult = mult * itemMults[playerId].particleMult
+	end
 	print("Mult for player is: ", mult)
 	return mult
+end
+
+function rewardsHandler.SetItemMult(playerId: string, multOfItem: number, mode: "Model" | "Particle")
+	if mode == "Model" then
+		if itemMults[playerId] then
+			itemMults[playerId].toiletMult = multOfItem
+		else
+			itemMults[playerId] = { toiletMult = 1, particleMult = 1 }
+		end
+	end
+	if mode == "Particle" then
+		if itemMults[playerId] then
+			itemMults[playerId].particleMult = multOfItem
+		else
+			itemMults[playerId] = { toiletMult = 1, particleMult = 1 }
+		end
+	end
 end
 
 local function ObservePlayers()
@@ -53,6 +76,7 @@ end)
 Players.PlayerRemoving:Connect(function(Player)
 	local userId = tostring(Player.UserId)
 	Globals.group[userId] = nil
+	itemMults[userId] = nil
 end)
 
 return rewardsHandler

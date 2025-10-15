@@ -46,7 +46,6 @@ end
 
 local filteredShopItems: { types.ShopItem } = {}
 local ownedShopItems: { number } = {}
-
 local DISTANCE_THRESHOLD = 20
 
 local updateGUI
@@ -123,6 +122,7 @@ local function SetupButton(
 	price: TextLabel,
 	cost: number,
 	equipMode: "Model" | "Particle",
+	extraMoney: number,
 	robuxCost: number?,
 	buttonText: TextLabel?
 )
@@ -151,7 +151,7 @@ local function SetupButton(
 
 		conn = equipButton.MouseButton1Click:Connect(function()
 			DoPulse(equipButton)
-			equipShopItem:InvokeServer(id, equipMode)
+			equipShopItem:InvokeServer(id, extraMoney, equipMode)
 		end)
 		buttonConnections[equipButton] = conn
 	elseif mode == "Buy" then
@@ -169,7 +169,7 @@ local function SetupButton(
 			DoPulse(buyButton)
 			ownedShopItems = buyShopItems:InvokeServer(id, equipMode)
 			if table.find(ownedShopItems, id) then
-				SetupButton(equipButton, buyButton, buyRobuxButton, "Equip", id, price, cost, equipMode)
+				SetupButton(equipButton, buyButton, buyRobuxButton, "Equip", id, price, cost, equipMode, extraMoney)
 			end
 		end)
 		buttonConnections[buyButton] = conn
@@ -207,6 +207,7 @@ updateGUI = function()
 		local shopItemPrefabClone = shopItemPrefab:Clone() :: Frame
 		local price: TextLabel = shopItemPrefabClone:FindFirstChild("Price")
 		local title: TextLabel = shopItemPrefabClone:FindFirstChild("Title")
+		local extraMoney: TextLabel = shopItemPrefabClone:FindFirstChild("ExtraMoney")
 		local equipButton: ImageButton = shopItemPrefabClone:FindFirstChild("Equip")
 		local buyButton: ImageButton = shopItemPrefabClone:FindFirstChild("Buy")
 		local buyRobuxButton: ImageButton = shopItemPrefabClone:FindFirstChild("BuyRobux")
@@ -230,7 +231,8 @@ updateGUI = function()
 				shopItem.Id,
 				price,
 				shopItem.PriceMoney,
-				shopItem.ItemPlacement
+				shopItem.ItemPlacement,
+				shopItem.ExtraMoney
 			)
 		elseif shopItem.ShopFunction == enums.ShopItemType.EasterEgg then
 			shopItemPrefabClone.Visible = false
@@ -243,7 +245,8 @@ updateGUI = function()
 				shopItem.Id,
 				price,
 				shopItem.PriceMoney,
-				shopItem.ItemPlacement
+				shopItem.ItemPlacement,
+				shopItem.ExtraMoney
 			)
 			SetupButton(
 				equipButton,
@@ -254,6 +257,7 @@ updateGUI = function()
 				price,
 				shopItem.PriceMoney,
 				shopItem.ItemPlacement,
+				shopItem.ExtraMoney,
 				shopItem.PriceRobux,
 				buyRobuxButtonText
 			)
@@ -261,6 +265,7 @@ updateGUI = function()
 
 		title.Text = shopItem.Name
 		imageLabel.Image = shopItem.ImageId
+		extraMoney.Text = string.format("%.1f× $", shopItem.ExtraMoney)
 
 		if shopItem.ItemPlacement == "Model" then
 			shopItemPrefabClone.Parent = scrollingFrameModels
@@ -275,10 +280,69 @@ local function SetupShop()
 	updateGUI()
 end
 
+local equippedParticles: Frame? = nil
+local equippedToilet: Frame? = nil
+local function SetEquipped(toEquip: Frame, mode: "Particles" | "Model")
+	local prevEquippedStroke: UIStroke?
+	local newStroke: UIStroke?
+	if mode == "Model" then
+		if equippedToilet then
+			prevEquippedStroke = equippedToilet:WaitForChild("EquippedFrame"):FindFirstChild("Equipped") :: UIStroke?
+		end
+		equippedToilet = toEquip
+	end
+	if mode == "Particles" then
+		if equippedParticles then
+			prevEquippedStroke = equippedParticles:WaitForChild("EquippedFrame"):FindFirstChild("Equipped") :: UIStroke?
+		end
+		equippedParticles = toEquip
+	end
+	newStroke = toEquip:WaitForChild("EquippedFrame"):FindFirstChild("Equipped") :: UIStroke?
+
+	if prevEquippedStroke then
+		prevEquippedStroke.Transparency = 1
+	end
+	if newStroke then
+		newStroke.Transparency = 0
+	end
+end
+local function SetupEquipped()
+	local localStats = Player:FindFirstChild("localstats")
+	local equippedParticlesIntValue: IntValue? = localStats:FindFirstChild("EquippedParticles")
+	local equippedToiletIntValue: IntValue? = localStats:FindFirstChild("EquippedToilet")
+
+	if equippedParticlesIntValue and equippedToiletIntValue then
+		local function Splitter(val: number, mode: "Particles" | "Model")
+			if mode == "Particles" then
+				local pShopItem = cache[val].item
+				if pShopItem then
+					SetEquipped(pShopItem, "Particles")
+				end
+			end
+			if mode == "Model" then
+				local tShopItem = cache[val].item
+				if tShopItem then
+					SetEquipped(tShopItem, "Model")
+				end
+			end
+		end
+		Splitter(equippedParticlesIntValue.Value, "Particles")
+		Splitter(equippedToiletIntValue.Value, "Model")
+
+		equippedParticlesIntValue.Changed:Connect(function(val)
+			Splitter(val, "Particles")
+		end)
+		equippedToiletIntValue.Changed:Connect(function(val)
+			Splitter(val, "Model")
+		end)
+	end
+end
+
 local function start()
 	SetupOpenCloseConnections()
 	GetOwnedShopObjects()
 	SetupShop()
+	SetupEquipped()
 end
 start()
 
@@ -298,7 +362,8 @@ processPurchaseEvent.OnClientEvent:Connect(function(id: number, typename: "Model
 			id,
 			shopItemToUpdate.priceRef,
 			0,
-			typename
+			typename,
+			1.5
 		)
 		print("update after purchse")
 	end

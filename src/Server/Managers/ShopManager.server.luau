@@ -3,6 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local enums = require(ReplicatedStorage.Shared.enums)
 local ShopObjects = require(ServerScriptService.Server.Persistence.ShopObjects)
+local RewardsHandler = require(ServerScriptService.Server.RewardsHandler)
 local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local shopHandler = require(ServerScriptService.Server.shopHandler)
 local types = require(ReplicatedStorage.Shared.types)
@@ -30,6 +31,7 @@ getShopItemsEvent.OnServerInvoke = function(_: Player)
 	local filteredShopItems = {}
 
 	for _, item in ipairs(shopItems) do
+		local extraMoney = item:GetAttribute("ExtraMoney")
 		local id = item:GetAttribute("Id")
 		local name = item:GetAttribute("Name")
 		local shopFunction = item:GetAttribute("ShopItemType")
@@ -40,6 +42,7 @@ getShopItemsEvent.OnServerInvoke = function(_: Player)
 
 		if id and name and shopFunction and priceMoney and priceRobux and imageId and itemPlacement then
 			local shopItem: types.ShopItem = {
+				ExtraMoney = extraMoney,
 				Id = id,
 				Name = name,
 				ShopFunction = shopFunction,
@@ -69,7 +72,7 @@ buyShopItemEvent.OnServerInvoke = function(player: Player, id: number, equipMode
 	return shopHandler.BuyItem(player, id, equipMode)
 end
 
-equipShopItemEvent.OnServerInvoke = function(player: Player, id: number, mode: "Model" | "Particle")
+equipShopItemEvent.OnServerInvoke = function(player: Player, id: number, multOfItem: number, mode: "Model" | "Particle")
 	funnelEvents.LogStepPlayers(
 		{ player },
 		enums.Analytics.Shop.EquipItem.Name,
@@ -86,6 +89,7 @@ equipShopItemEvent.OnServerInvoke = function(player: Player, id: number, mode: "
 	if mode == "Model" then
 		equippedItem = localstats and localstats:FindFirstChild("EquippedToilet")
 	end
+	RewardsHandler.SetItemMult(tostring(player.UserId), multOfItem, mode)
 
 	if equippedItem and equippedItem:IsA("IntValue") then
 		equippedItem.Value = id --TODO: Should prob do a server check to make sure player owns the thing

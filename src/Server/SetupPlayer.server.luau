@@ -3,9 +3,20 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local actions = ReplicatedStorage:WaitForChild("DynamicUI"):WaitForChild("Actions")
 local BadgeHandler = require(script.Parent.BadgeHandler)
+local RewardsHandler = require(script.Parent.RewardsHandler)
 local serverUtils = require(script.Parent.serverUtils)
 local Stats = require(ServerScriptService.Server.Persistence.Stats)
 
+local dataStart = {
+	Toilet = {
+		StartMult = 1,
+		StartId = 100,
+	},
+	Particle = {
+		StartMult = 1,
+		StartId = 1,
+	},
+}
 Players.PlayerAdded:Connect(function(player)
 	local localStats = Instance.new("Folder")
 	localStats.Name = "localstats"
@@ -45,12 +56,12 @@ Players.PlayerAdded:Connect(function(player)
 	Money.Parent = leaderStats
 
 	local EquippedParticles = Instance.new("IntValue")
-	EquippedParticles.Value = 1
+	EquippedParticles.Value = dataStart.Particle.StartId
 	EquippedParticles.Name = "EquippedParticles"
 	EquippedParticles.Parent = localStats
 
 	local EquippedToilet = Instance.new("IntValue")
-	EquippedToilet.Value = 100
+	EquippedToilet.Value = dataStart.Toilet.StartId
 	EquippedToilet.Name = "EquippedToilet"
 	EquippedToilet.Parent = localStats
 
@@ -73,4 +84,6 @@ Players.PlayerAdded:Connect(function(player)
 	local playerStats = Stats.GetPlayerStats(player.UserId)
 	serverUtils.updatePlayerLeaderStats(player.UserId, playerStats)
 	BadgeHandler.GiveBadges(player)
+	RewardsHandler.SetItemMult(tostring(player.UserId), dataStart.Toilet.StartMult, "Model")
+	RewardsHandler.SetItemMult(tostring(player.UserId), dataStart.Particle.StartMult, "Particle")
 end)

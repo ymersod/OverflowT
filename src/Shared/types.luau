@@ -1,6 +1,7 @@
 local types = {}
 
 export type ShopItem = {
+	ExtraMoney: number?,
 	Id: number?,
 	Name: string?,
 	ShopFunction: string?,
