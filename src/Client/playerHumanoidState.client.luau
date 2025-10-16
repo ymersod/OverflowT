@@ -1,12 +1,10 @@
 local Player = game:GetService("Players").LocalPlayer
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ContextActionService = game:GetService("ContextActionService")
-
-local FREEZE_ACTION = "freezeMovement"
 
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local actionGuiState = require(script.Parent.actionGuiState)
+local clientGlobals = require(script.Parent.clientGlobals)
 local humanoidUtils = require(ReplicatedStorage.Shared.humanoidUtils)
 local tags = require(ReplicatedStorage.Shared.tags)
 
@@ -35,6 +33,7 @@ local function getWorldObjects()
 	end)
 end
 getWorldObjects()
+local afkPort = CollectionService:GetTagged(tags.AFK_PORT)[1] :: Part
 
 local function MovePlayersToSpawn()
 	local character = Player.Character
@@ -42,6 +41,10 @@ local function MovePlayersToSpawn()
 		local hrp = character.HumanoidRootPart
 
 		local spawn = Player.RespawnLocation or workspace:FindFirstChild("SpawnLocation")
+		print("isafk?: ", clientGlobals.isAfk)
+		if clientGlobals.isAfk then
+			spawn = afkPort
+		end
 		if spawn then
 			local targetPos = spawn.Position
 			hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))

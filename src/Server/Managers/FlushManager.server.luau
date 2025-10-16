@@ -22,6 +22,7 @@ local Globals = require(ServerScriptService.Server.Globals)
 
 local LineArray = require(ServerScriptService.Server.LineArray)
 local MonetizationHandler = require(ServerScriptService.Server.MonetizationHandler)
+local NoobBot = require(ServerScriptService.Server.NoobBot)
 local flushUtils = require(ServerScriptService.Server.flushUtils)
 local funnelEvents = require(ServerScriptService.Server.funnelEvents)
 local tags = require(ReplicatedStorage.Shared.tags)
@@ -240,6 +241,7 @@ local function startFlush(playerCall, line: {})
 
 	startToiletAnimation()
 end
+
 StartFlushEvent.OnServerEvent:Connect(function(playerCall: Player)
 	if not isJammed.Value or Globals.isInOverflow then
 		ActionHandler:Enqueue(function()
@@ -351,9 +353,46 @@ JamFlushEvent.OnServerEvent:Connect(function(player: Player, actionId: string)
 end)
 
 local lastHolderId = nil
+local noobBotHeldTime = 0
+local noobBotCap = math.random(1.5, 3)
+local resatNoobBotsTurn = false
 RunService.Heartbeat:Connect(function()
 	local line = LineArray:GetLine()
 	local newHolderId = (line[1] or nil)
+	local currentTime = os.clock()
+
+	if NoobBot.NoobBotVals.NoobBotsTurn then
+		resatNoobBotsTurn = false
+
+		if not isFreezed.Value then
+			if noobBotHeldTime == 0 then
+				turnOnRumbleAnimation()
+				local clockedTime = currentTime - lastTimeIteration
+				noobBotHeldTime += clockedTime
+				lastTimeIteration = currentTime
+			else
+				updateRumbleAnimation()
+				SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
+				Sound.Update(getPercentageFull())
+				local clockedTime = currentTime - lastTimeIteration
+				noobBotHeldTime += clockedTime
+				lastTimeIteration = currentTime
+
+				FlushHandler.AddFlushedTime(clockedTime, currentHolder)
+			end
+		end
+
+		if noobBotHeldTime > noobBotCap then
+			noobBotHeldTime = 0
+			noobBotCap = math.random(1, 2)
+			LineArray:Next()
+		end
+
+		return
+	elseif not NoobBot.NoobBotVals.NoobBotsTurn and not resatNoobBotsTurn then
+		resatNoobBotsTurn = true
+		stopFlushing()
+	end
 
 	if currentHolder and newHolderId then
 		if currentHolder.UserId ~= newHolderId and lastHolderId ~= newHolderId then
@@ -362,8 +401,6 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	lastHolderId = newHolderId
-
-	local currentTime = os.clock()
 
 	if not Globals.flushStarted or isFreezed.Value then
 		lastTimeIteration = currentTime

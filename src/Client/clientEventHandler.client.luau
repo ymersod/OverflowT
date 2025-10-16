@@ -28,6 +28,7 @@ local playTimeFunnelEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("Funnel")
 	:WaitForChild("PlayTimeRewards")
 
+local clientGlobals = require(script.Parent.clientGlobals)
 local SoundEffectHandler = require(ReplicatedStorage.Shared.SoundEffectHandler)
 local clientUtils = require(ReplicatedStorage.Shared.clientUitls)
 local enums = require(ReplicatedStorage.Shared.enums)
@@ -322,7 +323,14 @@ afkWarningEvent.OnClientEvent:Connect(function(setWarning: boolean, timeUntilKic
 	if timeUntilKick then
 		timeLabel.Text = tostring(timeUntilKick)
 	end
+	print("Setting clientglobals")
 	afkWarning.Visible = setWarning
+	task.spawn(function()
+		if clientGlobals.isAfk then
+			task.wait(5)
+		end
+		clientGlobals.isAfk = setWarning
+	end)
 end)
 
 -- ragdoll client

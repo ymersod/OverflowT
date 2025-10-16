@@ -15,6 +15,7 @@ local GameCancelledEvent = ReplicatedStorage:WaitForChild("Shared")
 
 local enums = require(ReplicatedStorage.Shared.enums)
 local FlushHandler = require(script.Parent.FlushHandler)
+local NoobBot = require(script.Parent.NoobBot)
 local funnelEvents = require(script.Parent.funnelEvents)
 local serverUtils = require(script.Parent.serverUtils)
 local Line = require(ServerScriptService.Server.LineArray)
@@ -23,7 +24,7 @@ local prevLine = { table.unpack(Line:GetLine()) }
 local lobbyZone = CollectionService:GetTagged("LobbyZone")[1]
 local lobbyHalfSize = lobbyZone.Size / 2
 
-local INTERMISSION_TIME = 30 -- seconds
+local INTERMISSION_TIME = 10 -- seconds
 local timer = INTERMISSION_TIME
 
 local function GetPlayersInLobby(): { Player }
@@ -70,7 +71,10 @@ task.spawn(function()
 				Line:Fill(players)
 				FlushHandler.StartToilet()
 			else
-				GameCancelledEvent:FireAllClients("Cant start game, need at least 2 players ...")
+				table.insert(players, NoobBot.SetupNoobBot())
+				serverUtils.handlePlayerSpots(true, #players)
+				Line:Fill(players)
+				FlushHandler.StartToilet()
 			end
 		end
 		task.wait(1)
@@ -94,7 +98,8 @@ end
 RunService.Heartbeat:Connect(function()
 	local currentLine = Line:GetLine()
 	if #currentLine > 1 and FlushHandler.gameOnGoing then
-		TopBarUpdateEvent:FireAllClients(Players:GetPlayerByUserId(currentLine[1]).Name, "Ongoing")
+		local player = Players:GetPlayerByUserId(currentLine[1])
+		TopBarUpdateEvent:FireAllClients(player and player.Name or "NoobBot", "Ongoing")
 	elseif #currentLine == 0 and not FlushHandler.gameOnGoing then
 		TopBarUpdateEvent:FireAllClients(math.max(0, math.floor(timer)), "Intermission")
 	elseif #currentLine <= 1 and FlushHandler.gameOnGoing then

@@ -11,6 +11,7 @@ local EconomyFunnels = require(script.Parent.EconomyFunnels)
 local enums = require(ReplicatedStorage.Shared.enums)
 local Globals = require(script.Parent.Globals)
 local MonetizationHandler = require(script.Parent.MonetizationHandler)
+local NoobBot = require(script.Parent.NoobBot)
 local RewardsHandler = require(script.Parent.RewardsHandler)
 local flushUtils = require(script.Parent.flushUtils)
 local funnelEvents = require(script.Parent.funnelEvents)
@@ -44,6 +45,10 @@ local function calcCoins(playerId: number)
 end
 
 local function RewardWinners()
+	if NoobBot.NoobBotVals.noobBotClone then
+		NoobBot.Stop()
+	end
+
 	local playerIds = flushHandler.lastLine and flushHandler.lastLine or LineArray:GetLine()
 	task.defer(function()
 		funnelEvents.OnboardPlayersUserId(playerIds, enums.Analytics.Onboarding.CompletedFirstGame.Name)
@@ -103,62 +108,62 @@ local function RewardWinners()
 		coinsEarned = coinsEarned * mult
 		winsEarned = winsEarned * mult
 
-		local soundLength = EndGameScreenEvent:InvokeClient(
-			Players:GetPlayerByUserId(playerId),
-			enums.EndGameScreen.Win,
-			coinsEarned,
-			winsEarned
-		)
+		local player = Players:GetPlayerByUserId(playerId)
 
-		task.defer(function()
-			local curWinStreaks = serverUtils.GetLeaderStatVal(playerId, "WinStreak")
-			local curWins = serverUtils.GetLeaderStatVal(playerId, "Wins")
-			local curMoney = serverUtils.GetLeaderStatVal(playerId, "Money")
+		if player then
+			local soundLength =
+				EndGameScreenEvent:InvokeClient(player, enums.EndGameScreen.Win, coinsEarned, winsEarned)
 
-			if curWinStreaks and curWins and curMoney then
-				EconomyFunnels.LogEconomyEventPlayerIds(
-					{ playerId },
-					Enum.AnalyticsEconomyFlowType.Source,
-					"WinStreak",
-					1,
-					curWinStreaks + 1,
-					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
-					"Win match (WINSTREAK)"
-				)
-				EconomyFunnels.LogEconomyEventPlayerIds(
-					{ playerId },
-					Enum.AnalyticsEconomyFlowType.Source,
-					"Wins",
-					winsEarned,
-					curWins + winsEarned,
-					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
-					"Win match (WINS)"
-				)
-				EconomyFunnels.LogEconomyEventPlayerIds(
-					{ playerId },
-					Enum.AnalyticsEconomyFlowType.Source,
-					"Money",
-					coinsEarned,
-					curMoney + coinsEarned,
-					Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
-					"Win match (MONEY)"
-				)
-			end
-		end)
+			task.defer(function()
+				local curWinStreaks = serverUtils.GetLeaderStatVal(playerId, "WinStreak")
+				local curWins = serverUtils.GetLeaderStatVal(playerId, "Wins")
+				local curMoney = serverUtils.GetLeaderStatVal(playerId, "Money")
 
-		task.delay(soundLength, function()
-			serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)
-			serverUtils.modifyPlayerLeaderStats(playerId, "Wins", winsEarned)
-			serverUtils.modifyPlayerLeaderStats(playerId, "WinStreak", 1)
-			task.spawn(function()
-				Stats.UpdatePlayerStats(playerId, function(currentStats)
-					currentStats.Coins += coinsEarned
-					currentStats.Wins += winsEarned
-					currentStats.WinStreak += 1
-					return currentStats
+				if curWinStreaks and curWins and curMoney then
+					EconomyFunnels.LogEconomyEventPlayerIds(
+						{ playerId },
+						Enum.AnalyticsEconomyFlowType.Source,
+						"WinStreak",
+						1,
+						curWinStreaks + 1,
+						Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+						"Win match (WINSTREAK)"
+					)
+					EconomyFunnels.LogEconomyEventPlayerIds(
+						{ playerId },
+						Enum.AnalyticsEconomyFlowType.Source,
+						"Wins",
+						winsEarned,
+						curWins + winsEarned,
+						Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+						"Win match (WINS)"
+					)
+					EconomyFunnels.LogEconomyEventPlayerIds(
+						{ playerId },
+						Enum.AnalyticsEconomyFlowType.Source,
+						"Money",
+						coinsEarned,
+						curMoney + coinsEarned,
+						Enum.AnalyticsEconomyTransactionType.Gameplay.Name,
+						"Win match (MONEY)"
+					)
+				end
+			end)
+
+			task.delay(soundLength, function()
+				serverUtils.modifyPlayerLeaderStats(playerId, "Money", coinsEarned)
+				serverUtils.modifyPlayerLeaderStats(playerId, "Wins", winsEarned)
+				serverUtils.modifyPlayerLeaderStats(playerId, "WinStreak", 1)
+				task.spawn(function()
+					Stats.UpdatePlayerStats(playerId, function(currentStats)
+						currentStats.Coins += coinsEarned
+						currentStats.Wins += winsEarned
+						currentStats.WinStreak += 1
+						return currentStats
+					end)
 				end)
 			end)
-		end)
+		end
 	end
 	serverUtils.handlePlayerSpots(false)
 	flushHandler.lastLine = {}

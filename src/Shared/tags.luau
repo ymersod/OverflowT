@@ -51,6 +51,7 @@ local tags = {
 	SEMI_BLOCK = "SemiBlock",
 	CUTTING_ACTIONS = "CuttingAction",
 	RAINBOW_TEXT = "RainbowText",
+	AFK_PORT = "AfkPort",
 }
 
 return tags

@@ -23,6 +23,7 @@ local EndGameScreenEvent = ReplicatedStorage:WaitForChild("Shared")
 local curFirstInLine
 local warningCalled, warnedPlayer
 local timer = os.clock()
+local afkStarted = false
 local AFK_CAP = 20 -- 20
 local UNTIL_WARNING = 5 -- 5
 
@@ -52,7 +53,8 @@ local function checkAfks()
 					warnedPlayer = player
 				end
 			end
-			if diff >= AFK_CAP then
+			if diff >= AFK_CAP and not afkStarted then
+				afkStarted = true
 				SoundEffectHandler.Play("AfkKick")
 				local playerId = line[1]
 				ActionHandler:Enqueue(function()
@@ -86,6 +88,7 @@ local function checkAfks()
 								currentStats.WinStreak = 0
 								return currentStats
 							end)
+							afkStarted = false
 						end)
 					end
 				end)
