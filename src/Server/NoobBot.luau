@@ -111,7 +111,10 @@ RunService.Heartbeat:Connect(function()
 end)
 
 function noobBot.Stop()
-	noobBot.NoobBotVals.noobBotClone:Destroy()
+	if noobBot.NoobBotVals.noobBotClone then
+		noobBot.NoobBotVals.noobBotClone:Destroy()
+	end
+
 	noobBot.NoobBotVals.noobBotClone = nil
 	placedInLine = false
 	settingTurn = false
