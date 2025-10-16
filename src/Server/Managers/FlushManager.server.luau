@@ -371,14 +371,16 @@ RunService.Heartbeat:Connect(function()
 				noobBotHeldTime += clockedTime
 				lastTimeIteration = currentTime
 			else
-				updateRumbleAnimation()
-				SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
-				Sound.Update(getPercentageFull())
 				local clockedTime = currentTime - lastTimeIteration
 				noobBotHeldTime += clockedTime
 				lastTimeIteration = currentTime
 
-				FlushHandler.AddFlushedTime(clockedTime, currentHolder)
+				local didIt = FlushHandler.AddFlushedTime(clockedTime, currentHolder)
+				if didIt then
+					updateRumbleAnimation()
+					SetParticlesEnabled(true, tags.HOLD_PARTICLES, waterParticles)
+					Sound.Update(getPercentageFull())
+				end
 			end
 		end
 
@@ -386,6 +388,7 @@ RunService.Heartbeat:Connect(function()
 			noobBotHeldTime = 0
 			noobBotCap = math.random(1, 2)
 			LineArray:Next()
+			stopFlushing()
 		end
 
 		return

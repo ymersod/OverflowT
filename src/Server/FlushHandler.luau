@@ -179,7 +179,7 @@ end
 
 function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player, lastLineRecieved: {}?)
 	if not flushHandler.gameOnGoing then
-		return
+		return false
 	end
 
 	if lastLineRecieved then
@@ -191,6 +191,7 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player, las
 
 	if flushHandler.totalTimeHeld >= flushHandler.curCap then
 		flushHandler.Overflow()
+		return false
 	else
 		local timeHeld = playerHeldTime[curPlayer.UserId]
 		if timeHeld then
@@ -199,6 +200,8 @@ function flushHandler.AddFlushedTime(flushedTime: number, curPlayer: Player, las
 			playerHeldTime[curPlayer.UserId] = flushedTime
 		end
 	end
+
+	return true
 end
 
 function flushHandler.ResetTimeHeld()

@@ -147,7 +147,7 @@ local function UpdateTopWinstreak(top10Arr: { key: string, value: number }?)
 	end
 end
 
-RunService.Heartbeat:Connect(function()
+local function run()
 	local timeDiff = os.clock() - curTime
 	if timeDiff >= LEADERBOARD_UPDATE then
 		curTime = os.clock()
@@ -167,4 +167,10 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	leaderboardTimer.Text = "Update the leaderboard in " .. LEADERBOARD_UPDATE - math.round(timeDiff) .. " seconds"
+end
+task.spawn(function()
+	RunService.Heartbeat:Connect(function()
+		run()
+	end)
 end)
+run()
