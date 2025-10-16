@@ -15,6 +15,7 @@ WoodCrackSound.Looped = true
 
 local frozenToiletParts = CollectionService:GetTagged(tags.FROZEN_TOILET_PARTS)
 local frozenParticles = CollectionService:GetTagged(tags.FROZEN_PARTICLE)
+WoodCrackSound.Parent = frozenToiletParts[1]
 
 local standardPosition = mainToilet.PrimaryPart and mainToilet.PrimaryPart.Position
 	or mainToilet:GetModelCFrame().Position
